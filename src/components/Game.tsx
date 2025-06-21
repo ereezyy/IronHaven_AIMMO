@@ -253,10 +253,20 @@ function Player() {
         setIsInVehicle(false);
         setCurrentVehicle(null);
       }
+      
+      // Sprint with shift
+      if (key === 'shift') {
+        setKeys(prev => ({ ...prev, sprint: true }));
+      }
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      setKeys(prev => ({ ...prev, [event.key.toLowerCase()]: false }));
+      const key = event.key.toLowerCase();
+      setKeys(prev => ({ ...prev, [key]: false }));
+      
+      if (key === 'shift') {
+        setKeys(prev => ({ ...prev, sprint: false }));
+      }
     };
 
     const handleMouseClick = (event: MouseEvent) => {
@@ -314,7 +324,8 @@ function Player() {
 
   useFrame((state, delta) => {
     // Movement speed
-    const speed = isInVehicle ? 25 : 15;
+    const baseSpeed = isInVehicle ? 25 : 15;
+    const speed = keys.sprint ? baseSpeed * 1.8 : baseSpeed;
     let newVelocity: [number, number, number] = [0, 0, 0];
 
     // WASD movement
@@ -937,6 +948,7 @@ function HUD() {
         <h3 className="text-lg font-bold text-blue-400 mb-3 border-b border-blue-500/30 pb-1">CONTROLS</h3>
         <div className="space-y-1 text-xs">
           <p><span className="text-blue-400 font-bold">WASD:</span> Move Danny</p>
+          <p><span className="text-blue-400 font-bold">Shift:</span> Sprint</p>
           <p><span className="text-blue-400 font-bold">1-6:</span> Switch weapons</p>
           <p><span className="text-blue-400 font-bold">Click:</span> Fire weapon</p>
           <p><span className="text-blue-400 font-bold">F:</span> Interact/Steal car</p>
@@ -998,15 +1010,14 @@ const Game: React.FC = () => {
       <HUD />
       <MissionPanel />
       
-      {/* Enhanced Game Title Overlay */}
-      <div className="absolute bottom-4 left-4 text-white">
-        <h1 className="text-4xl font-bold text-red-500 tracking-wider drop-shadow-lg">IRONHAVEN</h1>
-        <p className="text-sm text-gray-300 drop-shadow">Blood. Money. Power. Survival.</p>
-        <p className="text-xs text-red-400 mt-1">No Mercy. No Witnesses. No Escape.</p>
-        <div className="mt-2 flex space-x-2 text-xs">
-          <span className="bg-red-600 px-2 py-1 rounded">BRUTAL</span>
-          <span className="bg-gray-800 px-2 py-1 rounded">OPEN WORLD</span>
-          <span className="bg-yellow-600 px-2 py-1 rounded">CRIME</span>
+      {/* Game Controls Help */}
+      <div className="absolute bottom-4 right-1/2 transform translate-x-1/2 text-white text-center">
+        <div className="bg-black/80 px-6 py-3 rounded-lg border border-red-500/30 backdrop-blur-sm">
+          <p className="text-sm text-gray-300 mb-2">Welcome to Ironhaven - Use WASD to move, 1-6 for weapons</p>
+          <div className="flex space-x-2 text-xs justify-center">
+            <span className="bg-red-600 px-2 py-1 rounded">MATURE 17+</span>
+            <span className="bg-gray-800 px-2 py-1 rounded">CRIME SIMULATOR</span>
+          </div>
         </div>
       </div>
 

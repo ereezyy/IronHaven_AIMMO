@@ -66,8 +66,11 @@ const FeaturesSection: React.FC = () => {
                   The story confronts players with the ugly reality behind the power fantasy, creating emotional resonance through unflinching portrayals of criminal life.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <button className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-sm transition duration-300 text-sm tracking-wide">
-                    VIEW SCREENSHOTS
+                  <button 
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-sm transition duration-300 text-sm tracking-wide"
+                  >
+                    PLAY DEMO
                   </button>
                   <button className="bg-transparent border border-gray-700 hover:border-gray-500 text-gray-300 px-6 py-3 rounded-sm transition duration-300 text-sm tracking-wide">
                     READ DEVELOPER BLOG

@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 
-const HeroSection: React.FC = () => {
+interface HeroSectionProps {
+  onPlayGame?: () => void;
+}
+
+const HeroSection: React.FC<HeroSectionProps> = ({ onPlayGame }) => {
   const [opacity, setOpacity] = useState(0);
 
   useEffect(() => {
@@ -53,8 +57,11 @@ const HeroSection: React.FC = () => {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-sm transition duration-300 transform hover:scale-105 w-full sm:w-auto text-sm md:text-base font-medium tracking-wide">
-            WATCH TRAILER
+          <button 
+            onClick={onPlayGame}
+            className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-sm transition duration-300 transform hover:scale-105 w-full sm:w-auto text-sm md:text-base font-medium tracking-wide"
+          >
+            PLAY DEMO
           </button>
           <button className="bg-transparent border border-gray-500 hover:border-white text-white px-8 py-3 rounded-sm transition duration-300 w-full sm:w-auto text-sm md:text-base font-medium tracking-wide">
             JOIN WAITLIST

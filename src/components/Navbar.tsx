@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, AlertTriangle } from 'lucide-react';
 
-const Navbar: React.FC = () => {
+interface NavbarProps {
+  onPlayGame?: () => void;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ onPlayGame }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -37,8 +41,11 @@ const Navbar: React.FC = () => {
             <NavLink href="#gameplay">GAMEPLAY</NavLink>
             <NavLink href="#city">CITY</NavLink>
             <NavLink href="#features">FEATURES</NavLink>
-            <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-sm transition duration-300 transform hover:scale-105">
-              COMING SOON
+            <button 
+              onClick={onPlayGame}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-sm transition duration-300 transform hover:scale-105"
+            >
+              PLAY DEMO
             </button>
           </div>
 
@@ -65,11 +72,14 @@ const Navbar: React.FC = () => {
               <MobileNavLink href="#gameplay" onClick={() => setIsMenuOpen(false)}>GAMEPLAY</MobileNavLink>
               <MobileNavLink href="#city" onClick={() => setIsMenuOpen(false)}>CITY</MobileNavLink>
               <MobileNavLink href="#features" onClick={() => setIsMenuOpen(false)}>FEATURES</MobileNavLink>
-              <button 
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onPlayGame?.();
+                }}
                 className="bg-red-600 hover:bg-red-700 text-white py-3 w-full rounded-sm transition duration-300"
-                onClick={() => setIsMenuOpen(false)}
               >
-                COMING SOON
+                PLAY DEMO
               </button>
             </div>
           </div>
