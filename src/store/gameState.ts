@@ -27,7 +27,7 @@ interface GameState {
   setCurrentWeaponId: (weaponId: string) => void;
 }
 
-export const useGameStore = create<GameState>((set) => ({
+export const useGameStore = create<GameState>((set, get) => ({
   playerStats: {
     health: 100,
     reputation: 0,
