@@ -231,10 +231,11 @@ function Player() {
   const [keys, setKeys] = useState<{[key: string]: boolean}>({});
   const [bloodLevel, setBloodLevel] = useState(0);
   const [isMoving, setIsMoving] = useState(false);
-  const [currentWeapon, setCurrentWeapon] = useState<Weapon>(weapons[0]);
   const [combatEffects, setCombatEffects] = useState<CombatEffect[]>([]);
   const [isInVehicle, setIsInVehicle] = useState(false);
   const [currentVehicle, setCurrentVehicle] = useState<Vehicle | null>(null);
+
+  const currentWeapon = gameStore.getCurrentWeapon();
 
   // Handle keyboard input
   useEffect(() => {
@@ -245,7 +246,7 @@ function Player() {
       // Weapon switching
       const weaponIndex = parseInt(key) - 1;
       if (weaponIndex >= 0 && weaponIndex < weapons.length) {
-        setCurrentWeapon(weapons[weaponIndex]);
+        gameStore.setCurrentWeaponId(weapons[weaponIndex].id);
       }
       
       // Exit vehicle
@@ -284,7 +285,7 @@ function Player() {
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('mousedown', handleMouseClick);
     };
-  }, [currentWeapon]);
+  }, [currentWeapon.id, gameStore]);
 
   const fireWeapon = () => {
     if (currentWeapon.ammo === 0) return;
@@ -384,11 +385,6 @@ function Player() {
         weapon={currentWeapon.id}
       />
       
-      <WeaponSystem 
-        currentWeapon={currentWeapon}
-        onWeaponChange={setCurrentWeapon}
-      />
-      
       <CombatSystem 
         effects={combatEffects}
         onEffectComplete={removeCombatEffect}
@@ -454,9 +450,9 @@ function City() {
   }>>([]);
 
   const [playerPosition, setPlayerPosition] = useState<[number, number, number]>([0, 1, 0]);
-  const [currentWeapon, setCurrentWeapon] = useState<Weapon>(weapons[0]);
 
   const gameStore = useGameStore();
+  const currentWeapon = gameStore.getCurrentWeapon();
 
   // Update NPC behavior based on player actions
   useEffect(() => {
@@ -1009,11 +1005,12 @@ const Game: React.FC = () => {
       
       <HUD />
       <MissionPanel />
+      <WeaponSystem />
       
       {/* Game Controls Help */}
       <div className="absolute bottom-4 right-1/2 transform translate-x-1/2 text-white text-center">
         <div className="bg-black/80 px-6 py-3 rounded-lg border border-red-500/30 backdrop-blur-sm">
-          <p className="text-sm text-gray-300 mb-2">Welcome to Ironhaven - Use WASD to move, 1-6 for weapons</p>
+          <div className="text-sm text-gray-300 mb-2">Welcome to Ironhaven - Use WASD to move, 1-6 for weapons</div>
           <div className="flex space-x-2 text-xs justify-center">
             <span className="bg-red-600 px-2 py-1 rounded">MATURE 17+</span>
             <span className="bg-gray-800 px-2 py-1 rounded">CRIME SIMULATOR</span>

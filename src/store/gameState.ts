@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { weapons, Weapon } from '../components/WeaponSystem';
 
 interface GameState {
   playerStats: {
@@ -16,11 +17,14 @@ interface GameState {
   inventory: string[];
   recentActions: string[];
   activeMission: any;
+  currentWeaponId: string;
+  getCurrentWeapon: () => Weapon;
   addAction: (action: string) => void;
   updateStats: (stats: Partial<GameState['playerStats']>) => void;
   addInventoryItem: (item: string) => void;
   setActiveMission: (mission: any) => void;
   updateSkills: (skillUpdates: Partial<GameState['playerStats']['skills']>) => void;
+  setCurrentWeaponId: (weaponId: string) => void;
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -39,6 +43,11 @@ export const useGameStore = create<GameState>((set) => ({
   inventory: [],
   recentActions: [],
   activeMission: null,
+  currentWeaponId: 'fists',
+  getCurrentWeapon: () => {
+    const state = get();
+    return weapons.find(w => w.id === state.currentWeaponId) || weapons[0];
+  },
   addAction: (action) => 
     set((state) => ({
       recentActions: [...state.recentActions.slice(-4), action]
@@ -58,5 +67,9 @@ export const useGameStore = create<GameState>((set) => ({
   updateSkills: (skillUpdates) =>
     set((state) => ({
       playerStats: { ...state.playerStats, skills: { ...state.playerStats.skills, ...skillUpdates } }
+    })),
+  setCurrentWeaponId: (weaponId) =>
+    set(() => ({
+      currentWeaponId: weaponId
     }))
 }));

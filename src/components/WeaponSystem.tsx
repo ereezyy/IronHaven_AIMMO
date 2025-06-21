@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameState';
 
-interface Weapon {
+export interface Weapon {
   id: string;
   name: string;
   damage: number;
@@ -13,7 +13,7 @@ interface Weapon {
   sprite: string;
 }
 
-const weapons: Weapon[] = [
+export const weapons: Weapon[] = [
   {
     id: 'fists',
     name: 'Bare Hands',
@@ -82,13 +82,10 @@ const weapons: Weapon[] = [
   }
 ];
 
-interface WeaponSystemProps {
-  onWeaponChange: (weapon: Weapon) => void;
-  currentWeapon: Weapon;
-}
 
-const WeaponSystem: React.FC<WeaponSystemProps> = ({ onWeaponChange, currentWeapon }) => {
+const WeaponSystem: React.FC = () => {
   const gameStore = useGameStore();
+  const currentWeapon = gameStore.getCurrentWeapon();
   const [unlockedWeapons, setUnlockedWeapons] = useState<string[]>(['fists']);
   const [lastFired, setLastFired] = useState(0);
 
@@ -152,7 +149,7 @@ const WeaponSystem: React.FC<WeaponSystemProps> = ({ onWeaponChange, currentWeap
         {weapons.filter(w => unlockedWeapons.includes(w.id)).map((weapon) => (
           <button
             key={weapon.id}
-            onClick={() => onWeaponChange(weapon)}
+            onClick={() => gameStore.setCurrentWeaponId(weapon.id)}
             className={`p-2 rounded text-xs transition-colors ${
               currentWeapon?.id === weapon.id
                 ? 'bg-red-600 text-white'
@@ -166,12 +163,11 @@ const WeaponSystem: React.FC<WeaponSystemProps> = ({ onWeaponChange, currentWeap
       </div>
       
       <div className="mt-3 text-xs text-gray-400">
-        <p>Keys 1-6: Quick select</p>
-        <p>Mouse: Aim & Fire</p>
+        <div>Keys 1-6: Quick select</div>
+        <div>Mouse: Aim & Fire</div>
       </div>
     </div>
   );
 };
 
-export { WeaponSystem, weapons };
-export type { Weapon };
+export { WeaponSystem };
