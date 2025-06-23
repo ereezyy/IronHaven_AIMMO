@@ -11,7 +11,8 @@ import {
   Volume2,
   VolumeX,
   Pause,
-  Play
+  Play,
+  Skull
 } from 'lucide-react';
 
 const EnhancedUI: React.FC = () => {
