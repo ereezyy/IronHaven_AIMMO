@@ -508,7 +508,6 @@ function City() {
 
   const [playerPosition, setPlayerPosition] = useState<[number, number, number]>([0, 1, 0]);
 
-  const [worldChunks, setWorldChunks] = useState<WorldChunk[]>([]);
   const currentWeapon = gameStore.getCurrentWeapon();
 
   // Update world chunks based on player position
