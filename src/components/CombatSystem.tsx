@@ -99,8 +99,6 @@ const EffectRenderer: React.FC<{ effect: CombatEffect }> = ({ effect }) => {
           color={getEffectColor()} 
           transparent 
           opacity={0.8}
-          emissive={getEffectColor()}
-          emissiveIntensity={2}
         />
       </mesh>
     );
