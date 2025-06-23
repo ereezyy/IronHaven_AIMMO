@@ -1460,8 +1460,18 @@ function MissionPanel() {
   );
 }
 
-function HUD() {
+function HUD({ policeKillCount = 0 }: { policeKillCount?: number }) {
   const gameStore = useGameStore();
+  
+  // Safe access to game store data
+  const playerStats = gameStore.playerStats || {
+    health: 100,
+    reputation: 0,
+    wanted: 0,
+    money: 0
+  };
+  
+  const recentActions = gameStore.recentActions || [];
   
   const getReputationLabel = (rep: number) => {
     if (rep < 15) return "NOBODY";
@@ -1472,7 +1482,7 @@ function HUD() {
     return "KINGPIN";
   };
 
-  const killCount = gameStore.recentActions.filter(action => 
+  const killCount = recentActions.filter(action => 
     action.includes('killed') || action.includes('executed')
   ).length;
   
@@ -1488,10 +1498,10 @@ function HUD() {
               <div className="w-24 h-3 bg-gray-800 rounded-full mr-2 border border-gray-600 overflow-hidden">
                 <div 
                   className="h-full bg-gradient-to-r from-red-400 via-yellow-400 to-green-400 rounded-full transition-all duration-500 ease-out"
-                  style={{ width: `${gameStore.playerStats.health}%` }}
+                  style={{ width: `${Math.max(0, Math.min(100, playerStats.health))}%` }}
                 ></div>
               </div>
-              <span className="text-white font-bold text-xs">{gameStore.playerStats.health}</span>
+              <span className="text-white font-bold text-xs">{playerStats.health}</span>
             </div>
           </div>
           
@@ -1502,36 +1512,36 @@ function HUD() {
                 <div className="w-24 h-3 bg-gray-800 rounded-full mr-2 border border-gray-600 overflow-hidden">
                   <div 
                     className="h-full bg-gradient-to-r from-yellow-500 to-red-500 rounded-full transition-all duration-500 ease-out"
-                    style={{ width: `${gameStore.playerStats.reputation}%` }}
+                    style={{ width: `${Math.max(0, Math.min(100, playerStats.reputation))}%` }}
                   ></div>
                 </div>
-                <span className="text-white font-bold text-xs">{gameStore.playerStats.reputation}</span>
+                <span className="text-white font-bold text-xs">{playerStats.reputation}</span>
               </div>
-              <span className="text-xs text-yellow-400 block">{getReputationLabel(gameStore.playerStats.reputation)}</span>
+              <span className="text-xs text-yellow-400 block">{getReputationLabel(playerStats.reputation)}</span>
             </div>
           </div>
           
           <div className="flex justify-between items-center">
             <span className="text-gray-400">Heat Level:</span>
             <span className="text-red-400 font-bold text-lg animate-pulse">
-              {'★'.repeat(gameStore.playerStats.wanted)}
-              {'☆'.repeat(5 - gameStore.playerStats.wanted)}
+              {'★'.repeat(Math.max(0, Math.min(5, playerStats.wanted)))}
+              {'☆'.repeat(Math.max(0, 5 - Math.min(5, playerStats.wanted)))}
             </span>
           </div>
           
           <div className="flex justify-between items-center">
             <span className="text-gray-400">Blood Money:</span>
-            <span className="text-green-400 font-bold text-lg">${gameStore.playerStats.money.toLocaleString()}</span>
+            <span className="text-green-400 font-bold text-lg">${(playerStats.money || 0).toLocaleString()}</span>
           </div>
 
           <div className="flex justify-between items-center">
             <span className="text-gray-400">Body Count:</span>
-            <span className="text-red-500 font-bold text-xl animate-bounce">{killCount + policeKillCount}</span>
+            <span className="text-red-500 font-bold text-xl animate-bounce">{(killCount || 0) + (policeKillCount || 0)}</span>
           </div>
           
           <div className="flex justify-between items-center">
             <span className="text-gray-400">Cops Killed:</span>
-            <span className="text-blue-400 font-bold text-lg animate-pulse">{policeKillCount}</span>
+            <span className="text-blue-400 font-bold text-lg animate-pulse">{policeKillCount || 0}</span>
           </div>
         </div>
       </div>
@@ -1563,6 +1573,74 @@ function HUD() {
 }
 
 const Game: React.FC = () => {
+  const gameStore = useGameStore();
+  const [policeKillCount, setPoliceKillCount] = useState(0);
+
+  // Error boundary state
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Error handling effect
+  useEffect(() => {
+    const handleError = (error: ErrorEvent) => {
+      console.error('Game Error:', error);
+      setHasError(true);
+      setErrorMessage(error.message || 'An unexpected error occurred');
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('Unhandled Promise Rejection:', event.reason);
+      setHasError(true);
+      setErrorMessage('A system error occurred. Please refresh the page.');
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+
+  // Handle police kill events
+  const handlePoliceKilled = useCallback((policeId: string) => {
+    setPoliceKillCount(prev => prev + 1);
+    gameStore.addAction('killed_police_officer');
+    gameStore.updateStats({ 
+      reputation: gameStore.playerStats.reputation + 30,
+      money: gameStore.playerStats.money + 500
+    });
+  }, [gameStore]);
+
+  // Handle vehicle events
+  const handlePlayerEnterVehicle = useCallback((vehicleId: string) => {
+    gameStore.addAction(`entered_vehicle_${vehicleId}`);
+  }, [gameStore]);
+
+  const handlePlayerExitVehicle = useCallback(() => {
+    gameStore.addAction('exited_vehicle');
+  }, [gameStore]);
+
+  // Error fallback UI
+  if (hasError) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center bg-gradient-to-b from-red-900 to-black text-white">
+        <div className="text-center p-8 bg-black/80 rounded-lg border border-red-500">
+          <h2 className="text-2xl font-bold text-red-400 mb-4">⚠ SYSTEM ERROR ⚠</h2>
+          <p className="text-gray-300 mb-4">{errorMessage}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded font-bold transition-colors"
+          >
+            RESTART GAME
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Safe render with null checks
   return (
     <div className="w-full h-screen relative bg-gradient-to-b from-red-900/20 to-black">
       <Canvas 
@@ -1603,20 +1681,13 @@ const Game: React.FC = () => {
         {/* New Systems */}
         <AudioSystem />
         <PoliceSystem 
-          playerPosition={gameStore.playerPosition} 
-          onPoliceKilled={(id) => {
-            gameStore.incrementPoliceKillCount();
-            gameStore.addAction(`killed_police_${id}`);
-          }}
+          playerPosition={gameStore.playerPosition || [0, 0, 0]} 
+          onPoliceKilled={handlePoliceKilled}
         />
         <VehicleSystem 
-          playerPosition={gameStore.playerPosition}
-          onPlayerEnterVehicle={(vehicleId) => {
-            gameStore.addAction(`entered_vehicle_${vehicleId}`);
-          }}
-          onPlayerExitVehicle={() => {
-            gameStore.addAction('exited_vehicle');
-          }}
+          playerPosition={gameStore.playerPosition || [0, 0, 0]}
+          onPlayerEnterVehicle={handlePlayerEnterVehicle}
+          onPlayerExitVehicle={handlePlayerExitVehicle}
         />
         
         <OrbitControls 
@@ -1633,7 +1704,7 @@ const Game: React.FC = () => {
         />
       </Canvas>
       
-      <HUD />
+      <HUD policeKillCount={policeKillCount} />
       <MissionPanel />
       <WeaponSystem />
       <AudioSystem />
