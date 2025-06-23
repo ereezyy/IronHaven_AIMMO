@@ -33,21 +33,87 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
   // Create detailed sprite texture based on character type
   const createCharacterTexture = () => {
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
+    canvas.width = 512;
+    canvas.height = 512;
     const ctx = canvas.getContext('2d')!;
 
-    // Clear canvas
-    ctx.clearRect(0, 0, 256, 256);
+    // Clear canvas with higher resolution
+    ctx.clearRect(0, 0, 512, 512);
+    
+    // Enable anti-aliasing for smoother graphics
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     if (type === 'corpse') {
-      // Draw detailed corpse
-      ctx.fillStyle = '#4a0000';
-      ctx.fillRect(80, 180, 96, 32); // Body lying down
+      // Draw ultra-detailed corpse with more realism
       ctx.fillStyle = '#2d1810';
-      ctx.fillRect(72, 168, 32, 32); // Head
+      ctx.fillRect(180, 350, 152, 60); // Body lying down
+      ctx.fillStyle = '#1a0f08';
+      ctx.fillRect(160, 330, 60, 60); // Head
       
-      // Large blood pool
+      // Massive blood pool with gradient
+      const gradient = ctx.createRadialGradient(256, 380, 0, 256, 380, 120);
+      gradient.addColorStop(0, '#8B0000');
+      gradient.addColorStop(0.5, '#4a0000');
+      gradient.addColorStop(1, 'rgba(139, 0, 0, 0.3)');
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.ellipse(256, 380, 120, 60, 0, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Realistic blood spatter with varying opacity
+      for (let i = 0; i < 25; i++) {
+        ctx.fillStyle = `rgba(139, 0, 0, ${Math.random() * 0.8 + 0.2})`;
+        ctx.beginPath();
+        const size = Math.random() * 12 + 4;
+        ctx.arc(
+          180 + Math.random() * 152,
+          320 + Math.random() * 120,
+          size,
+          0,
+          2 * Math.PI
+        );
+        ctx.fill();
+        
+        // Blood drip trails
+        if (Math.random() > 0.7) {
+          ctx.fillRect(
+            180 + Math.random() * 152,
+            320 + Math.random() * 60,
+            2,
+            Math.random() * 20 + 10
+          );
+        }
+      }
+      
+      // Multiple bullet holes with realistic detail
+      for (let i = 0; i < 5; i++) {
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(
+          200 + Math.random() * 112,
+          350 + Math.random() * 48,
+          3,
+          0,
+          2 * Math.PI
+        );
+        ctx.fill();
+        
+        // Powder burns around bullet holes
+        ctx.fillStyle = 'rgba(50, 50, 50, 0.3)';
+        ctx.beginPath();
+        ctx.arc(
+          200 + Math.random() * 112,
+          350 + Math.random() * 48,
+          8,
+          0,
+          2 * Math.PI
+        );
+        ctx.fill();
+      }
+      
+      return new THREE.CanvasTexture(canvas);
+    }
       ctx.fillStyle = '#8B0000';
       ctx.beginPath();
       ctx.ellipse(128, 200, 60, 32, 0, 0, 2 * Math.PI);
@@ -138,33 +204,60 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
     }
 
     // Draw shadow
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    const shadowGradient = ctx.createRadialGradient(256, 480, 0, 256, 480, 80);
+    shadowGradient.addColorStop(0, 'rgba(0, 0, 0, 0.4)');
+    shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = shadowGradient;
     ctx.beginPath();
-    ctx.ellipse(128, 240, 40, 16, 0, 0, 2 * Math.PI);
+    ctx.ellipse(256, 480, 80, 32, 0, 0, 2 * Math.PI);
     ctx.fill();
 
     // Draw body
     ctx.fillStyle = bodyColor;
-    ctx.fillRect(96, 128, 64, 80);
+    ctx.fillRect(192, 256, 128, 160);
+    
+    // Add muscle/body definition with shading
+    ctx.fillStyle = `rgba(0, 0, 0, 0.1)`;
+    ctx.fillRect(192, 256, 20, 160); // Left shadow
+    ctx.fillRect(300, 256, 20, 160); // Right shadow
+    ctx.fillRect(220, 300, 72, 8); // Chest definition
 
     // Draw head
     ctx.fillStyle = headColor;
-    ctx.fillRect(104, 80, 48, 48);
+    ctx.fillRect(208, 160, 96, 96);
+    
+    // Add neck
+    ctx.fillStyle = headColor;
+    ctx.fillRect(232, 240, 48, 24);
 
-    // Draw facial features
+    // Enhanced facial features with more detail
     ctx.fillStyle = '#000000';
-    // Eyes
-    ctx.fillRect(112, 96, 8, 8);
-    ctx.fillRect(136, 96, 8, 8);
-    // Mouth
+    // Eyes with pupils and iris
+    ctx.fillRect(224, 192, 16, 16);
+    ctx.fillRect(272, 192, 16, 16);
+    
+    // Eye pupils
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(228, 196, 8, 8);
+    ctx.fillRect(276, 196, 8, 8);
+    
+    // Nose
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.fillRect(248, 208, 8, 12);
+    
+    // Mouth with expression based on mood
+    ctx.fillStyle = '#000000';
     if (mood === 'hostile' || mood === 'aggressive') {
-      ctx.fillRect(120, 112, 16, 4); // Angry mouth
+      ctx.fillRect(240, 224, 32, 8); // Angry mouth
+      // Angry eyebrows
+      ctx.fillRect(220, 184, 24, 4);
+      ctx.fillRect(268, 184, 24, 4);
     } else if (mood === 'terrified') {
       ctx.beginPath();
-      ctx.arc(128, 116, 6, 0, Math.PI);
+      ctx.arc(256, 232, 12, 0, Math.PI);
       ctx.fill();
     } else {
-      ctx.fillRect(124, 112, 8, 4); // Neutral mouth
+      ctx.fillRect(248, 224, 16, 6); // Neutral mouth
     }
 
     // Draw clothing details
@@ -270,56 +363,71 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
 
     // Add blood effects if bloodLevel > 0
     if (bloodLevel > 0) {
-      ctx.fillStyle = `rgba(139, 0, 0, ${bloodLevel})`;
+      ctx.fillStyle = `rgba(139, 0, 0, ${Math.min(bloodLevel * 1.2, 1)})`;
       
-      // Blood on clothes
-      for (let i = 0; i < bloodLevel * 15; i++) {
+      // More realistic blood splatter on clothes
+      for (let i = 0; i < bloodLevel * 30; i++) {
+        const opacity = Math.random() * bloodLevel;
+        ctx.fillStyle = `rgba(139, 0, 0, ${opacity})`;
         ctx.fillRect(
-          96 + Math.random() * 64,
-          128 + Math.random() * 80,
-          Math.random() * 4 + 1,
-          Math.random() * 4 + 1
+          192 + Math.random() * 128,
+          256 + Math.random() * 160,
+          Math.random() * 8 + 2,
+          Math.random() * 8 + 2
         );
       }
       
-      // Blood on hands
+      // Blood on hands with realistic coverage
       if (bloodLevel > 0.3) {
         ctx.fillStyle = 'rgba(139, 0, 0, 0.9)';
-        ctx.fillRect(88, 160, 16, 16); // Left hand
-        ctx.fillRect(152, 160, 16, 16); // Right hand
+        ctx.fillRect(176, 320, 32, 32); // Left hand
+        ctx.fillRect(304, 320, 32, 32); // Right hand
       }
       
-      // Blood on face for extreme violence
+      // Facial blood for extreme violence
       if (bloodLevel > 0.7) {
         ctx.fillStyle = 'rgba(139, 0, 0, 0.8)';
-        ctx.fillRect(104, 112, 48, 16); // Face blood
+        ctx.fillRect(208, 224, 96, 32); // Face blood
         
-        // Blood drips
-        for (let i = 0; i < 3; i++) {
+        // Realistic blood drips down face
+        for (let i = 0; i < 6; i++) {
           ctx.fillRect(
-            112 + i * 12,
-            128,
-            2,
-            Math.random() * 10 + 5
+            224 + i * 16,
+            256,
+            4,
+            Math.random() * 20 + 10
           );
         }
       }
     }
 
-    // Add damage indicators for wounded characters
+    // Enhanced damage indicators
     if (bloodLevel > 0.5 && type !== 'corpse') {
-      // Bullet holes
+      // Multiple bullet holes with realistic detail
       ctx.fillStyle = '#000000';
-      for (let i = 0; i < Math.floor(bloodLevel * 3); i++) {
+      for (let i = 0; i < Math.floor(bloodLevel * 6); i++) {
         ctx.beginPath();
         ctx.arc(
-          104 + Math.random() * 48,
-          136 + Math.random() * 64,
-          1.5,
+          208 + Math.random() * 96,
+          272 + Math.random() * 128,
+          3,
           0,
           2 * Math.PI
         );
         ctx.fill();
+        
+        // Powder burns around holes
+        ctx.fillStyle = 'rgba(50, 50, 50, 0.2)';
+        ctx.beginPath();
+        ctx.arc(
+          208 + Math.random() * 96,
+          272 + Math.random() * 128,
+          8,
+          0,
+          2 * Math.PI
+        );
+        ctx.fill();
+        ctx.fillStyle = '#000000';
       }
     }
 

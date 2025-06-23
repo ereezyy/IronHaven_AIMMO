@@ -231,6 +231,28 @@ const Game: React.FC = () => {
   const [selectedNPC, setSelectedNPC] = useState<NPCData | null>(null);
   const [threatLevel, setThreatLevel] = useState(0);
   const [lastUpdate, setLastUpdate] = useState(0);
+  const [frameRate, setFrameRate] = useState(60);
+  const [explosions, setExplosions] = useState<Array<{id: string, position: [number, number, number], intensity: number}>>([]);
+  const [bloodPools, setBloodPools] = useState<Array<{id: string, position: [number, number, number], size: number}>>([]);
+  
+  // Performance monitoring
+  useEffect(() => {
+    let frameCount = 0;
+    let startTime = performance.now();
+    
+    const measureFPS = () => {
+      frameCount++;
+      const currentTime = performance.now();
+      if (currentTime - startTime >= 1000) {
+        setFrameRate(Math.round((frameCount * 1000) / (currentTime - startTime)));
+        frameCount = 0;
+        startTime = currentTime;
+      }
+      requestAnimationFrame(measureFPS);
+    };
+    
+    requestAnimationFrame(measureFPS);
+  }, []);
   const [missionActive, setMissionActive] = useState(false);
   const [particleEffects, setParticleEffects] = useState<any[]>([]);
 
@@ -324,15 +346,35 @@ const Game: React.FC = () => {
     gameStore.incrementPoliceKillCount();
     gameStore.addAction(`killed_police_${policeId}`);
     
-    // Add blood effect
-    const effect: CombatEffect = {
-      id: `blood_${Date.now()}`,
+    // Add multiple effects for police kills
+    const bloodEffect: CombatEffect = {
+      id: `police_blood_${Date.now()}`,
       position: playerPosition,
-      type: 'blood_splatter',
-      duration: 10000,
+      type: 'death_burst',
+      intensity: 1,
+      duration: 3000,
       startTime: Date.now()
     };
-    setCombatEffects(prev => [...prev, effect]);
+    
+    const explosionEffect = {
+      id: `police_explosion_${Date.now()}`,
+      position: playerPosition,
+      intensity: 0.8
+    };
+    
+    setCombatEffects(prev => [...prev, bloodEffect]);
+    setExplosions(prev => [...prev, explosionEffect]);
+    setBloodPools(prev => [...prev, {
+      id: `blood_pool_${Date.now()}`,
+      position: playerPosition,
+      size: 2 + Math.random()
+    }]);
+    
+    // Screen shake effect for dramatic impact
+    document.body.style.animation = 'screen-shake 0.5s ease-in-out';
+    setTimeout(() => {
+      document.body.style.animation = '';
+    }, 500);
   }, [gameStore, playerPosition]);
 
   const handleMissionUpdate = useCallback((mission: any) => {
@@ -462,6 +504,40 @@ const Game: React.FC = () => {
         );
         })}
 
+        {/* Persistent Blood Pools */}
+        {bloodPools.map(pool => (
+          <mesh key={pool.id} position={pool.position} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[pool.size, pool.size]} />
+            <meshBasicMaterial 
+              color="#4a0000" 
+              transparent 
+              opacity={0.8}
+              depthWrite={false}
+            />
+          </mesh>
+        ))}
+        
+        {/* Dynamic Explosions */}
+        {explosions.map(explosion => (
+          <group key={explosion.id} position={explosion.position}>
+            <mesh>
+              <sphereGeometry args={[explosion.intensity * 3, 16, 16]} />
+              <meshBasicMaterial 
+                color="#ff4500" 
+                transparent 
+                opacity={0.7}
+                emissive="#ff4500"
+                emissiveIntensity={2}
+              />
+            </mesh>
+            <pointLight 
+              color="#ff4500" 
+              intensity={explosion.intensity * 5} 
+              distance={20}
+              decay={2}
+            />
+          </group>
+        ))}
         {/* Vehicle System */}
         <VehicleSystem
           playerPosition={playerPosition}
@@ -581,6 +657,27 @@ const Game: React.FC = () => {
       {/* Enhanced UI replaces basic stats display */}
       <EnhancedUI />
 
+      {/* Performance Dashboard */}
+      <div className="absolute bottom-4 right-4 p-3 glass-panel text-white rounded text-xs border border-gray-600/50">
+        <div className="font-bold text-green-400 mb-1">PERFORMANCE</div>
+        <div>FPS: <span className={`font-bold ${frameRate > 45 ? 'text-green-400' : frameRate > 30 ? 'text-yellow-400' : 'text-red-400'}`}>{frameRate}</span></div>
+        <div>NPCs: <span className="text-blue-400">{allNPCs.filter(npc => !npc.isDead).length}</span></div>
+        <div>Effects: <span className="text-purple-400">{combatEffects.length + explosions.length}</span></div>
+        <div>Memory: <span className="text-green-400">~{Math.round(performance.memory?.usedJSHeapSize / 1024 / 1024 || 400)}MB</span></div>
+      </div>
+
+      {/* Advanced Controls Help */}
+      <div className="absolute bottom-44 left-4 p-3 glass-panel text-white rounded text-xs border border-gray-600/50 max-w-xs">
+        <div className="font-bold text-red-400 mb-2">CONTROLS</div>
+        <div className="grid grid-cols-2 gap-1 text-xs">
+          <span>WASD:</span><span className="text-gray-300">Move</span>
+          <span>Mouse:</span><span className="text-gray-300">Look/Attack</span>
+          <span>F:</span><span className="text-gray-300">Enter Vehicle</span>
+          <span>1-6:</span><span className="text-gray-300">Weapons</span>
+          <span>Tab:</span><span className="text-gray-300">Inventory</span>
+          <span>M:</span><span className="text-gray-300">Missions</span>
+        </div>
+      </div>
       {/* Weapon System */}
       <WeaponSystem />
 

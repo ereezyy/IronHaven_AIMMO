@@ -102,64 +102,78 @@ export class WorldGenerator {
     let buildingCount = 0;
     let minHeight = 5;
     let maxHeight = 15;
+    let buildingDensity = 1;
     
     switch (biome) {
       case 'downtown':
-        buildingCount = 8;
+        buildingCount = 12;
         minHeight = 15;
-        maxHeight = 35;
+        maxHeight = 45;
+        buildingDensity = 1.5;
         break;
       case 'residential':
-        buildingCount = 12;
+        buildingCount = 16;
         minHeight = 3;
         maxHeight = 8;
+        buildingDensity = 1.2;
         break;
       case 'industrial':
-        buildingCount = 6;
+        buildingCount = 8;
         minHeight = 8;
         maxHeight = 20;
+        buildingDensity = 0.8;
         break;
       case 'warehouse':
-        buildingCount = 4;
+        buildingCount = 6;
         minHeight = 6;
         maxHeight = 12;
+        buildingDensity = 0.6;
         break;
       case 'slums':
-        buildingCount = 15;
+        buildingCount = 20;
         minHeight = 2;
         maxHeight = 6;
+        buildingDensity = 1.8;
         break;
     }
 
+    buildingCount = Math.floor(buildingCount * buildingDensity);
+
     for (let i = 0; i < buildingCount; i++) {
-      const x = baseX + (Math.random() - 0.5) * CHUNK_SIZE * 0.8;
-      const z = baseZ + (Math.random() - 0.5) * CHUNK_SIZE * 0.8;
+      const x = baseX + (Math.random() - 0.5) * CHUNK_SIZE * 0.9;
+      const z = baseZ + (Math.random() - 0.5) * CHUNK_SIZE * 0.9;
       const height = Math.random() * (maxHeight - minHeight) + minHeight;
-      const width = Math.random() * 8 + 4;
-      const depth = Math.random() * 8 + 4;
+      const width = Math.random() * 12 + 6;
+      const depth = Math.random() * 12 + 6;
       
       let buildingType: Building['type'] = 'residential';
       let color = '#4a4a4a';
+      let hasWindows = true;
+      let hasNeon = false;
       
       switch (biome) {
         case 'downtown':
           buildingType = Math.random() > 0.5 ? 'office' : 'commercial';
-          color = `hsl(${Math.random() * 30}, 20%, ${Math.random() * 20 + 15}%)`;
+          color = `hsl(${200 + Math.random() * 60}, 25%, ${Math.random() * 25 + 20}%)`;
+          hasNeon = Math.random() > 0.4;
           break;
         case 'industrial':
           buildingType = Math.random() > 0.3 ? 'industrial' : 'warehouse';
-          color = `hsl(${Math.random() * 30}, 15%, ${Math.random() * 15 + 8}%)`;
+          color = `hsl(${30 + Math.random() * 60}, 15%, ${Math.random() * 15 + 8}%)`;
+          hasWindows = Math.random() > 0.3;
           break;
         case 'warehouse':
           buildingType = 'warehouse';
-          color = `hsl(${Math.random() * 30}, 10%, ${Math.random() * 12 + 6}%)`;
+          color = `hsl(${30 + Math.random() * 60}, 10%, ${Math.random() * 12 + 6}%)`;
+          hasWindows = Math.random() > 0.6;
           break;
         case 'slums':
           buildingType = 'residential';
-          color = `hsl(${Math.random() * 30}, 25%, ${Math.random() * 10 + 5}%)`;
+          color = `hsl(${30 + Math.random() * 90}, 25%, ${Math.random() * 10 + 5}%)`;
+          hasWindows = Math.random() > 0.2;
           break;
         default:
-          color = `hsl(${Math.random() * 30}, 20%, ${Math.random() * 15 + 12}%)`;
+          color = `hsl(${Math.random() * 360}, 20%, ${Math.random() * 20 + 15}%)`;
       }
 
       buildings.push({
@@ -168,8 +182,8 @@ export class WorldGenerator {
         size: [width, height, depth],
         type: buildingType,
         color,
-        windows: Math.random() > 0.2,
-        neonSign: biome === 'downtown' && Math.random() > 0.7
+        windows: hasWindows,
+        neonSign: hasNeon
       });
     }
 
