@@ -253,12 +253,13 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
       ctx.fillRect(220, 184, 24, 4);
       ctx.fillRect(268, 184, 24, 4);
     } else if (mood === 'terrified') {
-          )
-      }
-    }
-    )
-  }
-}
+     // Open mouth in terror
+     ctx.beginPath();
+     ctx.arc(256, 232, 12, 0, Math.PI);
+     ctx.fill();
+   } else {
+     ctx.fillRect(248, 224, 16, 6); // Neutral mouth
+   }
       ctx.beginPath();
       ctx.arc(256, 232, 12, 0, Math.PI);
       ctx.fill();
