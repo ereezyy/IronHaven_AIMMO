@@ -13,6 +13,11 @@ import AudioSystem from './AudioSystem';
 import MissionSystem from './MissionSystem';
 import CrimeSystem from './CrimeSystem';
 import DynamicEvents from './DynamicEvents';
+import InventorySystem from './InventorySystem';
+import ParticleSystem from './ParticleSystem';
+import DayNightCycle from './DayNightCycle';
+import WeatherSystem from './WeatherSystem';
+import EnhancedUI from './EnhancedUI';
 import * as THREE from 'three';
 
 // Collision detection helper
@@ -223,6 +228,7 @@ const Game: React.FC = () => {
   const [threatLevel, setThreatLevel] = useState(0);
   const [lastUpdate, setLastUpdate] = useState(0);
   const [missionActive, setMissionActive] = useState(false);
+  const [particleEffects, setParticleEffects] = useState<any[]>([]);
 
   // Memoize buildings for collision detection
   const allBuildings = useMemo(() => {
@@ -338,6 +344,17 @@ const Game: React.FC = () => {
   }, []);
 
   const handleCrimeCommitted = useCallback((crime: any) => {
+    // Add particle effects for serious crimes
+    if (crime.severity > 70) {
+      const effect = {
+        id: `crime_particle_${Date.now()}`,
+        type: crime.type === 'murder' ? 'blood_spatter' : 'impact',
+        position: crime.location,
+        intensity: crime.severity / 100
+      };
+      setParticleEffects(prev => [...prev, effect]);
+    }
+    
     // Add visual effects for serious crimes
     if (crime.severity > 70) {
       const effect: CombatEffect = {
@@ -352,9 +369,23 @@ const Game: React.FC = () => {
   }, []);
 
   const handleEventTriggered = useCallback((event: any) => {
+    // Add particle effects for events
+    if (event.type === 'gang_war' || event.type === 'police_raid') {
+      const effect = {
+        id: `event_particle_${Date.now()}`,
+        type: 'explosion',
+        position: event.location,
+        intensity: event.severity / 100
+      };
+      setParticleEffects(prev => [...prev, effect]);
+    }
+    
     gameStore.addAction(`event_${event.type}_started`);
   }, [gameStore]);
 
+  const handleParticleEffectComplete = useCallback((id: string) => {
+    setParticleEffects(prev => prev.filter(effect => effect.id !== id));
+  }, []);
   return (
     <div className="w-full h-screen bg-black relative overflow-hidden">
       <Canvas
@@ -366,17 +397,11 @@ const Game: React.FC = () => {
           gl.shadowMap.type = THREE.PCFSoftShadowMap;
         }}
       >
-        {/* Optimized Lighting */}
-        <ambientLight intensity={0.3} color="#001122" />
-        <directionalLight
-          position={[10, 20, 10]}
-          intensity={0.5}
-          color="#ffaa00"
-          castShadow
-          shadow-mapSize-width={1024}
-          shadow-mapSize-height={1024}
-        />
-        <pointLight position={[0, 10, 0]} intensity={0.3} color="#ff0066" />
+        {/* Day/Night Cycle with Dynamic Lighting */}
+        <DayNightCycle timeScale={180} />
+        
+        {/* Weather System */}
+        <WeatherSystem />
 
         {/* Ground */}
         <mesh position={[0, -0.5, 0]} receiveShadow>
@@ -433,6 +458,12 @@ const Game: React.FC = () => {
         <CombatSystem
           effects={combatEffects}
           onEffectComplete={handleCombatEffectComplete}
+        />
+        
+        {/* Particle System for Enhanced Visual Effects */}
+        <ParticleSystem
+          effects={particleEffects}
+          onEffectComplete={handleParticleEffectComplete}
         />
 
         {/* Street lights for atmosphere */}
@@ -500,28 +531,27 @@ const Game: React.FC = () => {
 
       {/* NPC Dialogue */}
       {selectedNPC && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-4 bg-black/95 text-white rounded-lg border border-gray-600 max-w-md">
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-4 bg-black/95 text-white rounded-lg border border-red-500/70 backdrop-blur-sm max-w-md z-40">
           <h3 className="font-bold text-red-400 mb-2 capitalize">{selectedNPC.type}</h3>
           <p className="text-gray-300 text-sm">{selectedNPC.dialogue}</p>
+          <div className="mt-2 text-xs text-gray-400">
+            Click elsewhere to close
+          </div>
         </div>
       )}
 
       {/* Controls Help */}
-      <div className="absolute bottom-4 left-4 p-3 bg-black/90 text-white rounded-lg border border-red-500/70 backdrop-blur-sm">
-        <h3 className="text-lg font-bold text-red-400 mb-2">CONTROLS</h3>
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div>WASD: Move</div>
-          <div>Mouse: Look</div>
-          <div>F: Enter/Exit Vehicle</div>
-          <div>Click: Interact</div>
-        </div>
-      </div>
+      {/* Enhanced UI replaces basic stats display */}
+      <EnhancedUI />
 
       {/* Weapon System */}
       <WeaponSystem />
 
       {/* Audio System */}
       <AudioSystem />
+      
+      {/* Inventory System */}
+      <InventorySystem />
 
       {/* Mission System */}
       <MissionSystem
