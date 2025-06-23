@@ -333,43 +333,43 @@ function Player() {
 
   useFrame((state, delta) => {
     // Movement speed
-    const baseSpeed = isInVehicle ? 30 : 20;
-    const speed = keys.sprint ? baseSpeed * 2.2 : baseSpeed;
-    const acceleration = 0.15;
-    const friction = 0.12;
+    const baseSpeed = isInVehicle ? 45 : 35;
+    const speed = keys.sprint ? baseSpeed * 1.8 : baseSpeed;
+    const acceleration = 0.8; // Much more responsive
+    const friction = 0.25; // Faster stopping
     
-    let targetVelocity: [number, number, number] = [0, 0, 0];
+    let newVelocity: [number, number, number] = [0, 0, 0];
 
     // WASD movement
-    if (keys['w']) targetVelocity[2] -= speed;
-    if (keys['s']) targetVelocity[2] += speed;
-    if (keys['a']) targetVelocity[0] -= speed;
-    if (keys['d']) targetVelocity[0] += speed;
+    if (keys['w']) newVelocity[2] -= speed;
+    if (keys['s']) newVelocity[2] += speed;
+    if (keys['a']) newVelocity[0] -= speed;
+    if (keys['d']) newVelocity[0] += speed;
     
-    // Smooth velocity interpolation
-    const newSmoothVelocity: [number, number, number] = [
-      THREE.MathUtils.lerp(smoothVelocity[0], targetVelocity[0], acceleration),
+    // Much more direct movement with minimal smoothing
+    const finalVelocity: [number, number, number] = [
+      THREE.MathUtils.lerp(smoothVelocity[0], newVelocity[0], acceleration),
       0,
-      THREE.MathUtils.lerp(smoothVelocity[2], targetVelocity[2], acceleration)
+      THREE.MathUtils.lerp(smoothVelocity[2], newVelocity[2], acceleration)
     ];
     
     // Apply friction when not moving
-    if (targetVelocity[0] === 0) newSmoothVelocity[0] *= (1 - friction);
-    if (targetVelocity[2] === 0) newSmoothVelocity[2] *= (1 - friction);
+    if (newVelocity[0] === 0) finalVelocity[0] *= (1 - friction);
+    if (newVelocity[2] === 0) finalVelocity[2] *= (1 - friction);
     
-    setSmoothVelocity(newSmoothVelocity);
+    setSmoothVelocity(finalVelocity);
     
     // Update rotation based on movement direction
-    if (Math.abs(newSmoothVelocity[0]) > 0.1 || Math.abs(newSmoothVelocity[2]) > 0.1) {
-      const newRotation = Math.atan2(newSmoothVelocity[0], newSmoothVelocity[2]);
-      setRotation(THREE.MathUtils.lerp(rotation, newRotation, 0.1));
+    if (Math.abs(finalVelocity[0]) > 1 || Math.abs(finalVelocity[2]) > 1) {
+      const newRotation = Math.atan2(finalVelocity[0], finalVelocity[2]);
+      setRotation(THREE.MathUtils.lerp(rotation, newRotation, 0.3));
     }
 
     // Apply movement
     const newPosition: [number, number, number] = [
-      position[0] + newSmoothVelocity[0] * delta,
+      position[0] + finalVelocity[0] * delta,
       1.5,
-      position[2] + newSmoothVelocity[2] * delta
+      position[2] + finalVelocity[2] * delta
     ];
 
     // Boundary constraints
@@ -377,8 +377,8 @@ function Player() {
     newPosition[2] = Math.max(-40, Math.min(40, newPosition[2]));
 
     setPosition(newPosition);
-    setVelocity(newSmoothVelocity);
-    setIsMoving(Math.abs(newSmoothVelocity[0]) > 0.5 || Math.abs(newSmoothVelocity[2]) > 0.5);
+    setVelocity(finalVelocity);
+    setIsMoving(Math.abs(finalVelocity[0]) > 2 || Math.abs(finalVelocity[2]) > 2);
 
     if (isMoving) {
       gameStore.addAction('player_moved');
@@ -836,22 +836,20 @@ function City() {
 function CameraController() {
   const { camera } = useThree();
   const gameStore = useGameStore();
-  const [targetPosition, setTargetPosition] = useState(new THREE.Vector3(15, 25, 15));
+  const [targetPosition, setTargetPosition] = useState(new THREE.Vector3(12, 20, 12));
   
   useFrame(() => {
-    // Much more stable camera following
+    // More responsive camera following
     const playerPos = gameStore.playerPosition || [0, 0, 0];
-    const newTarget = new THREE.Vector3(playerPos[0] + 12, 22, playerPos[2] + 12);
+    const newTarget = new THREE.Vector3(playerPos[0] + 8, 18, playerPos[2] + 8);
     
-    // Only update if player has moved significantly
-    if (targetPosition.distanceTo(newTarget) > 0.5) {
-      setTargetPosition(newTarget);
-    }
+    // Update target position more frequently for responsive camera
+    setTargetPosition(newTarget);
     
-    // Smooth, stable camera movement
-    camera.position.lerp(targetPosition, 0.02);
+    // More responsive camera movement
+    camera.position.lerp(targetPosition, 0.08);
     
-    // Stable lookAt point
+    // Direct lookAt following player
     const lookAtPoint = new THREE.Vector3(playerPos[0], 0, playerPos[2]);
     camera.lookAt(lookAtPoint);
   });
@@ -1020,12 +1018,12 @@ function HUD() {
       <div className="p-3 bg-black/90 text-white rounded-lg border border-blue-500/70 backdrop-blur-sm shadow-2xl">
         <h3 className="text-lg font-bold text-blue-400 mb-3 border-b border-blue-500/30 pb-1">CONTROLS</h3>
         <div className="space-y-1 text-xs leading-tight">
-          <p><span className="text-blue-400 font-bold">WASD:</span> <span className="text-white">Smooth Movement</span></p>
-          <p><span className="text-blue-400 font-bold">Shift:</span> <span className="text-white">Sprint (Fast!)</span></p>
+          <p><span className="text-green-400 font-bold animate-pulse">WASD:</span> <span className="text-white font-bold">INSTANT MOVE!</span></p>
+          <p><span className="text-yellow-400 font-bold">Shift:</span> <span className="text-white">TURBO SPRINT!</span></p>
           <p><span className="text-blue-400 font-bold">1-6:</span> <span className="text-white">Quick Weapons</span></p>
           <p><span className="text-blue-400 font-bold">Click NPCs:</span> <span className="text-white">Interact</span></p>
-          <p><span className="text-blue-400 font-bold">Red Spheres:</span> <span className="text-white">Attack!</span></p>
-          <p><span className="text-blue-400 font-bold">Mouse Drag:</span> <span className="text-white">Camera</span></p>
+          <p><span className="text-red-400 font-bold">Red Spheres:</span> <span className="text-white">ATTACK!</span></p>
+          <p><span className="text-blue-400 font-bold">Mouse Drag:</span> <span className="text-white">Fast Camera</span></p>
         </div>
       </div>
 
@@ -1079,15 +1077,15 @@ const Game: React.FC = () => {
         <CameraController />
         <OrbitControls 
           enablePan={false}
-          enableZoom={true}
+          enableZoom={false}
           enableRotate={true}
-          maxDistance={50}
-          minDistance={15}
+          maxDistance={30}
+          minDistance={12}
           maxPolarAngle={Math.PI / 2.5}
           enableDamping={true}
-          dampingFactor={0.08}
-          rotateSpeed={0.3}
-          zoomSpeed={0.5}
+          dampingFactor={0.05}
+          rotateSpeed={0.8}
+          autoRotate={false}
         />
       </Canvas>
       
@@ -1098,10 +1096,10 @@ const Game: React.FC = () => {
       {/* Game Controls Help */}
       <div className="absolute bottom-4 right-1/2 transform translate-x-1/2 text-white text-center">
         <div className="bg-black/80 px-6 py-3 rounded-lg border border-red-500/30 backdrop-blur-sm">
-          <div className="text-sm text-gray-300 mb-2">🎮 WASD = Move | Shift = Sprint | Click NPCs | Red = Attack | Mouse = Camera</div>
+          <div className="text-sm text-gray-300 mb-2">🎮 <span className="text-green-400 font-bold">WASD = INSTANT MOVE</span> | <span className="text-yellow-400">Shift = SPRINT</span> | <span className="text-red-400">Red Spheres = ATTACK</span> | <span className="text-blue-400">Mouse Drag = CAMERA</span></div>
           <div className="flex space-x-2 text-xs justify-center">
             <span className="bg-red-600 px-2 py-1 rounded">MATURE 17+</span>
-            <span className="bg-gray-800 px-2 py-1 rounded">CRIME SIMULATOR</span>
+            <span className="bg-green-600 px-2 py-1 rounded animate-pulse">IMPROVED CONTROLS</span>
           </div>
         </div>
       </div>
