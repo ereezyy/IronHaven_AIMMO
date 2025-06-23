@@ -7,6 +7,7 @@ interface GameState {
     reputation: number;
     wanted: number;
     money: number;
+    policeKillCount: number;
     skills: {
       combat: number;
       stealth: number;
@@ -22,6 +23,7 @@ interface GameState {
   getCurrentWeapon: () => Weapon;
   addAction: (action: string) => void;
   updateStats: (stats: Partial<GameState['playerStats']>) => void;
+  incrementPoliceKillCount: () => void;
   addInventoryItem: (item: string) => void;
   setActiveMission: (mission: any) => void;
   updateSkills: (skillUpdates: Partial<GameState['playerStats']['skills']>) => void;
@@ -35,6 +37,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     reputation: 0,
     wanted: 0,
     money: 1000,
+    policeKillCount: 0,
     skills: {
       combat: 10,
       stealth: 10,
@@ -58,6 +61,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   updateStats: (stats) =>
     set((state) => ({
       playerStats: { ...state.playerStats, ...stats }
+    })),
+  incrementPoliceKillCount: () =>
+    set((state) => ({
+      playerStats: { ...state.playerStats, policeKillCount: state.playerStats.policeKillCount + 1 }
     })),
   addInventoryItem: (item) =>
     set((state) => ({
