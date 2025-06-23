@@ -253,6 +253,12 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
       ctx.fillRect(220, 184, 24, 4);
       ctx.fillRect(268, 184, 24, 4);
     } else if (mood === 'terrified') {
+          )
+      }
+    }
+    )
+  }
+}
       ctx.beginPath();
       ctx.arc(256, 232, 12, 0, Math.PI);
       ctx.fill();
