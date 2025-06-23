@@ -333,8 +333,8 @@ function Player() {
 
   useFrame((state, delta) => {
     // Movement speed
-    const baseSpeed = isInVehicle ? 45 : 35;
-    const speed = keys.sprint ? baseSpeed * 1.8 : baseSpeed;
+    const baseSpeed = isInVehicle ? 20 : 12;
+    const speed = keys.sprint ? baseSpeed * 1.5 : baseSpeed;
     const acceleration = 0.8; // Much more responsive
     const friction = 0.25; // Faster stopping
     
@@ -372,9 +372,7 @@ function Player() {
       position[2] + finalVelocity[2] * delta
     ];
 
-    // Boundary constraints
-    newPosition[0] = Math.max(-40, Math.min(40, newPosition[0]));
-    newPosition[2] = Math.max(-40, Math.min(40, newPosition[2]));
+    // No boundary constraints for infinite world
 
     setPosition(newPosition);
     setVelocity(finalVelocity);
@@ -427,62 +425,15 @@ function Player() {
 }
 
 function City() {
+  const gameStore = useGameStore();
+  const [worldChunks, setWorldChunks] = useState<import('../lib/worldGenerator').WorldChunk[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  
   // Fixed NPC positions to prevent flutter
-  const [npcs, setNpcs] = useState<NPCData[]>(() => {
-    const fixedPositions = [
-      [-20, 1, -20], [-10, 1, -25], [0, 1, -30], [10, 1, -20], [20, 1, -25],
-      [-25, 1, -10], [-15, 1, 0], [5, 1, -15], [15, 1, 0], [25, 1, -10],
-      [-30, 1, 5], [-20, 1, 10], [-10, 1, 15], [0, 1, 20], [10, 1, 25],
-      [20, 1, 15], [30, 1, 5], [-15, 1, 25], [5, 1, 30], [25, 1, 20],
-      [-35, 1, -5], [-25, 1, 20], [-5, 1, -35], [15, 1, -30], [35, 1, -15],
-      [-30, 1, 25], [0, 1, 35], [20, 1, 30], [30, 1, 10], [-10, 1, 30]
-    ];
-    
-    return Array.from({ length: 30 }).map((_, i) => {
-      const types = ['civilian', 'gangster', 'police', 'dealer', 'hitman', 'boss'];
-      const type = types[Math.floor(Math.random() * types.length)] as NPCData['type'];
-      
-      return {
-        id: i.toString(),
-        position: fixedPositions[i] as [number, number, number],
-        type,
-        mood: 'neutral' as const,
-        dialogue: '',
-        health: type === 'boss' ? 200 : type === 'hitman' ? 150 : 100,
-        maxHealth: type === 'boss' ? 200 : type === 'hitman' ? 150 : 100,
-        isDead: false,
-        bloodLevel: 0,
-        lastInteraction: 0,
-        weapon: type === 'police' ? 'pistol' : type === 'gangster' ? 'knife' : undefined,
-        bounty: type === 'boss' ? 5000 : type === 'hitman' ? 2000 : type === 'dealer' ? 1000 : undefined,
-        faction: type === 'gangster' ? 'falcone' : type === 'police' ? 'police' : undefined,
-        ai_behavior: 'idle',
-        lastPosition: [0, 0, 0] as [number, number, number],
-        alertLevel: 0
-      };
-    });
-  });
+  const [npcs, setNpcs] = useState<NPCData[]>([]);
 
   // Fixed vehicle positions to prevent flutter
-  const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
-    const fixedVehiclePositions = [
-      [-18, 0.5, -18], [-8, 0.5, -22], [2, 0.5, -28], [12, 0.5, -18], [22, 0.5, -23],
-      [-23, 0.5, -8], [-13, 0.5, 2], [7, 0.5, -13], [17, 0.5, 2], [27, 0.5, -8],
-      [-28, 0.5, 7], [-18, 0.5, 12], [-8, 0.5, 17], [2, 0.5, 22], [12, 0.5, 27]
-    ];
-    
-    return Array.from({ length: 15 }).map((_, i) => {
-      const types = ['sedan', 'sports', 'truck', 'police', 'ambulance'];
-      return {
-        id: `vehicle_${i}`,
-        position: fixedVehiclePositions[i] as [number, number, number],
-        type: types[Math.floor(Math.random() * types.length)] as Vehicle['type'],
-        health: 100,
-        speed: Math.random() * 50 + 30,
-        occupied: false
-      };
-    });
-  });
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
 
   const [corpses, setCorpses] = useState<Array<{
     id: string;
@@ -493,8 +444,68 @@ function City() {
 
   const [playerPosition, setPlayerPosition] = useState<[number, number, number]>([0, 1, 0]);
 
-  const gameStore = useGameStore();
   const currentWeapon = gameStore.getCurrentWeapon();
+  
+  // Update world based on player position
+  useEffect(() => {
+    const updateWorld = async () => {
+      setIsGenerating(true);
+      try {
+        const { worldGenerator } = await import('../lib/worldGenerator');
+        const chunks = await worldGenerator.updateWorld(gameStore.playerPosition);
+        setWorldChunks(chunks);
+        
+        // Extract NPCs and vehicles from chunks
+        const allNPCs: NPCData[] = [];
+        const allVehicles: Vehicle[] = [];
+        
+        chunks.forEach(chunk => {
+          // Convert chunk NPCs to game NPCs
+          chunk.npcs.forEach(chunkNPC => {
+            allNPCs.push({
+              id: chunkNPC.id,
+              position: chunkNPC.position,
+              type: chunkNPC.type,
+              mood: chunkNPC.mood,
+              dialogue: chunkNPC.dialogue,
+              health: chunkNPC.health,
+              maxHealth: chunkNPC.maxHealth,
+              isDead: chunkNPC.isDead,
+              bloodLevel: chunkNPC.bloodLevel,
+              lastInteraction: 0,
+              weapon: chunkNPC.weapon,
+              bounty: chunkNPC.bounty,
+              faction: chunkNPC.faction,
+              ai_behavior: 'idle',
+              lastPosition: [0, 0, 0] as [number, number, number],
+              alertLevel: 0
+            });
+          });
+          
+          // Convert chunk vehicles to game vehicles
+          chunk.vehicles.forEach(chunkVehicle => {
+            allVehicles.push({
+              id: chunkVehicle.id,
+              position: chunkVehicle.position,
+              type: chunkVehicle.type,
+              health: chunkVehicle.health,
+              speed: chunkVehicle.speed,
+              occupied: chunkVehicle.occupied
+            });
+          });
+        });
+        
+        setNpcs(allNPCs);
+        setVehicles(allVehicles);
+      } catch (error) {
+        console.error('Error updating world:', error);
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+    
+    updateWorld();
+  }, [gameStore.playerPosition]);
 
   // Update NPC behavior based on player actions
   useEffect(() => {
@@ -579,7 +590,7 @@ function City() {
       <Plane
         rotation={[-Math.PI / 2, 0, 0]}
         position={[0, 0, 0]}
-        args={[120, 120]}
+        args={[1000, 1000]}
       >
         <meshStandardMaterial 
           color="#1a1a1a" 
@@ -629,7 +640,7 @@ function City() {
       <Plane
         rotation={[-Math.PI / 2, 0, 0]}
         position={[0, 0.02, 0]}
-        args={[120, 120]}
+        args={[1000, 1000]}
       >
         <meshBasicMaterial 
           color="#444444" 
@@ -638,109 +649,123 @@ function City() {
         />
       </Plane>
       
-      {/* Buildings - more detailed and atmospheric */}
-      {Array.from({ length: 25 }).map((_, i) => {
-        // Fixed building positions to prevent any movement
-        const buildingData = [
-          { x: -35, z: -35, h: 12, w: 4, d: 4 }, { x: -25, z: -35, h: 18, w: 6, d: 5 },
-          { x: -15, z: -35, h: 8, w: 3, d: 4 }, { x: 0, z: -35, h: 15, w: 5, d: 6 },
-          { x: 15, z: -35, h: 10, w: 4, d: 4 }, { x: 25, z: -35, h: 20, w: 7, d: 5 },
-          { x: 35, z: -35, h: 14, w: 5, d: 4 }, { x: -35, z: -20, h: 16, w: 5, d: 6 },
-          { x: -25, z: -15, h: 9, w: 4, d: 3 }, { x: -15, z: -10, h: 13, w: 6, d: 4 },
-          { x: 15, z: -10, h: 11, w: 4, d: 5 }, { x: 25, z: -15, h: 17, w: 6, d: 6 },
-          { x: 35, z: -20, h: 7, w: 3, d: 3 }, { x: -35, z: 10, h: 19, w: 7, d: 5 },
-          { x: -25, z: 15, h: 12, w: 5, d: 4 }, { x: -15, z: 20, h: 8, w: 3, d: 4 },
-          { x: 0, z: 25, h: 22, w: 8, d: 6 }, { x: 15, z: 20, h: 14, w: 5, d: 5 },
-          { x: 25, z: 15, h: 10, w: 4, d: 4 }, { x: 35, z: 10, h: 16, w: 6, d: 5 },
-          { x: -30, z: 30, h: 13, w: 5, d: 4 }, { x: -10, z: 35, h: 9, w: 4, d: 3 },
-          { x: 10, z: 35, h: 15, w: 6, d: 5 }, { x: 30, z: 30, h: 11, w: 4, d: 4 },
-          { x: 0, z: 0, h: 25, w: 10, d: 8 }
-        ];
+      {/* AI Generated Buildings */}
+      {worldChunks.flatMap(chunk => 
+        chunk.buildings.map((building) => {
+          const [x, height, z] = building.position;
+          const [width, _, depth] = building.size;
         
-        const building = buildingData[i] || { x: 0, z: 0, h: 10, w: 4, d: 4 };
-        const { x, z, h: height, w: width, d: depth } = building;
-        
-        return (
-          <group key={`building-${i}`}>
-            <Box
-              position={[x, height / 2, z]}
-              scale={[width, height, depth]}
-            >
-              <meshStandardMaterial 
-                color={`hsl(${Math.random() * 30}, 25%, ${Math.random() * 15 + 12}%)`}
-                roughness={0.7}
-                metalness={0.2}
-              />
-            </Box>
-            
-            {/* Windows */}
-            {Array.from({ length: Math.floor(height / 3) }).map((_, floor) => (
-              <group key={floor}>
-                {Array.from({ length: 3 }).map((_, window) => (
-                  <Box
-                    key={window}
-                    position={[
-                      x + (window - 1) * width / 4,
-                      (floor + 1) * 3,
-                      z + depth/2 + 0.1
-                    ]}
-                    scale={[0.6, 0.8, 0.1]}
-                  >
-                    <meshStandardMaterial 
-                      color={Math.random() > 0.6 ? "#ffaa44" : "#111111"} 
-                      transparent
-                      opacity={0.9}
-                      emissive={Math.random() > 0.6 ? "#ff6622" : "#000000"}
-                      emissiveIntensity={Math.random() > 0.6 ? 0.8 : 0}
-                    />
-                  </Box>
-                ))}
-              </group>
-            ))}
-            
-            {/* Rooftop details */}
-            {Math.random() > 0.5 && (
+          return (
+            <group key={building.id}>
               <Box
-                position={[x, height + 0.5, z]}
-                scale={[1, 1, 1]}
-              >
-                <meshStandardMaterial color="#444444" roughness={0.8} />
-              </Box>
-            )}
-            
-            {/* Neon signs */}
-            {Math.random() > 0.8 && (
-              <Box
-                position={[x, height * 0.8, z + depth/2 + 0.2]}
-                scale={[width * 0.8, 0.5, 0.1]}
+                position={building.position}
+                scale={building.size}
               >
                 <meshStandardMaterial 
-                  color="#ff3366" 
-                  emissive="#ff3366"
-                  emissiveIntensity={2.0}
+                  color={building.color}
+                  roughness={0.7}
+                  metalness={0.2}
                 />
               </Box>
-            )}
-          </group>
-        );
-      })}
+              
+              {/* Windows */}
+              {building.windows && Array.from({ length: Math.floor(height / 3) }).map((_, floor) => (
+                <group key={floor}>
+                  {Array.from({ length: 3 }).map((_, window) => (
+                    <Box
+                      key={window}
+                      position={[
+                        x + (window - 1) * width / 4,
+                        (floor + 1) * 3,
+                        z + depth/2 + 0.1
+                      ]}
+                      scale={[0.6, 0.8, 0.1]}
+                    >
+                      <meshStandardMaterial 
+                        color={Math.random() > 0.6 ? "#ffaa44" : "#111111"} 
+                        transparent
+                        opacity={0.9}
+                        emissive={Math.random() > 0.6 ? "#ff6622" : "#000000"}
+                        emissiveIntensity={Math.random() > 0.6 ? 0.8 : 0}
+                      />
+                    </Box>
+                  ))}
+                </group>
+              ))}
+              
+              {/* Neon signs */}
+              {building.neonSign && (
+                <Box
+                  position={[x, height * 0.8, z + depth/2 + 0.2]}
+                  scale={[width * 0.8, 0.5, 0.1]}
+                >
+                  <meshStandardMaterial 
+                    color="#ff3366" 
+                    emissive="#ff3366"
+                    emissiveIntensity={2.0}
+                  />
+                </Box>
+              )}
+            </group>
+          );
+        })
+      )}
 
-      {/* Street props */}
-      {Array.from({ length: 30 }).map((_, i) => {
-        // Fixed prop positions
+      {/* AI Generated Props */}
+      {worldChunks.flatMap(chunk => 
+        chunk.props.map((prop) => {
+          if (prop.type === 'street_light') {
+            return (
+              <group key={prop.id}>
+                <Cylinder position={prop.position} scale={prop.scale}>
+                  <meshStandardMaterial color="#555555" roughness={0.8} />
+                </Cylinder>
+                <Sphere position={[prop.position[0], prop.position[1] + 4, prop.position[2]]} scale={[0.3, 0.3, 0.3]}>
+                  <meshStandardMaterial 
+                    color="#ffaa44" 
+                    emissive="#ff6622"
+                    emissiveIntensity={1.2}
+                  />
+                </Sphere>
+              </group>
+            );
+          } else if (prop.type === 'trash_can') {
+            return (
+              <Cylinder
+                key={prop.id}
+                position={prop.position}
+                scale={prop.scale}
+              >
+                <meshStandardMaterial color="#3d3d3d" roughness={0.9} />
+              </Cylinder>
+            );
+          } else {
+            return (
+              <Box
+                key={prop.id}
+                position={prop.position}
+                scale={prop.scale}
+                rotation={[0, prop.rotation, 0]}
+              >
+                <meshStandardMaterial color="#2a2a2a" roughness={0.9} />
+              </Box>
+            );
+          }
+        })
+      )}
+
+      {/* Street props - reduced for infinite world */}
+      {Array.from({ length: 10 }).map((_, i) => {
+        // Fixed prop positions near spawn
         const propPositions = [
-          [-40, -40], [-30, -38], [-20, -42], [-10, -45], [0, -40],
-          [10, -45], [20, -42], [30, -38], [40, -40], [-42, -20],
-          [-38, -10], [-45, 0], [-40, 10], [-42, 20], [-38, 30],
-          [-40, 40], [42, -20], [38, -10], [45, 0], [40, 10],
-          [42, 20], [38, 30], [40, 40], [-20, 42], [-10, 45],
-          [0, 40], [10, 45], [20, 42], [30, 38], [40, 40]
+          [-15, -15], [-10, -18], [-5, -12], [0, -20], [5, -15],
+          [10, -18], [15, -12], [-12, 12], [8, 15], [12, 18]
         ];
         
         const [x, z] = propPositions[i] || [0, 0];
         const propType = Math.random();
         
-        if (propType < 0.3) {
+        if (propType < 0.5) {
           // Trash cans
           return (
             <Cylinder
@@ -750,22 +775,6 @@ function City() {
             >
               <meshStandardMaterial color="#3d3d3d" roughness={0.9} />
             </Cylinder>
-          );
-        } else if (propType < 0.6) {
-          // Street lights
-          return (
-            <group key={`prop-${i}`}>
-              <Cylinder position={[x, 2.5, z]} scale={[0.1, 5, 0.1]}>
-                <meshStandardMaterial color="#555555" roughness={0.8} />
-              </Cylinder>
-              <Sphere position={[x, 4.5, z]} scale={[0.3, 0.3, 0.3]}>
-                <meshStandardMaterial 
-                  color="#ffaa44" 
-                  emissive="#ff6622"
-                  emissiveIntensity={1.2}
-                />
-              </Sphere>
-            </group>
           );
         } else {
           // Debris
@@ -829,6 +838,19 @@ function City() {
           )}
         </group>
       ))}
+      
+      {/* World Generation Indicator */}
+      {isGenerating && (
+        <Text
+          position={[gameStore.playerPosition[0], gameStore.playerPosition[1] + 10, gameStore.playerPosition[2]]}
+          fontSize={2}
+          color="#00ff00"
+          anchorX="center"
+          anchorY="middle"
+        >
+          🌍 GENERATING WORLD...
+        </Text>
+      )}
     </>
   );
 }
@@ -1018,12 +1040,12 @@ function HUD() {
       <div className="p-3 bg-black/90 text-white rounded-lg border border-blue-500/70 backdrop-blur-sm shadow-2xl">
         <h3 className="text-lg font-bold text-blue-400 mb-3 border-b border-blue-500/30 pb-1">CONTROLS</h3>
         <div className="space-y-1 text-xs leading-tight">
-          <p><span className="text-green-400 font-bold animate-pulse">WASD:</span> <span className="text-white font-bold">INSTANT MOVE!</span></p>
-          <p><span className="text-yellow-400 font-bold">Shift:</span> <span className="text-white">TURBO SPRINT!</span></p>
+          <p><span className="text-green-400 font-bold animate-pulse">WASD:</span> <span className="text-white font-bold">MOVE</span></p>
+          <p><span className="text-yellow-400 font-bold">Shift:</span> <span className="text-white">SPRINT</span></p>
           <p><span className="text-blue-400 font-bold">1-6:</span> <span className="text-white">Quick Weapons</span></p>
           <p><span className="text-blue-400 font-bold">Click NPCs:</span> <span className="text-white">Interact</span></p>
           <p><span className="text-red-400 font-bold">Red Spheres:</span> <span className="text-white">ATTACK!</span></p>
-          <p><span className="text-blue-400 font-bold">Mouse Drag:</span> <span className="text-white">Fast Camera</span></p>
+          <p><span className="text-purple-400 font-bold">🌍 EXPLORE:</span> <span className="text-white">Infinite AI World!</span></p>
         </div>
       </div>
 
@@ -1096,10 +1118,10 @@ const Game: React.FC = () => {
       {/* Game Controls Help */}
       <div className="absolute bottom-4 right-1/2 transform translate-x-1/2 text-white text-center">
         <div className="bg-black/80 px-6 py-3 rounded-lg border border-red-500/30 backdrop-blur-sm">
-          <div className="text-sm text-gray-300 mb-2">🎮 <span className="text-green-400 font-bold">WASD = INSTANT MOVE</span> | <span className="text-yellow-400">Shift = SPRINT</span> | <span className="text-red-400">Red Spheres = ATTACK</span> | <span className="text-blue-400">Mouse Drag = CAMERA</span></div>
+          <div className="text-sm text-gray-300 mb-2">🌍 <span className="text-green-400 font-bold">INFINITE AI WORLD</span> | <span className="text-yellow-400">WASD = MOVE</span> | <span className="text-red-400">Red Spheres = ATTACK</span> | <span className="text-blue-400">Mouse Drag = CAMERA</span></div>
           <div className="flex space-x-2 text-xs justify-center">
             <span className="bg-red-600 px-2 py-1 rounded">MATURE 17+</span>
-            <span className="bg-green-600 px-2 py-1 rounded animate-pulse">IMPROVED CONTROLS</span>
+            <span className="bg-purple-600 px-2 py-1 rounded animate-pulse">AI GENERATED WORLD</span>
           </div>
         </div>
       </div>
