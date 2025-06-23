@@ -123,48 +123,47 @@ const WeaponSystem: React.FC = () => {
   };
 
   return (
-    <div className="absolute bottom-4 right-4 p-4 bg-black/95 text-white rounded-lg border border-red-500/50 backdrop-blur-sm">
+    <div className="absolute bottom-4 right-4 p-3 bg-black/90 text-white rounded-lg border border-red-500/70 backdrop-blur-sm">
       <h3 className="text-lg font-bold text-red-400 mb-3 border-b border-red-500/30 pb-1">ARSENAL</h3>
       
       <div className="space-y-2 mb-4">
         <div className="flex justify-between items-center">
           <span className="text-gray-400">Current:</span>
-          <span className="text-white font-bold">{currentWeapon?.sprite || '👊'} {currentWeapon?.name || 'Bare Hands'}</span>
+          <span className="text-white font-bold text-sm">{currentWeapon?.sprite || '👊'} {currentWeapon?.name || 'Bare Hands'}</span>
         </div>
         
         {currentWeapon?.ammo !== -1 && (
           <div className="flex justify-between items-center">
             <span className="text-gray-400">Ammo:</span>
-            <span className="text-yellow-400 font-bold">{currentWeapon?.ammo || 0}/{currentWeapon?.maxAmmo || 0}</span>
+            <span className="text-yellow-400 font-bold text-sm">{currentWeapon?.ammo || 0}/{currentWeapon?.maxAmmo || 0}</span>
           </div>
         )}
         
         <div className="flex justify-between items-center">
           <span className="text-gray-400">Brutality:</span>
-          <span className="text-red-500 font-bold">{'💀'.repeat(Math.floor((currentWeapon?.brutality || 0) / 2))}</span>
+          <span className="text-red-500 font-bold text-sm">{'💀'.repeat(Math.floor((currentWeapon?.brutality || 0) / 2))}</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-3 gap-1">
         {weapons.filter(w => unlockedWeapons.includes(w.id)).map((weapon) => (
           <button
             key={weapon.id}
             onClick={() => gameStore.setCurrentWeaponId(weapon.id)}
-            className={`p-2 rounded text-xs transition-colors ${
+            className={`p-1 rounded text-xs transition-colors ${
               currentWeapon?.id === weapon.id
                 ? 'bg-red-600 text-white'
                 : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
             }`}
           >
-            <div className="text-lg mb-1">{weapon.sprite}</div>
-            <div className="font-medium">{weapon.name.split(' ')[0]}</div>
+            <div className="text-sm mb-1">{weapon.sprite}</div>
+            <div className="font-medium text-xs">{weapon.name.split(' ')[0]}</div>
           </button>
         ))}
       </div>
       
       <div className="mt-3 text-xs text-gray-400">
-        <div>Keys 1-6: Quick select</div>
-        <div>Mouse: Aim & Fire</div>
+        <div>Keys 1-6: Quick select | Mouse: Attack</div>
       </div>
     </div>
   );

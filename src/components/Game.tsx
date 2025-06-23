@@ -135,11 +135,24 @@ function NPC({ npc, onInteract, onKill, onDamage, playerPosition, currentWeapon 
         weapon={npc.weapon}
       />
       
+      {/* Glowing outline for interactive NPCs */}
+      {!npc.isDead && (
+        <mesh position={npc.position} scale={[3.5, 4, 3.5]}>
+          <cylinderGeometry args={[1, 1, 0.1, 8]} />
+          <meshBasicMaterial 
+            color={npc.type === 'police' ? '#0066ff' : npc.type === 'gangster' ? '#ff0066' : '#44ff44'} 
+            transparent 
+            opacity={0.2}
+            wireframe
+          />
+        </mesh>
+      )}
+      
       {/* Health bar for living NPCs */}
       {!npc.isDead && npc.health < npc.maxHealth && (
         <group position={[npc.position[0], npc.position[1] + 3.5, npc.position[2]]}>
           <Plane args={[2, 0.2]} position={[0, 0, 0]}>
-            <meshBasicMaterial color="#333333" />
+            <meshBasicMaterial color="#555555" />
           </Plane>
           <Plane 
             args={[(npc.health / npc.maxHealth) * 2, 0.15]} 
@@ -166,13 +179,19 @@ function NPC({ npc, onInteract, onKill, onDamage, playerPosition, currentWeapon 
       
       {/* Attack indicator when in range */}
       {!npc.isDead && isInRange && (
-        <Sphere
+        <mesh
           position={[npc.position[0], npc.position[1] + 2.8, npc.position[2]]}
-          scale={[0.2, 0.2, 0.2]}
+          scale={[0.3, 0.3, 0.3]}
           onClick={handleAttack}
         >
-          <meshBasicMaterial color="#ff0000" transparent opacity={0.8} />
-        </Sphere>
+          <sphereGeometry args={[1, 8, 8]} />
+          <meshBasicMaterial 
+            color="#ff0000" 
+            transparent 
+            opacity={0.8}
+            emissive="#ff0000"
+          />
+        </mesh>
       )}
       
       {/* Bounty indicator for high-value targets */}
@@ -540,7 +559,7 @@ function City() {
         args={[100, 100]}
       >
         <meshStandardMaterial 
-          color="#0a0a0a" 
+          color="#2a2a2a" 
           roughness={0.9}
           metalness={0.1}
         />
@@ -590,9 +609,9 @@ function City() {
         args={[100, 100]}
       >
         <meshBasicMaterial 
-          color="#222222" 
+          color="#444444" 
           transparent 
-          opacity={0.3}
+          opacity={0.4}
           wireframe
         />
       </Plane>
@@ -774,8 +793,8 @@ function CameraController() {
   
   useFrame(() => {
     // Dynamic camera following with cinematic angles
-    const targetPosition = new THREE.Vector3(20, 25, 20);
-    camera.position.lerp(targetPosition, 0.02);
+    const targetPosition = new THREE.Vector3(15, 18, 15);
+    camera.position.lerp(targetPosition, 0.03);
     camera.lookAt(0, 0, 0);
   });
   
@@ -827,19 +846,19 @@ function MissionPanel() {
   };
 
   return (
-    <div className="absolute top-20 right-4 p-6 bg-black/95 text-white rounded-lg border border-red-500/50 backdrop-blur-sm shadow-2xl max-w-sm">
+    <div className="absolute top-4 right-4 p-4 bg-black/90 text-white rounded-lg border border-red-500/70 backdrop-blur-sm shadow-2xl max-w-xs">
       {gameStore.activeMission ? (
-        <div className="space-y-3">
+        <div className="space-y-2">
           <h3 className="text-xl font-bold text-red-400 border-b border-red-500/30 pb-2">ACTIVE CONTRACT</h3>
           <div className="space-y-2 text-sm">
-            <p><span className="text-gray-400">Type:</span> <span className="text-white font-semibold uppercase">{gameStore.activeMission.type}</span></p>
-            <p><span className="text-gray-400">Target:</span> <span className="text-white">{gameStore.activeMission.target}</span></p>
-            <p><span className="text-gray-400">Location:</span> <span className="text-white">{gameStore.activeMission.location}</span></p>
-            <p><span className="text-gray-400">Blood Money:</span> <span className="text-green-400 font-bold">${gameStore.activeMission.reward?.toLocaleString()}</span></p>
+            <p><span className="text-gray-400">Type:</span> <span className="text-white font-semibold uppercase text-xs">{gameStore.activeMission.type}</span></p>
+            <p><span className="text-gray-400">Target:</span> <span className="text-white text-xs">{gameStore.activeMission.target}</span></p>
+            <p><span className="text-gray-400">Location:</span> <span className="text-white text-xs">{gameStore.activeMission.location}</span></p>
+            <p><span className="text-gray-400">Blood Money:</span> <span className="text-green-400 font-bold text-sm">${gameStore.activeMission.reward?.toLocaleString()}</span></p>
           </div>
           
           {gameStore.activeMission.description && (
-            <div className="mt-4 p-3 bg-red-900/30 border border-red-500/30 rounded">
+            <div className="mt-3 p-2 bg-red-900/40 border border-red-500/40 rounded">
               <p className="text-xs text-red-300 italic">"{gameStore.activeMission.description}"</p>
             </div>
           )}
@@ -853,10 +872,10 @@ function MissionPanel() {
         </div>
       ) : (
         <div className="text-center">
-          <h3 className="text-lg font-bold text-red-400 mb-4">NO ACTIVE CONTRACT</h3>
-          <p className="text-gray-400 text-sm mb-4">The streets are calling for blood...</p>
+          <h3 className="text-lg font-bold text-red-400 mb-3">NO ACTIVE CONTRACT</h3>
+          <p className="text-gray-400 text-xs mb-3">The streets are calling for blood...</p>
           <button
-            className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg transition-colors font-medium border border-red-500 w-full"
+            className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition-colors font-medium border border-red-500 w-full text-sm"
             onClick={startNewMission}
             disabled={loading}
           >
@@ -887,19 +906,19 @@ function HUD() {
   return (
     <div className="absolute top-4 left-4 space-y-4">
       {/* Player Stats */}
-      <div className="p-4 bg-black/95 text-white rounded-lg border border-red-500/50 backdrop-blur-sm shadow-2xl">
+      <div className="p-4 bg-black/90 text-white rounded-lg border border-red-500/70 backdrop-blur-sm shadow-2xl">
         <h3 className="text-lg font-bold text-red-400 mb-3 border-b border-red-500/30 pb-1">DANNY'S STATUS</h3>
-        <div className="space-y-3 text-sm">
+        <div className="space-y-2 text-sm">
           <div className="flex justify-between items-center">
             <span className="text-gray-400">Health:</span>
             <div className="flex items-center">
-              <div className="w-20 h-2 bg-gray-700 rounded-full mr-2 border border-gray-600">
+              <div className="w-16 h-3 bg-gray-700 rounded-full mr-2 border border-gray-600">
                 <div 
-                  className="h-full bg-gradient-to-r from-red-500 to-green-500 rounded-full transition-all"
+                  className="h-full bg-gradient-to-r from-red-500 to-green-500 rounded-full transition-all duration-300"
                   style={{ width: `${gameStore.playerStats.health}%` }}
                 ></div>
               </div>
-              <span className="text-white font-bold">{gameStore.playerStats.health}</span>
+              <span className="text-white font-bold text-xs">{gameStore.playerStats.health}</span>
             </div>
           </div>
           
@@ -907,21 +926,21 @@ function HUD() {
             <span className="text-gray-400">Reputation:</span>
             <div className="text-right">
               <div className="flex items-center">
-                <div className="w-20 h-2 bg-gray-700 rounded-full mr-2 border border-gray-600">
+                <div className="w-16 h-3 bg-gray-700 rounded-full mr-2 border border-gray-600">
                   <div 
-                    className="h-full bg-gradient-to-r from-yellow-600 to-red-500 rounded-full transition-all"
+                    className="h-full bg-gradient-to-r from-yellow-600 to-red-500 rounded-full transition-all duration-300"
                     style={{ width: `${gameStore.playerStats.reputation}%` }}
                   ></div>
                 </div>
-                <span className="text-white font-bold">{gameStore.playerStats.reputation}</span>
+                <span className="text-white font-bold text-xs">{gameStore.playerStats.reputation}</span>
               </div>
-              <span className="text-xs text-yellow-400">{getReputationLabel(gameStore.playerStats.reputation)}</span>
+              <span className="text-xs text-yellow-400 block">{getReputationLabel(gameStore.playerStats.reputation)}</span>
             </div>
           </div>
           
           <div className="flex justify-between items-center">
             <span className="text-gray-400">Heat Level:</span>
-            <span className="text-red-400 font-bold">
+            <span className="text-red-400 font-bold text-lg">
               {'★'.repeat(gameStore.playerStats.wanted)}
               {'☆'.repeat(5 - gameStore.playerStats.wanted)}
             </span>
@@ -929,34 +948,33 @@ function HUD() {
           
           <div className="flex justify-between items-center">
             <span className="text-gray-400">Blood Money:</span>
-            <span className="text-green-400 font-bold">${gameStore.playerStats.money.toLocaleString()}</span>
+            <span className="text-green-400 font-bold text-sm">${gameStore.playerStats.money.toLocaleString()}</span>
           </div>
 
           <div className="flex justify-between items-center">
             <span className="text-gray-400">Body Count:</span>
-            <span className="text-red-500 font-bold">{killCount}</span>
+            <span className="text-red-500 font-bold text-lg">{killCount}</span>
           </div>
         </div>
       </div>
 
       {/* Controls */}
-      <div className="p-4 bg-black/95 text-white rounded-lg border border-blue-500/50 backdrop-blur-sm shadow-2xl">
+      <div className="p-3 bg-black/90 text-white rounded-lg border border-blue-500/70 backdrop-blur-sm shadow-2xl">
         <h3 className="text-lg font-bold text-blue-400 mb-3 border-b border-blue-500/30 pb-1">CONTROLS</h3>
-        <div className="space-y-1 text-xs">
-          <p><span className="text-blue-400 font-bold">WASD:</span> Move Danny</p>
-          <p><span className="text-blue-400 font-bold">Shift:</span> Sprint</p>
-          <p><span className="text-blue-400 font-bold">1-6:</span> Switch weapons</p>
-          <p><span className="text-blue-400 font-bold">Click:</span> Fire weapon</p>
-          <p><span className="text-blue-400 font-bold">F:</span> Interact/Steal car</p>
-          <p><span className="text-blue-400 font-bold">Mouse:</span> Look around</p>
+        <div className="space-y-1 text-xs leading-tight">
+          <p><span className="text-blue-400 font-bold">WASD:</span> <span className="text-gray-300">Move</span></p>
+          <p><span className="text-blue-400 font-bold">Shift:</span> <span className="text-gray-300">Sprint</span></p>
+          <p><span className="text-blue-400 font-bold">1-6:</span> <span className="text-gray-300">Weapons</span></p>
+          <p><span className="text-blue-400 font-bold">Click:</span> <span className="text-gray-300">Attack</span></p>
+          <p><span className="text-blue-400 font-bold">Mouse:</span> <span className="text-gray-300">Camera</span></p>
         </div>
       </div>
 
       {/* Violence Warning */}
-      <div className="p-3 bg-red-900/50 text-white rounded-lg border border-red-500/70 backdrop-blur-sm">
+      <div className="p-2 bg-red-900/60 text-white rounded-lg border border-red-500/80 backdrop-blur-sm">
         <div className="flex items-center text-xs">
           <span className="text-red-500 font-bold mr-2">⚠</span>
-          <span className="text-red-300">EXTREME VIOLENCE - MATURE CONTENT</span>
+          <span className="text-red-300">MATURE 17+</span>
         </div>
       </div>
     </div>
@@ -967,14 +985,14 @@ const Game: React.FC = () => {
   return (
     <div className="w-full h-screen relative bg-gradient-to-b from-red-900/20 to-black">
       <Canvas 
-        camera={{ position: [20, 25, 20], fov: 75 }}
+        camera={{ position: [15, 20, 15], fov: 60 }}
         shadows
       >
         {/* Dramatic lighting setup */}
-        <ambientLight intensity={0.15} color="#2a0a0a" />
+        <ambientLight intensity={0.4} color="#4a4a4a" />
         <directionalLight 
           position={[10, 20, 10]} 
-          intensity={0.5} 
+          intensity={0.8} 
           color="#ffffff"
           castShadow
           shadow-mapSize-width={2048}
@@ -982,13 +1000,13 @@ const Game: React.FC = () => {
         />
         
         {/* Multiple colored lights for atmosphere */}
-        <pointLight position={[0, 15, 0]} intensity={0.8} color="#ff1122" distance={50} />
-        <pointLight position={[-30, 8, -30]} intensity={0.6} color="#ff4444" distance={40} />
-        <pointLight position={[30, 8, 30]} intensity={0.6} color="#ff4444" distance={40} />
-        <pointLight position={[0, 5, -40]} intensity={0.4} color="#0066ff" distance={30} />
+        <pointLight position={[0, 15, 0]} intensity={1.2} color="#ff6644" distance={60} />
+        <pointLight position={[-20, 8, -20]} intensity={0.8} color="#ff8844" distance={50} />
+        <pointLight position={[20, 8, 20]} intensity={0.8} color="#ff8844" distance={50} />
+        <pointLight position={[0, 5, -30]} intensity={0.6} color="#4488ff" distance={40} />
         
         {/* Heavy atmospheric fog */}
-        <fog attach="fog" args={['#0a0000', 25, 100]} />
+        <fog attach="fog" args={['#2a1a1a', 40, 120]} />
         
         <Player />
         <City />
@@ -997,8 +1015,8 @@ const Game: React.FC = () => {
           enablePan={true}
           enableZoom={true}
           enableRotate={true}
-          maxDistance={80}
-          minDistance={10}
+          maxDistance={50}
+          minDistance={8}
           maxPolarAngle={Math.PI / 2.2}
         />
       </Canvas>
@@ -1010,7 +1028,7 @@ const Game: React.FC = () => {
       {/* Game Controls Help */}
       <div className="absolute bottom-4 right-1/2 transform translate-x-1/2 text-white text-center">
         <div className="bg-black/80 px-6 py-3 rounded-lg border border-red-500/30 backdrop-blur-sm">
-          <div className="text-sm text-gray-300 mb-2">Welcome to Ironhaven - Use WASD to move, 1-6 for weapons</div>
+          <div className="text-sm text-gray-300 mb-2">Welcome to Ironhaven - Click NPCs to interact, Red spheres to attack</div>
           <div className="flex space-x-2 text-xs justify-center">
             <span className="bg-red-600 px-2 py-1 rounded">MATURE 17+</span>
             <span className="bg-gray-800 px-2 py-1 rounded">CRIME SIMULATOR</span>
