@@ -440,18 +440,24 @@ function Player() {
 }
 
 function City() {
-  const [npcs, setNpcs] = useState<NPCData[]>(() => 
-    Array.from({ length: 30 }).map((_, i) => {
+  // Fixed NPC positions to prevent flutter
+  const [npcs, setNpcs] = useState<NPCData[]>(() => {
+    const fixedPositions = [
+      [-20, 1, -20], [-10, 1, -25], [0, 1, -30], [10, 1, -20], [20, 1, -25],
+      [-25, 1, -10], [-15, 1, 0], [5, 1, -15], [15, 1, 0], [25, 1, -10],
+      [-30, 1, 5], [-20, 1, 10], [-10, 1, 15], [0, 1, 20], [10, 1, 25],
+      [20, 1, 15], [30, 1, 5], [-15, 1, 25], [5, 1, 30], [25, 1, 20],
+      [-35, 1, -5], [-25, 1, 20], [-5, 1, -35], [15, 1, -30], [35, 1, -15],
+      [-30, 1, 25], [0, 1, 35], [20, 1, 30], [30, 1, 10], [-10, 1, 30]
+    ];
+    
+    return Array.from({ length: 30 }).map((_, i) => {
       const types = ['civilian', 'gangster', 'police', 'dealer', 'hitman', 'boss'];
       const type = types[Math.floor(Math.random() * types.length)] as NPCData['type'];
       
       return {
         id: i.toString(),
-        position: [
-          Math.random() * 80 - 40,
-          1,
-          Math.random() * 80 - 40
-        ] as [number, number, number],
+        position: fixedPositions[i] as [number, number, number],
         type,
         mood: 'neutral' as const,
         dialogue: '',
@@ -467,26 +473,29 @@ function City() {
         lastPosition: [0, 0, 0] as [number, number, number],
         alertLevel: 0
       };
-    })
-  );
+    });
+  });
 
-  const [vehicles, setVehicles] = useState<Vehicle[]>(() =>
-    Array.from({ length: 15 }).map((_, i) => {
+  // Fixed vehicle positions to prevent flutter
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => {
+    const fixedVehiclePositions = [
+      [-18, 0.5, -18], [-8, 0.5, -22], [2, 0.5, -28], [12, 0.5, -18], [22, 0.5, -23],
+      [-23, 0.5, -8], [-13, 0.5, 2], [7, 0.5, -13], [17, 0.5, 2], [27, 0.5, -8],
+      [-28, 0.5, 7], [-18, 0.5, 12], [-8, 0.5, 17], [2, 0.5, 22], [12, 0.5, 27]
+    ];
+    
+    return Array.from({ length: 15 }).map((_, i) => {
       const types = ['sedan', 'sports', 'truck', 'police', 'ambulance'];
       return {
         id: `vehicle_${i}`,
-        position: [
-          Math.random() * 70 - 35,
-          0.5,
-          Math.random() * 70 - 35
-        ] as [number, number, number],
+        position: fixedVehiclePositions[i] as [number, number, number],
         type: types[Math.floor(Math.random() * types.length)] as Vehicle['type'],
         health: 100,
         speed: Math.random() * 50 + 30,
         occupied: false
       };
-    })
-  );
+    });
+  });
 
   const [corpses, setCorpses] = useState<Array<{
     id: string;
@@ -643,12 +652,26 @@ function City() {
       </Plane>
       
       {/* Buildings - more detailed and atmospheric */}
-      {Array.from({ length: 35 }).map((_, i) => {
-        const x = (Math.random() - 0.5) * 80;
-        const z = (Math.random() - 0.5) * 80;
-        const height = Math.random() * 15 + 5;
-        const width = Math.random() * 5 + 3;
-        const depth = Math.random() * 5 + 3;
+      {Array.from({ length: 25 }).map((_, i) => {
+        // Fixed building positions to prevent any movement
+        const buildingData = [
+          { x: -35, z: -35, h: 12, w: 4, d: 4 }, { x: -25, z: -35, h: 18, w: 6, d: 5 },
+          { x: -15, z: -35, h: 8, w: 3, d: 4 }, { x: 0, z: -35, h: 15, w: 5, d: 6 },
+          { x: 15, z: -35, h: 10, w: 4, d: 4 }, { x: 25, z: -35, h: 20, w: 7, d: 5 },
+          { x: 35, z: -35, h: 14, w: 5, d: 4 }, { x: -35, z: -20, h: 16, w: 5, d: 6 },
+          { x: -25, z: -15, h: 9, w: 4, d: 3 }, { x: -15, z: -10, h: 13, w: 6, d: 4 },
+          { x: 15, z: -10, h: 11, w: 4, d: 5 }, { x: 25, z: -15, h: 17, w: 6, d: 6 },
+          { x: 35, z: -20, h: 7, w: 3, d: 3 }, { x: -35, z: 10, h: 19, w: 7, d: 5 },
+          { x: -25, z: 15, h: 12, w: 5, d: 4 }, { x: -15, z: 20, h: 8, w: 3, d: 4 },
+          { x: 0, z: 25, h: 22, w: 8, d: 6 }, { x: 15, z: 20, h: 14, w: 5, d: 5 },
+          { x: 25, z: 15, h: 10, w: 4, d: 4 }, { x: 35, z: 10, h: 16, w: 6, d: 5 },
+          { x: -30, z: 30, h: 13, w: 5, d: 4 }, { x: -10, z: 35, h: 9, w: 4, d: 3 },
+          { x: 10, z: 35, h: 15, w: 6, d: 5 }, { x: 30, z: 30, h: 11, w: 4, d: 4 },
+          { x: 0, z: 0, h: 25, w: 10, d: 8 }
+        ];
+        
+        const building = buildingData[i] || { x: 0, z: 0, h: 10, w: 4, d: 4 };
+        const { x, z, h: height, w: width, d: depth } = building;
         
         return (
           <group key={`building-${i}`}>
@@ -716,9 +739,18 @@ function City() {
       })}
 
       {/* Street props */}
-      {Array.from({ length: 40 }).map((_, i) => {
-        const x = (Math.random() - 0.5) * 90;
-        const z = (Math.random() - 0.5) * 90;
+      {Array.from({ length: 30 }).map((_, i) => {
+        // Fixed prop positions
+        const propPositions = [
+          [-40, -40], [-30, -38], [-20, -42], [-10, -45], [0, -40],
+          [10, -45], [20, -42], [30, -38], [40, -40], [-42, -20],
+          [-38, -10], [-45, 0], [-40, 10], [-42, 20], [-38, 30],
+          [-40, 40], [42, -20], [38, -10], [45, 0], [40, 10],
+          [42, 20], [38, 30], [40, 40], [-20, 42], [-10, 45],
+          [0, 40], [10, 45], [20, 42], [30, 38], [40, 40]
+        ];
+        
+        const [x, z] = propPositions[i] || [0, 0];
         const propType = Math.random();
         
         if (propType < 0.3) {
@@ -817,13 +849,24 @@ function City() {
 function CameraController() {
   const { camera } = useThree();
   const gameStore = useGameStore();
+  const [targetPosition, setTargetPosition] = useState(new THREE.Vector3(15, 25, 15));
   
   useFrame(() => {
-    // Follow player smoothly
+    // Much more stable camera following
     const playerPos = gameStore.playerPosition || [0, 0, 0];
-    const targetPosition = new THREE.Vector3(playerPos[0] + 15, 25, playerPos[2] + 15);
-    camera.position.lerp(targetPosition, 0.05);
-    camera.lookAt(playerPos[0], 0, playerPos[2]);
+    const newTarget = new THREE.Vector3(playerPos[0] + 12, 22, playerPos[2] + 12);
+    
+    // Only update if player has moved significantly
+    if (targetPosition.distanceTo(newTarget) > 0.5) {
+      setTargetPosition(newTarget);
+    }
+    
+    // Smooth, stable camera movement
+    camera.position.lerp(targetPosition, 0.02);
+    
+    // Stable lookAt point
+    const lookAtPoint = new THREE.Vector3(playerPos[0], 0, playerPos[2]);
+    camera.lookAt(lookAtPoint);
   });
   
   return null;
@@ -1014,42 +1057,50 @@ const Game: React.FC = () => {
   return (
     <div className="w-full h-screen relative bg-gradient-to-b from-red-900/20 to-black">
       <Canvas 
-        camera={{ position: [15, 25, 15], fov: 70 }}
+        camera={{ position: [12, 22, 12], fov: 65 }}
         shadows
-        gl={{ antialias: true, alpha: false }}
+        gl={{ 
+          antialias: true, 
+          alpha: false, 
+          powerPreference: "high-performance",
+          stencil: false,
+          depth: true
+        }}
+        frameloop="demand"
       >
-        {/* Dramatic lighting setup */}
-        <ambientLight intensity={0.6} color="#553333" />
+        {/* Stable lighting setup - no flickering */}
+        <ambientLight intensity={0.8} color="#442222" />
         <directionalLight 
-          position={[10, 20, 10]} 
-          intensity={1.2} 
+          position={[20, 30, 20]} 
+          intensity={1.0} 
           color="#ffffff"
           castShadow
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
+          shadow-mapSize-width={1024}
+          shadow-mapSize-height={1024}
         />
         
-        {/* Multiple colored lights for atmosphere */}
-        <pointLight position={[0, 15, 0]} intensity={1.5} color="#ff4422" distance={60} />
-        <pointLight position={[-25, 8, -25]} intensity={1.0} color="#ff6644" distance={50} />
-        <pointLight position={[25, 8, 25]} intensity={1.0} color="#ff6644" distance={50} />
-        <pointLight position={[0, 5, -35]} intensity={0.8} color="#4466ff" distance={40} />
+        {/* Stable atmospheric lights */}
+        <pointLight position={[0, 20, 0]} intensity={0.8} color="#ff3322" distance={80} />
+        <pointLight position={[-30, 12, -30]} intensity={0.6} color="#ff4433" distance={60} />
+        <pointLight position={[30, 12, 30]} intensity={0.6} color="#ff4433" distance={60} />
         
-        {/* Heavy atmospheric fog */}
-        <fog attach="fog" args={['#331111', 35, 120]} />
+        {/* Stable fog - no movement */}
+        <fog attach="fog" args={['#221111', 40, 100]} />
         
         <Player />
         <City />
         <CameraController />
         <OrbitControls 
-          enablePan={true}
+          enablePan={false}
           enableZoom={true}
           enableRotate={true}
-          maxDistance={60}
-          minDistance={12}
-          maxPolarAngle={Math.PI / 2.2}
+          maxDistance={50}
+          minDistance={15}
+          maxPolarAngle={Math.PI / 2.5}
           enableDamping={true}
-          dampingFactor={0.05}
+          dampingFactor={0.08}
+          rotateSpeed={0.3}
+          zoomSpeed={0.5}
         />
       </Canvas>
       
