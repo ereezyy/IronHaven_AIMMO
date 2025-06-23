@@ -256,7 +256,8 @@ export class WorldGenerator {
       civilian: ["Just trying to get by.", "This used to be a nice neighborhood.", "Kids can't even play outside anymore."],
       dealer: ["Quiet around here, good for business.", "Family man's gotta eat.", "Keep it low-key."],
       police: ["Patrol's been doubled.", "Keeping the community safe.", "Report anything suspicious."]
-    };
+    }
+  };
 
     const biomeDialogues = dialogues[biome as keyof typeof dialogues];
     if (biomeDialogues && biomeDialogues[npcType as keyof typeof biomeDialogues]) {
