@@ -247,7 +247,6 @@ function Player() {
   const [currentVehicle, setCurrentVehicle] = useState<Vehicle | null>(null);
   const [rotation, setRotation] = useState(0);
   const [worldChunks, setWorldChunks] = useState<WorldChunk[]>([]);
-  const gameStore = useGameStore();
 
   const currentWeapon = gameStore.getCurrentWeapon();
   
