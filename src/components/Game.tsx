@@ -135,19 +135,6 @@ function NPC({ npc, onInteract, onKill, onDamage, playerPosition, currentWeapon 
         weapon={npc.weapon}
       />
       
-      {/* Glowing outline for interactive NPCs */}
-      {!npc.isDead && (
-        <mesh position={npc.position} scale={[3.5, 4, 3.5]}>
-          <cylinderGeometry args={[1, 1, 0.1, 8]} />
-          <meshBasicMaterial 
-            color={npc.type === 'police' ? '#0066ff' : npc.type === 'gangster' ? '#ff0066' : '#44ff44'} 
-            transparent 
-            opacity={0.2}
-            wireframe
-          />
-        </mesh>
-      )}
-      
       {/* Health bar for living NPCs */}
       {!npc.isDead && npc.health < npc.maxHealth && (
         <group position={[npc.position[0], npc.position[1] + 3.5, npc.position[2]]}>
