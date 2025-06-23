@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Box, Text, OrbitControls } from '@react-three/drei';
 import { useGameStore } from '../store/gameState';
-import { generateNPCResponse, analyzeThreatLevel, generateDynamicMission } from '../lib/ai';
+import { generateNPCResponse, analyzeThreatLevel } from '../lib/ai';
 import { worldGenerator, WorldChunk, Building, NPCData } from '../lib/worldGenerator';
 import SpriteCharacter from './SpriteCharacter';
 import { WeaponSystem, weapons, Weapon } from './WeaponSystem';
-import { CombatSystem, CombatEffect } from './CombatSystem';
+import EnhancedCombat, { CombatEffect } from './EnhancedCombat';
+import SmartNPC from './SmartNPC';
+import ImmersiveWorld from './ImmersiveWorld';
 import VehicleSystem from './VehicleSystem';
 import PoliceSystem from './PoliceSystem';
 import AudioSystem from './AudioSystem';
@@ -241,22 +243,10 @@ const Game: React.FC = () => {
     return worldChunks.flatMap(chunk => chunk.buildings);
   }, [worldChunks]);
 
-  // Memoize visible NPCs for performance
-  const visibleNPCs = useMemo(() => {
-    const nearbyNPCs: NPCData[] = [];
-    worldChunks.forEach(chunk => {
-      chunk.npcs.forEach(npc => {
-        const distance = Math.sqrt(
-          Math.pow(npc.position[0] - playerPosition[0], 2) +
-          Math.pow(npc.position[2] - playerPosition[2], 2)
-        );
-        if (distance < 40 && !npc.isDead) { // Only render nearby living NPCs
-          nearbyNPCs.push(npc);
-        }
-      });
-    });
-    return nearbyNPCs;
-  }, [worldChunks, playerPosition]);
+  // Get all NPCs for smart AI system
+  const allNPCs = useMemo(() => {
+    return worldChunks.flatMap(chunk => chunk.npcs);
+  }, [worldChunks]);
 
   // Update world chunks periodically, not every frame
   useEffect(() => {
@@ -280,7 +270,7 @@ const Game: React.FC = () => {
   useEffect(() => {
     const analyzeThreat = async () => {
       try {
-        const analysis = await analyzeThreatLevel(playerPosition, visibleNPCs);
+        const analysis = await analyzeThreatLevel(playerPosition, allNPCs);
         setThreatLevel(analysis.level);
       } catch (error) {
         console.error('Error analyzing threat:', error);
@@ -289,7 +279,7 @@ const Game: React.FC = () => {
 
     const interval = setInterval(analyzeThreat, 3000);
     return () => clearInterval(interval);
-  }, [playerPosition, visibleNPCs]);
+  }, [playerPosition, allNPCs]);
 
   const handleNPCClick = useCallback(async (npc: NPCData) => {
     try {
@@ -419,9 +409,14 @@ const Game: React.FC = () => {
         <WeatherSystem onWeatherUpdate={handleWeatherUpdate} />
 
         {/* Ground */}
-        <mesh position={[0, -0.5, 0]} receiveShadow>
-          <boxGeometry args={[1000, 1, 1000]} />
-          <meshStandardMaterial color="#1a1a1a" roughness={0.9} />
+        <mesh position={[0, -0.5, 0]} receiveShadow castShadow>
+          <boxGeometry args={[2000, 1, 2000]} />
+          <meshStandardMaterial 
+            color="#0a0a0a" 
+            roughness={0.95}
+            metalness={0.1}
+            normalScale={new THREE.Vector2(0.5, 0.5)}
+          />
         </mesh>
 
         {/* Render Buildings with LOD */}
@@ -446,15 +441,26 @@ const Game: React.FC = () => {
           onRotationChange={setRotation}
         />
 
-        {/* NPCs with distance culling */}
-        {visibleNPCs.map(npc => (
-          <OptimizedNPC
+        {/* Enhanced Smart NPCs */}
+        {allNPCs.slice(0, 15).map(npc => {
+          const distance = Math.sqrt(
+            Math.pow(npc.position[0] - playerPosition[0], 2) +
+            Math.pow(npc.position[2] - playerPosition[2], 2)
+          );
+          
+          if (distance > 50 || npc.isDead) return null;
+          
+          return (
+          <SmartNPC
             key={npc.id}
-            npc={npc}
+            id={npc.id}
+            position={npc.position}
+            type={npc.type}
             playerPosition={playerPosition}
-            onNPCClick={handleNPCClick}
+            onInteraction={handleNPCClick}
           />
-        ))}
+        );
+        })}
 
         {/* Vehicle System */}
         <VehicleSystem
@@ -469,8 +475,8 @@ const Game: React.FC = () => {
           onPoliceKilled={handlePoliceKilled}
         />
 
-        {/* Combat Effects */}
-        <CombatSystem
+        {/* Enhanced Combat Effects */}
+        <EnhancedCombat
           effects={combatEffects}
           onEffectComplete={handleCombatEffectComplete}
         />
@@ -479,6 +485,13 @@ const Game: React.FC = () => {
         <ParticleSystem
           effects={particleEffects}
           onEffectComplete={handleParticleEffectComplete}
+        />
+
+        {/* Immersive World Details */}
+        <ImmersiveWorld 
+          playerPosition={playerPosition}
+          timeOfDay={dayNightData.currentTime}
+          weather={currentWeather}
         />
 
         {/* Street lights for atmosphere */}
@@ -586,7 +599,13 @@ const Game: React.FC = () => {
       {/* Crime System */}
       <CrimeSystem
         playerPosition={playerPosition}
-        nearbyNPCs={visibleNPCs}
+        nearbyNPCs={allNPCs.filter(npc => {
+          const distance = Math.sqrt(
+            Math.pow(npc.position[0] - playerPosition[0], 2) +
+            Math.pow(npc.position[2] - playerPosition[2], 2)
+          );
+          return distance < 25;
+        })}
         onCrimeCommitted={handleCrimeCommitted}
       />
 

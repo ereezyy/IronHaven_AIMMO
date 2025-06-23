@@ -48,3 +48,74 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(239, 68, 68, 0.8);
 }
+
+/* Enhanced UI Animations */
+@keyframes glow {
+  0%, 100% { text-shadow: 0 0 5px #ff0000; }
+  50% { text-shadow: 0 0 20px #ff0000, 0 0 30px #ff0000; }
+}
+
+@keyframes danger-pulse {
+  0%, 100% { background-color: rgba(239, 68, 68, 0.1); }
+  50% { background-color: rgba(239, 68, 68, 0.3); }
+}
+
+@keyframes screen-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.animate-danger-pulse {
+  animation: danger-pulse 1s ease-in-out infinite;
+}
+
+.animate-screen-shake {
+  animation: screen-shake 0.1s ease-in-out 3;
+}
+
+/* Premium button styles */
+.btn-premium {
+  background: linear-gradient(45deg, #dc2626, #991b1b);
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+  border: 1px solid #dc2626;
+  transition: all 0.3s ease;
+}
+
+.btn-premium:hover {
+  background: linear-gradient(45deg, #991b1b, #7f1d1d);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.6);
+  transform: translateY(-2px);
+}
+
+/* Glass morphism effect */
+.glass-panel {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Neon text effect */
+.neon-text {
+  color: #ff0000;
+  text-shadow: 
+    0 0 5px #ff0000,
+    0 0 10px #ff0000,
+    0 0 15px #ff0000,
+    0 0 20px #ff0000;
+}
+
+/* Loading spinner for heavy operations */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}

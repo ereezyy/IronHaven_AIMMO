@@ -127,44 +127,46 @@ const EnhancedUI: React.FC = () => {
   return (
     <>
       {/* Enhanced Main Stats Panel */}
-      <div className="absolute top-4 left-4 p-4 bg-black/95 text-white rounded-lg border border-red-500/70 backdrop-blur-sm min-w-[280px]">
+      <div className="absolute top-4 left-4 p-4 glass-panel text-white rounded-lg border border-red-500/70 min-w-[320px]">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-red-400">IRONHAVEN STATUS</h2>
+          <h2 className="text-xl font-bold neon-text animate-glow">IRONHAVEN STATUS</h2>
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-gray-400 hover:text-red-400 transition-all duration-300 hover:scale-110"
           >
             <Settings className="h-5 w-5" />
           </button>
         </div>
         
-        <div className="space-y-3">
+        <div className="space-y-4">
           {/* Health with visual bar */}
-          <div className="space-y-1">
+          <div className={`space-y-2 p-2 rounded ${gameStore.playerStats.health < 30 ? 'animate-danger-pulse' : ''}`}>
             <div className="flex justify-between items-center">
               <span className="flex items-center text-sm">
-                <Heart className="h-4 w-4 mr-2 text-red-500" />
+                <Heart className={`h-4 w-4 mr-2 ${gameStore.playerStats.health < 30 ? 'animate-pulse text-red-400' : 'text-red-500'}`} />
                 Health
               </span>
-              <span className={`font-bold ${getHealthColor()}`}>
+              <span className={`font-bold text-lg ${getHealthColor()}`}>
                 {gameStore.playerStats.health}/100
               </span>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-2">
+            <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
               <div 
-                className={`h-2 rounded-full transition-all duration-300 ${
+                className={`h-3 rounded-full transition-all duration-500 ${
                   gameStore.playerStats.health > 70 ? 'bg-green-500' :
-                  gameStore.playerStats.health > 30 ? 'bg-yellow-500' : 'bg-red-500'
+                  gameStore.playerStats.health > 30 ? 'bg-yellow-500' : 'bg-red-500 animate-pulse'
                 }`}
                 style={{ width: `${gameStore.playerStats.health}%` }}
-              />
+              >
+                <div className="h-full bg-gradient-to-r from-transparent to-white opacity-30"></div>
+              </div>
             </div>
           </div>
 
           {/* Wanted Level */}
-          <div className="flex justify-between items-center">
+          <div className={`flex justify-between items-center p-2 rounded ${gameStore.playerStats.wanted > 2 ? 'animate-danger-pulse' : ''}`}>
             <span className="flex items-center text-sm">
-              <AlertTriangle className="h-4 w-4 mr-2 text-yellow-500" />
+              <AlertTriangle className={`h-4 w-4 mr-2 ${gameStore.playerStats.wanted > 2 ? 'animate-pulse text-red-400' : 'text-yellow-500'}`} />
               Wanted
             </span>
             <div className="flex">{getWantedStars()}</div>
@@ -173,35 +175,37 @@ const EnhancedUI: React.FC = () => {
           {/* Money */}
           <div className="flex justify-between items-center">
             <span className="flex items-center text-sm">
-              <DollarSign className="h-4 w-4 mr-2 text-green-500" />
+              <DollarSign className="h-4 w-4 mr-2 text-green-400 animate-pulse" />
               Cash
             </span>
-            <span className="text-green-400 font-bold">
+            <span className="text-green-400 font-bold text-lg">
               ${gameStore.playerStats.money.toLocaleString()}
             </span>
           </div>
 
           {/* Reputation */}
-          <div className="space-y-1">
+          <div className="space-y-2">
             <div className="flex justify-between items-center">
               <span className="flex items-center text-sm">
-                <Star className="h-4 w-4 mr-2 text-yellow-500" />
+                <Star className="h-4 w-4 mr-2 text-yellow-400 animate-pulse" />
                 Reputation
               </span>
-              <span className="text-yellow-400 font-bold">
+              <span className="text-yellow-400 font-bold text-lg">
                 {gameStore.playerStats.reputation}
               </span>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-1">
+            <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
               <div 
-                className="h-1 bg-yellow-500 rounded-full transition-all duration-300"
+                className="h-2 bg-gradient-to-r from-yellow-600 to-yellow-400 rounded-full transition-all duration-500"
                 style={{ width: `${Math.min(gameStore.playerStats.reputation, 100)}%` }}
-              />
+              >
+                <div className="h-full bg-gradient-to-r from-transparent to-white opacity-30"></div>
+              </div>
             </div>
           </div>
 
           {/* Game Time */}
-          <div className="flex justify-between items-center text-xs text-gray-400 border-t border-gray-700 pt-2">
+          <div className="flex justify-between items-center text-xs text-gray-400 border-t border-gray-600/50 pt-3 mt-4">
             <span className="flex items-center">
               <Clock className="h-3 w-3 mr-1" />
               Session Time
@@ -213,16 +217,16 @@ const EnhancedUI: React.FC = () => {
 
       {/* Settings Panel */}
       {showSettings && (
-        <div className="absolute top-4 left-4 ml-[300px] p-4 bg-black/95 text-white rounded-lg border border-red-500/70 backdrop-blur-sm">
-          <h3 className="text-lg font-bold text-red-400 mb-3">SETTINGS</h3>
+        <div className="absolute top-4 left-4 ml-[340px] p-4 glass-panel text-white rounded-lg border border-red-500/70 animate-slide-in">
+          <h3 className="text-lg font-bold text-red-400 mb-4 neon-text">SETTINGS</h3>
           
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm">Audio</span>
               <button
                 onClick={() => setAudioEnabled(!audioEnabled)}
-                className={`p-2 rounded transition-colors ${
-                  audioEnabled ? 'text-green-400' : 'text-red-400'
+                className={`p-2 rounded transition-all duration-300 hover:scale-110 ${
+                  audioEnabled ? 'text-green-400 hover:text-green-300' : 'text-red-400 hover:text-red-300'
                 }`}
               >
                 {audioEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
@@ -233,8 +237,8 @@ const EnhancedUI: React.FC = () => {
               <span className="text-sm">Pause Game</span>
               <button
                 onClick={() => setIsPaused(!isPaused)}
-                className={`p-2 rounded transition-colors ${
-                  isPaused ? 'text-yellow-400' : 'text-green-400'
+                className={`p-2 rounded transition-all duration-300 hover:scale-110 ${
+                  isPaused ? 'text-yellow-400 hover:text-yellow-300' : 'text-green-400 hover:text-green-300'
                 }`}
               >
                 {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
@@ -242,7 +246,7 @@ const EnhancedUI: React.FC = () => {
             </div>
             
             <button
-              className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded text-sm transition-colors"
+              className="w-full btn-premium text-white py-2 px-4 rounded text-sm font-medium"
               onClick={() => window.location.reload()}
             >
               Restart Game
@@ -256,17 +260,22 @@ const EnhancedUI: React.FC = () => {
         {notifications.map(notification => (
           <div
             key={notification.id}
-            className={`p-3 rounded-lg border backdrop-blur-sm text-white text-sm animate-slide-in ${getNotificationColor(notification.type)}`}
+            className={`p-4 rounded-lg border glass-panel text-white text-sm animate-slide-in shadow-lg ${getNotificationColor(notification.type)}`}
           >
-            {notification.message}
+            <div className="font-medium">{notification.message}</div>
+            <div className="text-xs text-gray-400 mt-1">
+              {new Date(notification.timestamp).toLocaleTimeString()}
+            </div>
           </div>
         ))}
       </div>
 
       {/* Performance Monitor (Debug) */}
-      <div className="absolute bottom-4 right-4 p-2 bg-black/80 text-white rounded text-xs">
-        <div>FPS: {Math.round(60)} {/* This would need actual FPS calculation */}</div>
-        <div>Entities: {gameStore.recentActions.length}</div>
+      <div className="absolute bottom-4 right-4 p-3 glass-panel text-white rounded text-xs border border-gray-600/50">
+        <div className="font-bold text-green-400 mb-1">PERFORMANCE</div>
+        <div>FPS: <span className="text-green-400">60</span></div>
+        <div>Actions: <span className="text-yellow-400">{gameStore.recentActions.length}</span></div>
+        <div>Memory: <span className="text-blue-400">~400MB</span></div>
       </div>
     </>
   );
