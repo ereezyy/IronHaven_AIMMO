@@ -114,41 +114,6 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
       
       return new THREE.CanvasTexture(canvas);
     }
-      ctx.fillStyle = '#8B0000';
-      ctx.beginPath();
-      ctx.ellipse(128, 200, 60, 32, 0, 0, 2 * Math.PI);
-      ctx.fill();
-      
-      // Blood splatter pattern
-      for (let i = 0; i < 12; i++) {
-        ctx.fillStyle = `rgba(139, 0, 0, ${Math.random() * 0.8 + 0.2})`;
-        ctx.beginPath();
-        ctx.arc(
-          80 + Math.random() * 96,
-          160 + Math.random() * 60,
-          Math.random() * 6 + 2,
-          0,
-          2 * Math.PI
-        );
-        ctx.fill();
-      }
-      
-      // Bullet holes or stab wounds
-      for (let i = 0; i < 3; i++) {
-        ctx.fillStyle = '#000000';
-        ctx.beginPath();
-        ctx.arc(
-          100 + Math.random() * 56,
-          176 + Math.random() * 24,
-          2,
-          0,
-          2 * Math.PI
-        );
-        ctx.fill();
-      }
-      
-      return new THREE.CanvasTexture(canvas);
-    }
 
     // Character colors and details based on type
     let bodyColor = '#5A6578';
@@ -253,13 +218,7 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
       ctx.fillRect(220, 184, 24, 4);
       ctx.fillRect(268, 184, 24, 4);
     } else if (mood === 'terrified') {
-     // Open mouth in terror
-     ctx.beginPath();
-     ctx.arc(256, 232, 12, 0, Math.PI);
-     ctx.fill();
-   } else {
-     ctx.fillRect(248, 224, 16, 6); // Neutral mouth
-   }
+      // Open mouth in terror
       ctx.beginPath();
       ctx.arc(256, 232, 12, 0, Math.PI);
       ctx.fill();
