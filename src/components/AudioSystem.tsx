@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useGameStore } from '../store/gameState';
 
 interface AudioSystemProps {
@@ -227,49 +227,6 @@ const AudioSystem: React.FC<AudioSystemProps> = ({ enabled = true }) => {
   }
 
   return null;
-};
-
-export default AudioSystem;
-  };
-
-  // Listen for game events and play sounds
-  useEffect(() => {
-    const recentAction = gameStore.recentActions[gameStore.recentActions.length - 1];
-    if (!recentAction) return;
-
-    if (recentAction.includes('fired_')) {
-      playSound('gunshot', 0.8, Math.random() * 0.4 + 0.8);
-    }
-    
-    if (recentAction.includes('player_moved')) {
-      if (Math.random() > 0.95) { // Occasional footsteps
-        playSound('footstep', 0.3, Math.random() * 0.4 + 0.8);
-      }
-    }
-    
-    if (recentAction.includes('stole_')) {
-      playSound('engine', 0.6);
-    }
-    
-    if (gameStore.playerStats.wanted > 2) {
-      if (Math.random() > 0.98) { // Occasional siren when wanted
-        playSound('siren', 0.4);
-      }
-    }
-  }, [gameStore.recentActions, gameStore.playerStats.wanted]);
-
-  // Ambient city sounds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (Math.random() > 0.9) {
-        playSound('ambient', 0.1, Math.random() * 0.6 + 0.7);
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  return null; // This component handles audio, no visual output
 };
 
 export default AudioSystem;
