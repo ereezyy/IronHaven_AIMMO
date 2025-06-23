@@ -1,30 +1,70 @@
 import React, { useRef, useEffect } from 'react';
 import { useGameStore } from '../store/gameState';
 
-interface AudioSystemProps {}
+interface AudioSystemProps {
+  enabled?: boolean;
+}
 
-const AudioSystem: React.FC<AudioSystemProps> = () => {
+const AudioSystem: React.FC<AudioSystemProps> = ({ enabled = true }) => {
   const gameStore = useGameStore();
   const audioContextRef = useRef<AudioContext | null>(null);
   const soundsRef = useRef<{ [key: string]: AudioBuffer }>({});
   const backgroundMusicRef = useRef<AudioBufferSourceNode | null>(null);
+  const [audioInitialized, setAudioInitialized] = useState(false);
+  const [userInteracted, setUserInteracted] = useState(false);
 
-  // Initialize Web Audio API
+  // Initialize Web Audio API after user interaction
   useEffect(() => {
-    try {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      generateSounds();
-      playBackgroundMusic();
-    } catch (error) {
-      console.log('Web Audio API not supported');
+    const initAudio = async () => {
+      if (!enabled || !userInteracted) return;
+      
+      try {
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioContext) {
+          console.warn('Web Audio API not supported');
+          return;
+        }
+        
+        audioContextRef.current = new AudioContext();
+        
+        // Resume context if suspended
+        if (audioContextRef.current.state === 'suspended') {
+          await audioContextRef.current.resume();
+        }
+        
+        generateSounds();
+        setAudioInitialized(true);
+        
+        // Only play background music if context is running
+        if (audioContextRef.current.state === 'running') {
+          playBackgroundMusic();
+        }
+      } catch (error) {
+        console.warn('Audio initialization failed:', error);
+      }
+    };
+
+    initAudio();
+  }, [enabled, userInteracted]);
+  
+  // Handle user interaction to enable audio
+  useEffect(() => {
+    const handleInteraction = () => {
+      setUserInteracted(true);
+    };
+    
+    if (!userInteracted) {
+      document.addEventListener('click', handleInteraction);
+      document.addEventListener('keydown', handleInteraction);
+      document.addEventListener('touchstart', handleInteraction);
     }
 
     return () => {
-      if (backgroundMusicRef.current) {
-        backgroundMusicRef.current.stop();
-      }
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('keydown', handleInteraction);
+      document.removeEventListener('touchstart', handleInteraction);
     };
-  }, []);
+  }, [userInteracted]);
 
   // Generate procedural sounds using Web Audio API
   const generateSounds = () => {
@@ -79,52 +119,117 @@ const AudioSystem: React.FC<AudioSystemProps> = () => {
   };
 
   const playSound = (soundName: string, volume: number = 1, pitch: number = 1) => {
-    if (!audioContextRef.current || !soundsRef.current[soundName]) return;
-
-    const ctx = audioContextRef.current;
-    const source = ctx.createBufferSource();
-    const gainNode = ctx.createGain();
+    if (!audioInitialized || !audioContextRef.current || !soundsRef.current[soundName] || !enabled) return;
     
-    source.buffer = soundsRef.current[soundName];
-    source.playbackRate.value = pitch;
-    gainNode.gain.value = volume;
-    
-    source.connect(gainNode);
-    gainNode.connect(ctx.destination);
-    
-    source.start();
+    try {
+      const ctx = audioContextRef.current;
+      
+      // Check if context is suspended
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+        return;
+      }
+      
+      const source = ctx.createBufferSource();
+      const gainNode = ctx.createGain();
+      
+      source.buffer = soundsRef.current[soundName];
+      source.playbackRate.value = pitch;
+      gainNode.gain.value = Math.min(volume * 0.3, 0.3); // Reduce volume significantly
+      
+      source.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      source.start();
+      
+      // Clean up after sound finishes
+      source.onended = () => {
+        source.disconnect();
+        gainNode.disconnect();
+      };
+    } catch (error) {
+      console.warn('Error playing sound:', error);
+    }
   };
 
   const playBackgroundMusic = () => {
-    if (!audioContextRef.current) return;
+    if (!audioInitialized || !audioContextRef.current || !enabled) return;
+    
+    // Simplified background music - just a low drone
+    try {
+      const ctx = audioContextRef.current;
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      oscillator.type = 'sine';
+      oscillator.frequency.value = 60; // Low drone
+      gainNode.gain.value = 0.02; // Very quiet
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      oscillator.start();
+      backgroundMusicRef.current = oscillator as any;
+    } catch (error) {
+      console.warn('Error starting background music:', error);
+    }
+  };
 
-    const ctx = audioContextRef.current;
-    const oscillator1 = ctx.createOscillator();
-    const oscillator2 = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-    
-    oscillator1.type = 'sawtooth';
-    oscillator1.frequency.value = 55; // Low A
-    oscillator2.type = 'sine';
-    oscillator2.frequency.value = 110; // Higher A
-    
-    gainNode.gain.value = 0.05; // Very low volume
-    
-    oscillator1.connect(gainNode);
-    oscillator2.connect(gainNode);
-    gainNode.connect(ctx.destination);
-    
-    oscillator1.start();
-    oscillator2.start();
-    
-    // Create a dark, atmospheric loop
-    setInterval(() => {
-      if (oscillator1.frequency && oscillator2.frequency) {
-        const variation = Math.random() * 10 - 5;
-        oscillator1.frequency.value = 55 + variation;
-        oscillator2.frequency.value = 110 + variation * 2;
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (backgroundMusicRef.current) {
+        try {
+          (backgroundMusicRef.current as any).stop();
+        } catch (error) {
+          // Ignore cleanup errors
+        }
       }
-    }, 2000);
+      if (audioContextRef.current) {
+        try {
+          audioContextRef.current.close();
+        } catch (error) {
+          // Ignore cleanup errors
+        }
+      }
+    };
+  }, []);
+
+  // Listen for game events and play sounds (with reduced frequency)
+  useEffect(() => {
+    if (!audioInitialized || !enabled) return;
+    
+    const recentAction = gameStore.recentActions[gameStore.recentActions.length - 1];
+    if (!recentAction) return;
+
+    // Reduce sound frequency to avoid spam
+    if (Math.random() > 0.7) return;
+
+    if (recentAction.includes('fired_') || recentAction.includes('killed_')) {
+      playSound('gunshot', 0.3, Math.random() * 0.4 + 0.8);
+    }
+    
+    if (recentAction.includes('stole_')) {
+      playSound('engine', 0.2);
+    }
+  }, [gameStore.recentActions, audioInitialized, enabled]);
+
+  // Show audio status if not initialized
+  if (!userInteracted && enabled) {
+    return (
+      <div className="absolute top-72 left-4 p-3 bg-yellow-600/90 text-white rounded-lg border border-yellow-500/70 backdrop-blur-sm text-sm">
+        <div className="flex items-center">
+          <span className="mr-2">🔊</span>
+          <span>Click anywhere to enable audio</span>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+export default AudioSystem;
   };
 
   // Listen for game events and play sounds

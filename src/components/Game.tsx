@@ -482,38 +482,38 @@ const Game: React.FC = () => {
         {/* Weather System */}
         <WeatherSystem onWeatherUpdate={handleWeatherUpdate} />
         
-        {/* Atmospheric lighting for cyberpunk feel */}
-        <ambientLight intensity={dayNightData.isNight ? 0.1 : 0.3} color={dayNightData.isNight ? "#0088ff" : "#ffffff"} />
+        {/* Fixed lighting system */}
+        <ambientLight intensity={0.4} color="#ffffff" />
         <directionalLight 
-          position={[10, 10, 10]} 
-          intensity={dayNightData.isNight ? 0.2 : 0.6} 
-          color={dayNightData.isNight ? "#ff0044" : "#ffffff"}
+          position={[50, 50, 50]} 
+          intensity={0.8} 
+          color="#ffffff"
           castShadow
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+          shadow-camera-far={200}
+          shadow-camera-left={-50}
+          shadow-camera-right={50}
+          shadow-camera-top={50}
+          shadow-camera-bottom={-50}
         />
+        
+        {/* Additional point lights for better visibility */}
+        <pointLight position={[20, 20, 20]} intensity={0.5} color="#ffffff" distance={100} />
+        <pointLight position={[-20, 20, 20]} intensity={0.5} color="#ffffff" distance={100} />
+        <pointLight position={[20, 20, -20]} intensity={0.5} color="#ffffff" distance={100} />
+        <pointLight position={[-20, 20, -20]} intensity={0.5} color="#ffffff" distance={100} />
 
         {/* Ground */}
         <mesh position={[0, -0.5, 0]} receiveShadow>
-          <boxGeometry args={[5000, 1, 5000]} />
+          <boxGeometry args={[1000, 1, 1000]} />
           <meshStandardMaterial 
-            color={dayNightData.isNight ? "#050505" : "#0a0a0a"} 
-            roughness={0.9}
+            color="#1a1a1a" 
+            roughness={0.8}
             metalness={0.1}
           />
         </mesh>
         
-        {/* Cyberpunk city glow effect */}
-        {dayNightData.isNight && (
-          <mesh position={[0, 5, 0]}>
-            <sphereGeometry args={[100, 16, 16]} />
-            <meshBasicMaterial 
-              color="#ff0044" 
-              transparent 
-              opacity={0.02}
-              side={THREE.BackSide}
-            />
-          </mesh>
-        )}
-
         {/* Render Buildings with LOD */}
         {allBuildings.map((building, index) => {
           const distance = Math.sqrt(
