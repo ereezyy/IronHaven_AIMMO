@@ -250,14 +250,13 @@ export class WorldGenerator {
         gangster: ["Good place to disappear.", "Nobody hears screaming here.", "Business is business."],
         hitman: ["...", "You didn't see me.", "This conversation never happened."],
         civilian: ["I mind my own business.", "Don't see nothing, don't say nothing.", "Just here to work."]
+      },
+      residential: {
+        civilian: ["Just trying to get by.", "This used to be a nice neighborhood.", "Kids can't even play outside anymore."],
+        dealer: ["Quiet around here, good for business.", "Family man's gotta eat.", "Keep it low-key."],
+        police: ["Patrol's been doubled.", "Keeping the community safe.", "Report anything suspicious."]
       }
-    },
-    residential: {
-      civilian: ["Just trying to get by.", "This used to be a nice neighborhood.", "Kids can't even play outside anymore."],
-      dealer: ["Quiet around here, good for business.", "Family man's gotta eat.", "Keep it low-key."],
-      police: ["Patrol's been doubled.", "Keeping the community safe.", "Report anything suspicious."]
-    }
-  };
+    };
 
     const biomeDialogues = dialogues[biome as keyof typeof dialogues];
     if (biomeDialogues && biomeDialogues[npcType as keyof typeof biomeDialogues]) {
