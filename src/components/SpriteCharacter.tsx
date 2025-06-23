@@ -333,27 +333,27 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
       
       // Floating animation for living characters
       if (type !== 'corpse') {
-        spriteRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.08;
+        spriteRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 3) * 0.06;
         
         // Breathing animation
-        const breathe = 1 + Math.sin(state.clock.elapsedTime * 4) * 0.02;
+        const breathe = 1 + Math.sin(state.clock.elapsedTime * 6) * 0.03;
         spriteRef.current.scale.y = scale * 3 * breathe;
       }
       
       // Walking animation
       if (isWalking && type !== 'corpse') {
-        const walkCycle = Math.sin(state.clock.elapsedTime * 8);
-        spriteRef.current.scale.x = scale * 3 * (1 + walkCycle * 0.1);
+        const walkCycle = Math.sin(state.clock.elapsedTime * 12);
+        spriteRef.current.scale.x = scale * 3 * (1 + walkCycle * 0.08);
       }
       
       // Mood-based animations
       if (mood === 'terrified' && type !== 'corpse') {
-        const shake = Math.sin(state.clock.elapsedTime * 20) * 0.1;
+        const shake = Math.sin(state.clock.elapsedTime * 25) * 0.08;
         spriteRef.current.position.x = position[0] + shake;
       }
       
       if (mood === 'aggressive' && type !== 'corpse') {
-        const aggressive = Math.sin(state.clock.elapsedTime * 6) * 0.15;
+        const aggressive = Math.sin(state.clock.elapsedTime * 8) * 0.12;
         spriteRef.current.scale.setScalar(scale * 3 * (1 + aggressive));
       }
     }

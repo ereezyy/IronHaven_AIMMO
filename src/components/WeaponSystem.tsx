@@ -129,19 +129,21 @@ const WeaponSystem: React.FC = () => {
       <div className="space-y-2 mb-4">
         <div className="flex justify-between items-center">
           <span className="text-gray-400">Current:</span>
-          <span className="text-white font-bold text-sm">{currentWeapon?.sprite || '👊'} {currentWeapon?.name || 'Bare Hands'}</span>
+          <span className="text-white font-bold text-sm animate-pulse">{currentWeapon?.sprite || '👊'} {currentWeapon?.name || 'Bare Hands'}</span>
         </div>
         
         {currentWeapon?.ammo !== -1 && (
           <div className="flex justify-between items-center">
             <span className="text-gray-400">Ammo:</span>
-            <span className="text-yellow-400 font-bold text-sm">{currentWeapon?.ammo || 0}/{currentWeapon?.maxAmmo || 0}</span>
+            <span className={`font-bold text-sm transition-colors duration-300 ${
+              (currentWeapon?.ammo || 0) < 3 ? 'text-red-400 animate-pulse' : 'text-yellow-400'
+            }`}>{currentWeapon?.ammo || 0}/{currentWeapon?.maxAmmo || 0}</span>
           </div>
         )}
         
         <div className="flex justify-between items-center">
           <span className="text-gray-400">Brutality:</span>
-          <span className="text-red-500 font-bold text-sm">{'💀'.repeat(Math.floor((currentWeapon?.brutality || 0) / 2))}</span>
+          <span className="text-red-500 font-bold text-sm animate-bounce">{'💀'.repeat(Math.floor((currentWeapon?.brutality || 0) / 2))}</span>
         </div>
       </div>
 
@@ -150,20 +152,20 @@ const WeaponSystem: React.FC = () => {
           <button
             key={weapon.id}
             onClick={() => gameStore.setCurrentWeaponId(weapon.id)}
-            className={`p-1 rounded text-xs transition-colors ${
+            className={`p-1 rounded text-xs transition-all duration-200 transform hover:scale-105 ${
               currentWeapon?.id === weapon.id
-                ? 'bg-red-600 text-white'
+                ? 'bg-red-600 text-white shadow-lg shadow-red-500/50'
                 : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
             }`}
           >
-            <div className="text-sm mb-1">{weapon.sprite}</div>
+            <div className="text-sm mb-1 animate-pulse">{weapon.sprite}</div>
             <div className="font-medium text-xs">{weapon.name.split(' ')[0]}</div>
           </button>
         ))}
       </div>
       
       <div className="mt-3 text-xs text-gray-400">
-        <div>Keys 1-6: Quick select | Mouse: Attack</div>
+        <div className="animate-fade-in">🎯 Keys 1-6: Quick select | 🖱️ Mouse: Attack</div>
       </div>
     </div>
   );

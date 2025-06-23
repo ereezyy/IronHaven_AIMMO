@@ -247,6 +247,7 @@ function Player() {
   const gameStore = useGameStore();
   const [position, setPosition] = useState<[number, number, number]>([0, 1, 0]);
   const [velocity, setVelocity] = useState<[number, number, number]>([0, 0, 0]);
+  const [targetVelocity, setTargetVelocity] = useState<[number, number, number]>([0, 0, 0]);
   const [keys, setKeys] = useState<{[key: string]: boolean}>({});
   const [bloodLevel, setBloodLevel] = useState(0);
   const [isMoving, setIsMoving] = useState(false);
@@ -344,21 +345,29 @@ function Player() {
 
   useFrame((state, delta) => {
     // Movement speed
-    const baseSpeed = isInVehicle ? 25 : 15;
-    const speed = keys.sprint ? baseSpeed * 1.8 : baseSpeed;
-    let newVelocity: [number, number, number] = [0, 0, 0];
+    const baseSpeed = isInVehicle ? 30 : 18;
+    const speed = keys.sprint ? baseSpeed * 2.0 : baseSpeed;
+    let newTargetVelocity: [number, number, number] = [0, 0, 0];
 
     // WASD movement
-    if (keys['w']) newVelocity[2] -= speed;
-    if (keys['s']) newVelocity[2] += speed;
-    if (keys['a']) newVelocity[0] -= speed;
-    if (keys['d']) newVelocity[0] += speed;
+    if (keys['w']) newTargetVelocity[2] -= speed;
+    if (keys['s']) newTargetVelocity[2] += speed;
+    if (keys['a']) newTargetVelocity[0] -= speed;
+    if (keys['d']) newTargetVelocity[0] += speed;
+
+    // Smooth acceleration/deceleration
+    const acceleration = 8;
+    const smoothVelocity: [number, number, number] = [
+      velocity[0] + (newTargetVelocity[0] - velocity[0]) * acceleration * delta,
+      velocity[1],
+      velocity[2] + (newTargetVelocity[2] - velocity[2]) * acceleration * delta
+    ];
 
     // Apply movement
     const newPosition: [number, number, number] = [
-      position[0] + newVelocity[0] * delta,
+      position[0] + smoothVelocity[0] * delta,
       position[1],
-      position[2] + newVelocity[2] * delta
+      position[2] + smoothVelocity[2] * delta
     ];
 
     // Boundary constraints
@@ -366,8 +375,9 @@ function Player() {
     newPosition[2] = Math.max(-45, Math.min(45, newPosition[2]));
 
     setPosition(newPosition);
-    setVelocity(newVelocity);
-    setIsMoving(newVelocity[0] !== 0 || newVelocity[2] !== 0);
+    setVelocity(smoothVelocity);
+    setTargetVelocity(newTargetVelocity);
+    setIsMoving(Math.abs(smoothVelocity[0]) > 0.1 || Math.abs(smoothVelocity[2]) > 0.1);
 
     if (isMoving) {
       gameStore.addAction('player_moved');
@@ -400,7 +410,7 @@ function Player() {
         position={position}
         type="player"
         bloodLevel={bloodLevel}
-        scale={1.2}
+        scale={1.4}
         weapon={currentWeapon.id}
       />
       
@@ -560,8 +570,8 @@ function City() {
       >
         <meshStandardMaterial 
           color="#2a2a2a" 
-          roughness={0.9}
-          metalness={0.1}
+          roughness={0.8}
+          metalness={0.2}
         />
       </Plane>
       
@@ -611,7 +621,7 @@ function City() {
         <meshBasicMaterial 
           color="#444444" 
           transparent 
-          opacity={0.4}
+          opacity={0.6}
           wireframe
         />
       </Plane>
@@ -632,8 +642,8 @@ function City() {
             >
               <meshStandardMaterial 
                 color={`hsl(${Math.random() * 30}, 15%, ${Math.random() * 12 + 8}%)`}
-                roughness={0.9}
-                metalness={0.1}
+                roughness={0.7}
+                metalness={0.3}
               />
             </Box>
             
@@ -652,10 +662,12 @@ function City() {
                   >
                     <meshStandardMaterial 
                       color={Math.random() > 0.7 ? "#ffff88" : "#000000"} 
+                      roughness={0.1}
+                      metalness={0.8}
                       transparent
-                      opacity={0.8}
+                      opacity={0.9}
                       emissive={Math.random() > 0.7 ? "#ffff44" : "#000000"}
-                      emissiveIntensity={0.3}
+                      emissiveIntensity={0.5}
                     />
                   </Box>
                 ))}
@@ -668,7 +680,11 @@ function City() {
                 position={[x, height + 0.5, z]}
                 scale={[1, 1, 1]}
               >
-                <meshStandardMaterial color="#333333" />
+                <meshStandardMaterial 
+                  color="#333333" 
+                  roughness={0.8}
+                  metalness={0.4}
+                />
               </Box>
             )}
             
@@ -680,8 +696,10 @@ function City() {
               >
                 <meshStandardMaterial 
                   color="#ff0066" 
+                  roughness={0.1}
+                  metalness={0.9}
                   emissive="#ff0066"
-                  emissiveIntensity={1.5}
+                  emissiveIntensity={2.0}
                 />
               </Box>
             )}
@@ -703,7 +721,11 @@ function City() {
               position={[x, 0.5, z]}
               scale={[0.4, 1, 0.4]}
             >
-              <meshStandardMaterial color="#2d2d2d" />
+              <meshStandardMaterial 
+                color="#2d2d2d" 
+                roughness={0.9}
+                metalness={0.1}
+              />
             </Cylinder>
           );
         } else if (propType < 0.6) {
@@ -711,7 +733,10 @@ function City() {
           return (
             <group key={`prop-${i}`}>
               <Cylinder position={[x, 2.5, z]} scale={[0.1, 5, 0.1]}>
-                <meshStandardMaterial color="#444444" />
+                <meshStandardMaterial 
+                  color="#444444" 
+                  roughness={0.8}
+                />
               </Cylinder>
               <Sphere position={[x, 4.5, z]} scale={[0.3, 0.3, 0.3]}>
                 <meshStandardMaterial 
@@ -790,12 +815,17 @@ function City() {
 
 function CameraController() {
   const { camera } = useThree();
+  const [targetPosition, setTargetPosition] = useState(new THREE.Vector3(15, 18, 15));
   
   useFrame(() => {
-    // Dynamic camera following with cinematic angles
-    const targetPosition = new THREE.Vector3(15, 18, 15);
-    camera.position.lerp(targetPosition, 0.03);
-    camera.lookAt(0, 0, 0);
+    // Smooth camera movement that follows action
+    const newTarget = new THREE.Vector3(12, 16, 12);
+    setTargetPosition(prev => prev.lerp(newTarget, 0.02));
+    camera.position.lerp(targetPosition, 0.05);
+    
+    // Smooth look-at with slight offset for dynamic feel
+    const lookTarget = new THREE.Vector3(0, 2, 0);
+    camera.lookAt(lookTarget);
   });
   
   return null;
@@ -928,7 +958,7 @@ function HUD() {
               <div className="flex items-center">
                 <div className="w-16 h-3 bg-gray-700 rounded-full mr-2 border border-gray-600">
                   <div 
-                    className="h-full bg-gradient-to-r from-yellow-600 to-red-500 rounded-full transition-all duration-300"
+                    className="h-full bg-gradient-to-r from-yellow-600 to-red-500 rounded-full transition-all duration-500 ease-out"
                     style={{ width: `${gameStore.playerStats.reputation}%` }}
                   ></div>
                 </div>
@@ -1015,9 +1045,11 @@ const Game: React.FC = () => {
           enablePan={true}
           enableZoom={true}
           enableRotate={true}
-          maxDistance={50}
-          minDistance={8}
+          maxDistance={35}
+          minDistance={6}
           maxPolarAngle={Math.PI / 2.2}
+          dampingFactor={0.05}
+          enableDamping={true}
         />
       </Canvas>
       
@@ -1028,7 +1060,7 @@ const Game: React.FC = () => {
       {/* Game Controls Help */}
       <div className="absolute bottom-4 right-1/2 transform translate-x-1/2 text-white text-center">
         <div className="bg-black/80 px-6 py-3 rounded-lg border border-red-500/30 backdrop-blur-sm">
-          <div className="text-sm text-gray-300 mb-2">Welcome to Ironhaven - Click NPCs to interact, Red spheres to attack</div>
+          <div className="text-sm text-gray-300 mb-2">🎮 Smooth WASD movement • Click glowing outlines to interact • Red spheres to attack</div>
           <div className="flex space-x-2 text-xs justify-center">
             <span className="bg-red-600 px-2 py-1 rounded">MATURE 17+</span>
             <span className="bg-gray-800 px-2 py-1 rounded">CRIME SIMULATOR</span>
@@ -1041,7 +1073,7 @@ const Game: React.FC = () => {
       <div 
         className="absolute inset-0 opacity-20 pointer-events-none"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.4'/%3E%3C/svg%3E")`,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.3'/%3E%3C/svg%3E")`,
           mixBlendMode: 'multiply'
         }}
       ></div>
