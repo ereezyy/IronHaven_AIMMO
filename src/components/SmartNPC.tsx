@@ -56,19 +56,20 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
 
     const playerWanted = gameStore.playerStats.wanted;
     const playerRep = gameStore.playerStats.reputation;
+    const playerKills = gameStore.playerStats.policeKillCount;
 
     // Line of sight check
-    const hasLineOfSight = distanceToPlayer < 25 && Math.random() > 0.3;
+    const hasLineOfSight = distanceToPlayer < 30 && Math.random() > 0.2;
     
     if (hasLineOfSight) {
       setState(prev => ({ 
-        ...prev, 
-        awareness: Math.min(1, prev.awareness + 0.1),
+        ...prev,
+        awareness: Math.min(1, prev.awareness + 0.15),
         lastPlayerSeen: Date.now()
       }));
     }
 
-    // Decision tree based on NPC type and current situation
+    // Enhanced decision tree with more realistic behavior
     if (state.health <= 0) {
       setState(prev => ({ ...prev, mood: 'dead', currentAction: 'idle' }));
       return;
@@ -76,18 +77,23 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
 
     if (state.mood === 'dead') return;
 
-    // React to player's wanted level and reputation
-    let threatLevel = (playerWanted + playerRep / 20) / 10;
+    // Calculate threat level based on multiple factors
+    let threatLevel = (playerWanted * 2 + playerRep / 10 + playerKills / 5) / 15;
     
     if (type === 'civilian') {
-      if (state.awareness > 0.7 || playerWanted > 2) {
+      if (state.awareness > 0.5 || playerWanted > 1 || playerKills > 5) {
         setState(prev => ({ 
           ...prev, 
           mood: 'fleeing', 
           currentAction: 'flee',
           target: generateFleeTarget()
         }));
-      } else if (distanceToPlayer < 5 && Math.random() > 0.8) {
+        
+        // Civilians call police if they see crimes
+        if (playerWanted > 2 && Math.random() > 0.7) {
+          gameStore.addAction('civilian_called_police');
+        }
+      } else if (distanceToPlayer < 8 && Math.random() > 0.9) {
         // Random civilian interaction
         onInteraction({
           id,
@@ -97,7 +103,7 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
         });
       }
     } else if (type === 'police') {
-      if (playerWanted > 0) {
+      if (playerWanted > 0 || playerKills > 0) {
         setState(prev => ({ 
           ...prev, 
           mood: 'hostile', 
@@ -113,7 +119,23 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
         }));
       }
     } else if (type === 'gangster' || type === 'hitman' || type === 'boss') {
-      if (playerRep < 30 && distanceToPlayer < 15) {
+      // Gangsters react differently based on player reputation
+      if (playerRep < 20 && distanceToPlayer < 20) {
+        setState(prev => ({ 
+          ...prev, 
+          mood: 'hostile', 
+          currentAction: 'attack',
+          target: [...playerPosition]
+        }));
+      } else if (playerRep > 80 && type === 'boss') {
+        // High-level bosses challenge powerful players
+        setState(prev => ({ 
+          ...prev, 
+          mood: 'hostile', 
+          currentAction: 'attack',
+          target: [...playerPosition]
+        }));
+      } else if (playerRep >= 20 && playerRep <= 80 && distanceToPlayer < 15) {
         setState(prev => ({ 
           ...prev, 
           mood: 'hostile', 
@@ -125,16 +147,16 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
         onInteraction({
           id,
           type,
-          dialogue: getGangsterDialogue(playerRep, true),
+          dialogue: getGangsterDialogue(playerRep, playerKills, true),
           mood: 'calm'
         });
       }
     } else if (type === 'dealer') {
-      if (distanceToPlayer < 8 && Math.random() > 0.7) {
+      if (distanceToPlayer < 12 && Math.random() > 0.8) {
         onInteraction({
           id,
           type,
-          dialogue: getDealerDialogue(playerRep),
+          dialogue: getDealerDialogue(playerRep, playerKills),
           mood: state.mood
         });
       }
@@ -152,23 +174,26 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
   };
 
   const getCivilianDialogue = (rep: number, wanted: number): string => {
-    if (wanted > 3) return "Please don't hurt me!";
-    if (wanted > 1) return "Stay away from me!";
-    if (rep > 70) return "I heard about you... scary stuff.";
-    if (rep > 30) return "You look like trouble.";
+    if (wanted > 3) return "Oh god, please don't kill me! I have a family!";
+    if (wanted > 1) return "Stay back! I know what you've done!";
+    if (rep > 70) return "You're that psycho everyone's talking about...";
+    if (rep > 30) return "I don't want any trouble, please.";
     return "Nice day, isn't it?";
   };
 
-  const getGangsterDialogue = (rep: number, respectful: boolean): string => {
-    if (respectful) return "Boss, good to see you around.";
-    if (rep < 10) return "You don't belong here, kid.";
-    return "What do you want?";
+  const getGangsterDialogue = (rep: number, kills: number, respectful: boolean): string => {
+    if (respectful && kills > 10) return "Damn, you're a real killer. Respect.";
+    if (respectful) return "Boss, heard you're making moves.";
+    if (rep < 10) return "Get lost before I make you disappear.";
+    if (kills > 20) return "Holy shit, you're the Ironhaven Reaper!";
+    return "You got business here?";
   };
 
-  const getDealerDialogue = (rep: number): string => {
-    if (rep > 50) return "Got some premium stuff for you.";
-    if (rep > 20) return "Looking for something?";
-    return "You look like you could use something to take the edge off.";
+  const getDealerDialogue = (rep: number, kills: number): string => {
+    if (kills > 15) return "Yo, the murder king! Want something special?";
+    if (rep > 50) return "Premium merchandise for a premium client.";
+    if (rep > 20) return "You're moving up, I got what you need.";
+    return "First time? I got starter packages.";
   };
 
   // Movement and pathfinding
@@ -192,11 +217,10 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
             Math.pow(position[0] - state.target[0], 2) +
             Math.pow(position[2] - state.target[2], 2)
           );
-          if (distanceToTarget < 3 && Math.random() > 0.95) {
+          if (distanceToTarget < 5 && Math.random() > 0.93) {
             // NPC attacks player
-            gameStore.updateStats({ 
-              health: Math.max(0, gameStore.playerStats.health - 15) 
-            });
+            const damage = type === 'boss' ? 35 : type === 'hitman' ? 25 : type === 'police' ? 20 : 15;
+            gameStore.updateStats({ health: Math.max(0, gameStore.playerStats.health - damage) });
             gameStore.addAction(`${type}_attacked_player`);
           }
         }
@@ -253,16 +277,22 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
     // Combat interaction
     setState(prev => ({ 
       ...prev, 
-      health: Math.max(0, prev.health - 50),
+      health: Math.max(0, prev.health - (50 + Math.random() * 30)),
       mood: prev.health <= 50 ? 'dead' : 'hostile',
       currentAction: prev.health <= 50 ? 'idle' : 'attack'
     }));
     
     if (state.health <= 0) {
       gameStore.addAction(`killed_${type}`);
-      gameStore.updateStats({ 
-        reputation: gameStore.playerStats.reputation + (type === 'boss' ? 25 : type === 'police' ? 10 : 5) 
-      });
+      
+      // Variable reputation gain based on target importance
+      let repGain = 5;
+      if (type === 'boss') repGain = 30;
+      else if (type === 'hitman') repGain = 20;
+      else if (type === 'police') repGain = 15;
+      else if (type === 'gangster') repGain = 8;
+      
+      gameStore.updateStats({ reputation: gameStore.playerStats.reputation + repGain });
     }
   };
 

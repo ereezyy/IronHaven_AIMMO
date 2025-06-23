@@ -106,33 +106,33 @@ export class WorldGenerator {
     
     switch (biome) {
       case 'downtown':
-        buildingCount = 12;
-        minHeight = 15;
-        maxHeight = 45;
+        buildingCount = 15;
+        minHeight = 20;
+        maxHeight = 60;
         buildingDensity = 1.5;
         break;
       case 'residential':
-        buildingCount = 16;
+        buildingCount = 18;
         minHeight = 3;
-        maxHeight = 8;
+        maxHeight = 12;
         buildingDensity = 1.2;
         break;
       case 'industrial':
-        buildingCount = 8;
-        minHeight = 8;
-        maxHeight = 20;
+        buildingCount = 10;
+        minHeight = 10;
+        maxHeight = 25;
         buildingDensity = 0.8;
         break;
       case 'warehouse':
-        buildingCount = 6;
-        minHeight = 6;
-        maxHeight = 12;
+        buildingCount = 8;
+        minHeight = 8;
+        maxHeight = 15;
         buildingDensity = 0.6;
         break;
       case 'slums':
-        buildingCount = 20;
+        buildingCount = 25;
         minHeight = 2;
-        maxHeight = 6;
+        maxHeight = 8;
         buildingDensity = 1.8;
         break;
     }
@@ -143,8 +143,8 @@ export class WorldGenerator {
       const x = baseX + (Math.random() - 0.5) * CHUNK_SIZE * 0.9;
       const z = baseZ + (Math.random() - 0.5) * CHUNK_SIZE * 0.9;
       const height = Math.random() * (maxHeight - minHeight) + minHeight;
-      const width = Math.random() * 12 + 6;
-      const depth = Math.random() * 12 + 6;
+      const width = Math.random() * 15 + 8;
+      const depth = Math.random() * 15 + 8;
       
       let buildingType: Building['type'] = 'residential';
       let color = '#4a4a4a';
@@ -154,26 +154,26 @@ export class WorldGenerator {
       switch (biome) {
         case 'downtown':
           buildingType = Math.random() > 0.5 ? 'office' : 'commercial';
-          color = `hsl(${200 + Math.random() * 60}, 25%, ${Math.random() * 25 + 20}%)`;
-          hasNeon = Math.random() > 0.4;
+          color = `hsl(${Math.random() * 60}, 30%, ${Math.random() * 30 + 25}%)`;
+          hasNeon = Math.random() > 0.3;
           break;
         case 'industrial':
           buildingType = Math.random() > 0.3 ? 'industrial' : 'warehouse';
-          color = `hsl(${30 + Math.random() * 60}, 15%, ${Math.random() * 15 + 8}%)`;
+          color = `hsl(${20 + Math.random() * 40}, 20%, ${Math.random() * 20 + 10}%)`;
           hasWindows = Math.random() > 0.3;
           break;
         case 'warehouse':
           buildingType = 'warehouse';
-          color = `hsl(${30 + Math.random() * 60}, 10%, ${Math.random() * 12 + 6}%)`;
+          color = `hsl(${30 + Math.random() * 60}, 15%, ${Math.random() * 15 + 8}%)`;
           hasWindows = Math.random() > 0.6;
           break;
         case 'slums':
           buildingType = 'residential';
-          color = `hsl(${30 + Math.random() * 90}, 25%, ${Math.random() * 10 + 5}%)`;
+          color = `hsl(${Math.random() * 60}, 30%, ${Math.random() * 15 + 8}%)`;
           hasWindows = Math.random() > 0.2;
           break;
         default:
-          color = `hsl(${Math.random() * 360}, 20%, ${Math.random() * 20 + 15}%)`;
+          color = `hsl(${Math.random() * 360}, 25%, ${Math.random() * 25 + 20}%)`;
       }
 
       buildings.push({
@@ -201,23 +201,23 @@ export class WorldGenerator {
     switch (biome) {
       case 'downtown':
         npcCount = 8;
-        npcTypes = ['civilian', 'police', 'dealer', 'gangster', 'hitman'];
+        npcTypes = ['civilian', 'civilian', 'police', 'dealer', 'gangster', 'hitman', 'boss'];
         break;
       case 'residential':
         npcCount = 6;
-        npcTypes = ['civilian', 'civilian', 'dealer', 'police'];
+        npcTypes = ['civilian', 'civilian', 'civilian', 'dealer', 'police'];
         break;
       case 'industrial':
-        npcCount = 4;
-        npcTypes = ['gangster', 'dealer', 'hitman', 'boss'];
+        npcCount = 6;
+        npcTypes = ['gangster', 'gangster', 'dealer', 'hitman', 'boss'];
         break;
       case 'warehouse':
-        npcCount = 3;
-        npcTypes = ['gangster', 'hitman', 'boss', 'dealer'];
+        npcCount = 5;
+        npcTypes = ['gangster', 'gangster', 'hitman', 'boss', 'dealer'];
         break;
       case 'slums':
-        npcCount = 10;
-        npcTypes = ['civilian', 'dealer', 'gangster', 'gangster', 'hitman'];
+        npcCount = 12;
+        npcTypes = ['civilian', 'civilian', 'dealer', 'dealer', 'gangster', 'gangster', 'hitman'];
         break;
     }
 

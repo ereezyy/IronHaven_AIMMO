@@ -234,6 +234,14 @@ const Game: React.FC = () => {
   const [frameRate, setFrameRate] = useState(60);
   const [explosions, setExplosions] = useState<Array<{id: string, position: [number, number, number], intensity: number}>>([]);
   const [bloodPools, setBloodPools] = useState<Array<{id: string, position: [number, number, number], size: number}>>([]);
+  const [screenEffects, setScreenEffects] = useState<{
+    shake: number;
+    flash: number;
+    slowMotion: boolean;
+    redTint: number;
+  }>({ shake: 0, flash: 0, slowMotion: false, redTint: 0 });
+  const [killStreak, setKillStreak] = useState(0);
+  const [lastKillTime, setLastKillTime] = useState(0);
   
   // Performance monitoring
   useEffect(() => {
@@ -255,6 +263,14 @@ const Game: React.FC = () => {
   }, []);
   const [missionActive, setMissionActive] = useState(false);
   const [particleEffects, setParticleEffects] = useState<any[]>([]);
+
+  // Kill streak tracking
+  useEffect(() => {
+    const now = Date.now();
+    if (now - lastKillTime > 10000) { // Reset after 10 seconds
+      setKillStreak(0);
+    }
+  }, [lastKillTime]);
 
   // Add state for UI updates
   const [dayNightData, setDayNightData] = useState({ currentTime: 12, isNight: false });
@@ -346,6 +362,16 @@ const Game: React.FC = () => {
     gameStore.incrementPoliceKillCount();
     gameStore.addAction(`killed_police_${policeId}`);
     
+    // Increase kill streak
+    setKillStreak(prev => prev + 1);
+    setLastKillTime(Date.now());
+    
+    // Massive reputation gain for police kills
+    gameStore.updateStats({ 
+      reputation: gameStore.playerStats.reputation + 15,
+      wanted: Math.min(gameStore.playerStats.wanted + 1, 5)
+    });
+    
     // Add multiple effects for police kills
     const bloodEffect: CombatEffect = {
       id: `police_blood_${Date.now()}`,
@@ -371,10 +397,16 @@ const Game: React.FC = () => {
     }]);
     
     // Screen shake effect for dramatic impact
-    document.body.style.animation = 'screen-shake 0.5s ease-in-out';
+    setScreenEffects(prev => ({ ...prev, shake: 1, flash: 0.8, redTint: 0.3 }));
     setTimeout(() => {
-      document.body.style.animation = '';
-    }, 500);
+      setScreenEffects(prev => ({ ...prev, shake: 0, flash: 0, redTint: 0 }));
+    }, 800);
+    
+    // Slow motion for dramatic effect
+    setScreenEffects(prev => ({ ...prev, slowMotion: true }));
+    setTimeout(() => {
+      setScreenEffects(prev => ({ ...prev, slowMotion: false }));
+    }, 1000);
   }, [gameStore, playerPosition]);
 
   const handleMissionUpdate = useCallback((mission: any) => {
@@ -449,17 +481,38 @@ const Game: React.FC = () => {
         
         {/* Weather System */}
         <WeatherSystem onWeatherUpdate={handleWeatherUpdate} />
+        
+        {/* Atmospheric lighting for cyberpunk feel */}
+        <ambientLight intensity={dayNightData.isNight ? 0.1 : 0.3} color={dayNightData.isNight ? "#0088ff" : "#ffffff"} />
+        <directionalLight 
+          position={[10, 10, 10]} 
+          intensity={dayNightData.isNight ? 0.2 : 0.6} 
+          color={dayNightData.isNight ? "#ff0044" : "#ffffff"}
+          castShadow
+        />
 
         {/* Ground */}
-        <mesh position={[0, -0.5, 0]} receiveShadow castShadow>
-          <boxGeometry args={[2000, 1, 2000]} />
+        <mesh position={[0, -0.5, 0]} receiveShadow>
+          <boxGeometry args={[5000, 1, 5000]} />
           <meshStandardMaterial 
-            color="#0a0a0a" 
-            roughness={0.95}
+            color={dayNightData.isNight ? "#050505" : "#0a0a0a"} 
+            roughness={0.9}
             metalness={0.1}
-            normalScale={new THREE.Vector2(0.5, 0.5)}
           />
         </mesh>
+        
+        {/* Cyberpunk city glow effect */}
+        {dayNightData.isNight && (
+          <mesh position={[0, 5, 0]}>
+            <sphereGeometry args={[100, 16, 16]} />
+            <meshBasicMaterial 
+              color="#ff0044" 
+              transparent 
+              opacity={0.02}
+              side={THREE.BackSide}
+            />
+          </mesh>
+        )}
 
         {/* Render Buildings with LOD */}
         {allBuildings.map((building, index) => {
@@ -483,6 +536,26 @@ const Game: React.FC = () => {
           onRotationChange={setRotation}
         />
 
+        {/* Enhanced Smart NPCs with better AI */}
+        {allNPCs.slice(0, 20).map(npc => {
+          const distance = Math.sqrt(
+            Math.pow(npc.position[0] - playerPosition[0], 2) +
+            Math.pow(npc.position[2] - playerPosition[2], 2)
+          );
+          
+          if (distance > 60 || npc.isDead) return null;
+          
+          return (
+            <SmartNPC
+              key={npc.id}
+              id={npc.id}
+              position={npc.position}
+              type={npc.type}
+              playerPosition={playerPosition}
+              onInteraction={handleNPCClick}
+            />
+          );
+        })}
         {/* Enhanced Smart NPCs */}
         {allNPCs.slice(0, 15).map(npc => {
           const distance = Math.sqrt(
@@ -663,7 +736,7 @@ const Game: React.FC = () => {
         <div>FPS: <span className={`font-bold ${frameRate > 45 ? 'text-green-400' : frameRate > 30 ? 'text-yellow-400' : 'text-red-400'}`}>{frameRate}</span></div>
         <div>NPCs: <span className="text-blue-400">{allNPCs.filter(npc => !npc.isDead).length}</span></div>
         <div>Effects: <span className="text-purple-400">{combatEffects.length + explosions.length}</span></div>
-        <div>Memory: <span className="text-green-400">~{Math.round(performance.memory?.usedJSHeapSize / 1024 / 1024 || 400)}MB</span></div>
+        <div>Kills: <span className="text-red-400">{killStreak > 0 ? `${killStreak}x STREAK` : '0'}</span></div>
       </div>
 
       {/* Advanced Controls Help */}
@@ -711,6 +784,30 @@ const Game: React.FC = () => {
         playerPosition={playerPosition}
         onEventTriggered={handleEventTriggered}
       />
+      
+      {/* Screen Effects Overlay */}
+      {(screenEffects.shake > 0 || screenEffects.flash > 0 || screenEffects.redTint > 0) && (
+        <div 
+          className="absolute inset-0 pointer-events-none z-50"
+          style={{
+            backgroundColor: `rgba(255, 0, 0, ${screenEffects.redTint})`,
+            animation: screenEffects.shake > 0 ? 'screen-shake 0.1s ease-in-out 5' : undefined,
+            boxShadow: screenEffects.flash > 0 ? `inset 0 0 100px rgba(255, 255, 255, ${screenEffects.flash})` : undefined
+          }}
+        />
+      )}
+      
+      {/* Kill Streak Display */}
+      {killStreak > 2 && (
+        <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+          <div className="text-6xl font-bold text-red-500 animate-pulse text-center">
+            {killStreak}x KILL STREAK
+          </div>
+          <div className="text-xl text-white text-center mt-2 animate-bounce">
+            UNSTOPPABLE!
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -46,23 +46,38 @@ const EnhancedUI: React.FC = () => {
 
     if (lastAction.includes('killed_police')) {
       notification = {
-        message: 'Police Officer Down! Wanted level increased.',
+        message: '🔥 COP ELIMINATED! Heat is rising.',
+        type: 'error'
+      };
+    } else if (lastAction.includes('killed_boss')) {
+      notification = {
+        message: '👑 BOSS TERMINATED! Massive reputation gain!',
+        type: 'success'
+      };
+    } else if (lastAction.includes('killed_hitman')) {
+      notification = {
+        message: '💀 HITMAN DOWN! Professional kill.',
         type: 'warning'
       };
     } else if (lastAction.includes('completed_')) {
       notification = {
-        message: 'Mission Completed! Reputation gained.',
+        message: '✅ MISSION COMPLETE! Reputation gained.',
         type: 'success'
       };
     } else if (lastAction.includes('entered_vehicle')) {
       notification = {
-        message: 'Vehicle Acquired',
+        message: '🚗 RIDE ACQUIRED!',
         type: 'info'
       };
     } else if (lastAction.includes('bought_')) {
       notification = {
-        message: 'Item Purchased',
+        message: '💰 PURCHASE COMPLETE',
         type: 'success'
+      };
+    } else if (lastAction.includes('civilian_called_police')) {
+      notification = {
+        message: '📞 CIVILIAN CALLED BACKUP!',
+        type: 'warning'
       };
     }
 
@@ -129,7 +144,7 @@ const EnhancedUI: React.FC = () => {
       {/* Enhanced Main Stats Panel */}
       <div className="absolute top-4 left-4 p-4 glass-panel text-white rounded-lg border border-red-500/70 min-w-[320px]">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold neon-text animate-glow">IRONHAVEN STATUS</h2>
+          <h2 className="text-xl font-bold neon-text animate-glow">🏴‍☠️ CRIMINAL STATUS</h2>
           <button
             onClick={() => setShowSettings(!showSettings)}
             className="text-gray-400 hover:text-red-400 transition-all duration-300 hover:scale-110"
@@ -167,19 +182,24 @@ const EnhancedUI: React.FC = () => {
           <div className={`flex justify-between items-center p-2 rounded ${gameStore.playerStats.wanted > 2 ? 'animate-danger-pulse' : ''}`}>
             <span className="flex items-center text-sm">
               <AlertTriangle className={`h-4 w-4 mr-2 ${gameStore.playerStats.wanted > 2 ? 'animate-pulse text-red-400' : 'text-yellow-500'}`} />
-              Wanted
+              Heat Level
             </span>
-            <div className="flex">{getWantedStars()}</div>
+            <div className="flex items-center">
+              {getWantedStars()}
+              {gameStore.playerStats.wanted >= 5 && (
+                <span className="ml-2 text-red-500 text-xs animate-pulse">MAX HEAT</span>
+              )}
+            </div>
           </div>
 
           {/* Money */}
           <div className="flex justify-between items-center">
             <span className="flex items-center text-sm">
-              <DollarSign className="h-4 w-4 mr-2 text-green-400 animate-pulse" />
-              Cash
+              <DollarSign className="h-4 w-4 mr-2 text-green-400" />
+              Blood Money
             </span>
             <span className="text-green-400 font-bold text-lg">
-              ${gameStore.playerStats.money.toLocaleString()}
+              ${gameStore.playerStats.money.toLocaleString()} 
             </span>
           </div>
 
@@ -187,11 +207,14 @@ const EnhancedUI: React.FC = () => {
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <span className="flex items-center text-sm">
-                <Star className="h-4 w-4 mr-2 text-yellow-400 animate-pulse" />
-                Reputation
+                <Star className="h-4 w-4 mr-2 text-yellow-400" />
+                Street Cred
               </span>
-              <span className="text-yellow-400 font-bold text-lg">
+              <span className="text-yellow-400 font-bold text-lg flex items-center">
                 {gameStore.playerStats.reputation}
+                {gameStore.playerStats.reputation > 80 && (
+                  <span className="ml-2 text-red-500 text-xs">LEGENDARY</span>
+                )}
               </span>
             </div>
             <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
@@ -202,6 +225,17 @@ const EnhancedUI: React.FC = () => {
                 <div className="h-full bg-gradient-to-r from-transparent to-white opacity-30"></div>
               </div>
             </div>
+          </div>
+
+          {/* Kill Count */}
+          <div className="flex justify-between items-center border-t border-gray-600/50 pt-3">
+            <span className="flex items-center text-sm text-red-400">
+              <Skull className="h-4 w-4 mr-2" />
+              Body Count
+            </span>
+            <span className="text-red-400 font-bold text-lg">
+              {gameStore.playerStats.policeKillCount} cops
+            </span>
           </div>
 
           {/* Game Time */}
@@ -272,10 +306,10 @@ const EnhancedUI: React.FC = () => {
 
       {/* Performance Monitor (Debug) */}
       <div className="absolute bottom-4 right-4 p-3 glass-panel text-white rounded text-xs border border-gray-600/50">
-        <div className="font-bold text-green-400 mb-1">PERFORMANCE</div>
+        <div className="font-bold text-green-400 mb-1">🔧 SYSTEM</div>
         <div>FPS: <span className="text-green-400">60</span></div>
-        <div>Actions: <span className="text-yellow-400">{gameStore.recentActions.length}</span></div>
-        <div>Memory: <span className="text-blue-400">~400MB</span></div>
+        <div>Chaos: <span className="text-red-400">{gameStore.recentActions.filter(a => a.includes('killed')).length}</span></div>
+        <div>Status: <span className="text-green-400">STABLE</span></div>
       </div>
     </>
   );
