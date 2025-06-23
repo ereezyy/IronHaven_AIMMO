@@ -242,8 +242,33 @@ function Player() {
   const [isInVehicle, setIsInVehicle] = useState(false);
   const [currentVehicle, setCurrentVehicle] = useState<Vehicle | null>(null);
   const [rotation, setRotation] = useState(0);
+  const [worldChunks, setWorldChunks] = useState<import('../lib/worldGenerator').WorldChunk[]>([]);
 
   const currentWeapon = gameStore.getCurrentWeapon();
+  
+  // Collision detection function
+  const checkCollision = (newPos: [number, number, number]): boolean => {
+    const playerRadius = 1.5; // Player collision radius
+    
+    for (const chunk of worldChunks) {
+      for (const building of chunk.buildings) {
+        const [bx, by, bz] = building.position;
+        const [bw, bh, bd] = building.size;
+        
+        // Check if player would be inside building bounds (with margin)
+        const minX = bx - bw/2 - playerRadius;
+        const maxX = bx + bw/2 + playerRadius;
+        const minZ = bz - bd/2 - playerRadius;
+        const maxZ = bz + bd/2 + playerRadius;
+        
+        if (newPos[0] >= minX && newPos[0] <= maxX && 
+            newPos[2] >= minZ && newPos[2] <= maxZ) {
+          return true; // Collision detected
+        }
+      }
+    }
+    return false; // No collision
+  };
 
   // Handle keyboard input
   useEffect(() => {
@@ -365,12 +390,40 @@ function Player() {
       setRotation(THREE.MathUtils.lerp(rotation, newRotation, 0.3));
     }
 
-    // Apply movement
-    const newPosition: [number, number, number] = [
+    // Apply movement with collision detection
+    let newPosition: [number, number, number] = [
       position[0] + finalVelocity[0] * delta,
       1.5,
       position[2] + finalVelocity[2] * delta
     ];
+    
+    // Check collision and adjust position if needed
+    if (checkCollision(newPosition)) {
+      // Try moving only on X axis
+      const xOnlyPos: [number, number, number] = [
+        position[0] + finalVelocity[0] * delta,
+        1.5,
+        position[2]
+      ];
+      
+      // Try moving only on Z axis
+      const zOnlyPos: [number, number, number] = [
+        position[0],
+        1.5,
+        position[2] + finalVelocity[2] * delta
+      ];
+      
+      // Use the axis that doesn't collide, or stay in place
+      if (!checkCollision(xOnlyPos)) {
+        newPosition = xOnlyPos;
+      } else if (!checkCollision(zOnlyPos)) {
+        newPosition = zOnlyPos;
+      } else {
+        // Can't move in either direction, stay in current position
+        newPosition = position;
+        setSmoothVelocity([0, 0, 0]); // Stop movement
+      }
+    }
 
     // No boundary constraints for infinite world
 
@@ -445,6 +498,255 @@ function City() {
   const [playerPosition, setPlayerPosition] = useState<[number, number, number]>([0, 1, 0]);
 
   const currentWeapon = gameStore.getCurrentWeapon();
+  
+  // Pass world chunks to Player component
+  const PlayerWithCollision = () => {
+    const Player = () => {
+      const gameStore = useGameStore();
+      const [position, setPosition] = useState<[number, number, number]>([0, 1.5, 0]);
+      const [velocity, setVelocity] = useState<[number, number, number]>([0, 0, 0]);
+      const [smoothVelocity, setSmoothVelocity] = useState<[number, number, number]>([0, 0, 0]);
+      const [keys, setKeys] = useState<{[key: string]: boolean}>({});
+      const [bloodLevel, setBloodLevel] = useState(0);
+      const [isMoving, setIsMoving] = useState(false);
+      const [combatEffects, setCombatEffects] = useState<CombatEffect[]>([]);
+      const [isInVehicle, setIsInVehicle] = useState(false);
+      const [currentVehicle, setCurrentVehicle] = useState<Vehicle | null>(null);
+      const [rotation, setRotation] = useState(0);
+
+      const currentWeapon = gameStore.getCurrentWeapon();
+      
+      // Collision detection function with access to worldChunks
+      const checkCollision = (newPos: [number, number, number]): boolean => {
+        const playerRadius = 1.8; // Player collision radius - slightly bigger for comfort
+        
+        for (const chunk of worldChunks) {
+          for (const building of chunk.buildings) {
+            const [bx, by, bz] = building.position;
+            const [bw, bh, bd] = building.size;
+            
+            // Check if player would be inside building bounds (with margin)
+            const minX = bx - bw/2 - playerRadius;
+            const maxX = bx + bw/2 + playerRadius;
+            const minZ = bz - bd/2 - playerRadius;
+            const maxZ = bz + bd/2 + playerRadius;
+            
+            if (newPos[0] >= minX && newPos[0] <= maxX && 
+                newPos[2] >= minZ && newPos[2] <= maxZ) {
+              return true; // Collision detected
+            }
+          }
+        }
+        return false; // No collision
+      };
+
+      // Handle keyboard input
+      useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+          const key = event.key.toLowerCase();
+          setKeys(prev => ({ ...prev, [key]: true }));
+          
+          // Weapon switching
+          const weaponIndex = parseInt(key) - 1;
+          if (weaponIndex >= 0 && weaponIndex < weapons.length) {
+            gameStore.setCurrentWeaponId(weapons[weaponIndex].id);
+          }
+          
+          // Exit vehicle
+          if (key === 'f' && isInVehicle) {
+            setIsInVehicle(false);
+            setCurrentVehicle(null);
+          }
+          
+          // Sprint with shift
+          if (key === 'shift') {
+            setKeys(prev => ({ ...prev, sprint: true }));
+          }
+        };
+
+        const handleKeyUp = (event: KeyboardEvent) => {
+          const key = event.key.toLowerCase();
+          setKeys(prev => ({ ...prev, [key]: false }));
+          
+          if (key === 'shift') {
+            setKeys(prev => ({ ...prev, sprint: false }));
+          }
+        };
+
+        const handleMouseClick = (event: MouseEvent) => {
+          if (event.button === 0) { // Left click
+            fireWeapon();
+          }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        window.addEventListener('mousedown', handleMouseClick);
+
+        return () => {
+          window.removeEventListener('keydown', handleKeyDown);
+          window.removeEventListener('keyup', handleKeyUp);
+          window.removeEventListener('mousedown', handleMouseClick);
+        };
+      }, [currentWeapon.id, gameStore]);
+
+      const fireWeapon = () => {
+        if (currentWeapon.ammo === 0) return;
+        
+        // Create muzzle flash effect
+        const effectId = `muzzle_${Date.now()}`;
+        setCombatEffects(prev => [...prev, {
+          id: effectId,
+          position: [position[0], position[1] + 1, position[2]],
+          type: 'muzzle_flash',
+          duration: 100,
+          startTime: Date.now()
+        }]);
+        
+        // Decrease ammo
+        if (currentWeapon.ammo > 0) {
+          currentWeapon.ammo--;
+        }
+        
+        gameStore.addAction(`fired_${currentWeapon.name}`);
+      };
+
+      const addCombatEffect = (type: CombatEffect['type'], pos: [number, number, number]) => {
+        const effectId = `effect_${Date.now()}_${Math.random()}`;
+        setCombatEffects(prev => [...prev, {
+          id: effectId,
+          position: pos,
+          type,
+          duration: type === 'blood_splatter' ? 10000 : 500,
+          startTime: Date.now()
+        }]);
+      };
+
+      const removeCombatEffect = (id: string) => {
+        setCombatEffects(prev => prev.filter(effect => effect.id !== id));
+      };
+
+      useFrame((state, delta) => {
+        // Movement speed
+        const baseSpeed = isInVehicle ? 20 : 10; // Slightly slower for better control
+        const speed = keys.sprint ? baseSpeed * 1.5 : baseSpeed;
+        const acceleration = 0.9; // More responsive
+        const friction = 0.3; // Better stopping
+        
+        let newVelocity: [number, number, number] = [0, 0, 0];
+
+        // WASD movement
+        if (keys['w']) newVelocity[2] -= speed;
+        if (keys['s']) newVelocity[2] += speed;
+        if (keys['a']) newVelocity[0] -= speed;
+        if (keys['d']) newVelocity[0] += speed;
+        
+        // Direct movement with minimal smoothing
+        const finalVelocity: [number, number, number] = [
+          THREE.MathUtils.lerp(smoothVelocity[0], newVelocity[0], acceleration),
+          0,
+          THREE.MathUtils.lerp(smoothVelocity[2], newVelocity[2], acceleration)
+        ];
+        
+        // Apply friction when not moving
+        if (newVelocity[0] === 0) finalVelocity[0] *= (1 - friction);
+        if (newVelocity[2] === 0) finalVelocity[2] *= (1 - friction);
+        
+        setSmoothVelocity(finalVelocity);
+        
+        // Update rotation based on movement direction
+        if (Math.abs(finalVelocity[0]) > 1 || Math.abs(finalVelocity[2]) > 1) {
+          const newRotation = Math.atan2(finalVelocity[0], finalVelocity[2]);
+          setRotation(THREE.MathUtils.lerp(rotation, newRotation, 0.3));
+        }
+
+        // Apply movement with collision detection
+        let newPosition: [number, number, number] = [
+          position[0] + finalVelocity[0] * delta,
+          1.5,
+          position[2] + finalVelocity[2] * delta
+        ];
+        
+        // Check collision and adjust position if needed
+        if (checkCollision(newPosition)) {
+          // Try moving only on X axis
+          const xOnlyPos: [number, number, number] = [
+            position[0] + finalVelocity[0] * delta,
+            1.5,
+            position[2]
+          ];
+          
+          // Try moving only on Z axis
+          const zOnlyPos: [number, number, number] = [
+            position[0],
+            1.5,
+            position[2] + finalVelocity[2] * delta
+          ];
+          
+          // Use the axis that doesn't collide, or stay in place
+          if (!checkCollision(xOnlyPos)) {
+            newPosition = xOnlyPos;
+          } else if (!checkCollision(zOnlyPos)) {
+            newPosition = zOnlyPos;
+          } else {
+            // Can't move in either direction, stay in current position
+            newPosition = position;
+            setSmoothVelocity([0, 0, 0]); // Stop movement
+          }
+        }
+
+        setPosition(newPosition);
+        setVelocity(finalVelocity);
+        setIsMoving(Math.abs(finalVelocity[0]) > 2 || Math.abs(finalVelocity[2]) > 2);
+
+        if (isMoving) {
+          gameStore.addAction('player_moved');
+        }
+
+        // Update threat level periodically
+        if (Math.floor(state.clock.elapsedTime) % 5 === 0) {
+          const checkThreat = async () => {
+            const threat = await analyzeThreatLevel(newPosition, []);
+            if (threat.level > 0.7) {
+              gameStore.addAction('detected_high_threat');
+            }
+          };
+          checkThreat();
+        }
+        
+        // Update player position for other components
+        gameStore.setPlayerPosition(newPosition);
+      });
+
+      // Increase blood level based on recent violent actions
+      useEffect(() => {
+        const violentActions = gameStore.recentActions.filter(action => 
+          action.includes('killed') || action.includes('executed') || action.includes('attacked')
+        ).length;
+        setBloodLevel(Math.min(violentActions * 0.15, 1));
+      }, [gameStore.recentActions]);
+
+      return (
+        <>
+          <SpriteCharacter
+            position={position}
+            type="player"
+            bloodLevel={bloodLevel}
+            scale={1.5}
+            weapon={currentWeapon.id}
+            rotation={rotation}
+          />
+          
+          <CombatSystem 
+            effects={combatEffects}
+            onEffectComplete={removeCombatEffect}
+          />
+        </>
+      );
+    };
+    
+    return <Player />;
+  };
   
   // Update world based on player position
   useEffect(() => {
@@ -668,6 +970,19 @@ function City() {
                 />
               </Box>
               
+              {/* Visual collision bounds for debugging - red wireframe */}
+              <Box
+                position={building.position}
+                scale={[building.size[0] + 3.6, 0.1, building.size[2] + 3.6]}
+              >
+                <meshBasicMaterial 
+                  color="#ff0000" 
+                  transparent 
+                  opacity={0.1}
+                  wireframe
+                />
+              </Box>
+              
               {/* Windows */}
               {building.windows && Array.from({ length: Math.floor(height / 3) }).map((_, floor) => (
                 <group key={floor}>
@@ -800,6 +1115,8 @@ function City() {
         />
       ))}
 
+      <PlayerWithCollision />
+      
       {/* NPCs */}
       {npcs.map((npc) => (
         <NPC 
