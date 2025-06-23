@@ -245,15 +245,16 @@ function Vehicle({ vehicle, onSteal }: { vehicle: Vehicle; onSteal: (id: string)
 
 function Player() {
   const gameStore = useGameStore();
-  const [position, setPosition] = useState<[number, number, number]>([0, 1, 0]);
+  const [position, setPosition] = useState<[number, number, number]>([0, 1.5, 0]);
   const [velocity, setVelocity] = useState<[number, number, number]>([0, 0, 0]);
-  const [targetVelocity, setTargetVelocity] = useState<[number, number, number]>([0, 0, 0]);
+  const [smoothVelocity, setSmoothVelocity] = useState<[number, number, number]>([0, 0, 0]);
   const [keys, setKeys] = useState<{[key: string]: boolean}>({});
   const [bloodLevel, setBloodLevel] = useState(0);
   const [isMoving, setIsMoving] = useState(false);
   const [combatEffects, setCombatEffects] = useState<CombatEffect[]>([]);
   const [isInVehicle, setIsInVehicle] = useState(false);
   const [currentVehicle, setCurrentVehicle] = useState<Vehicle | null>(null);
+  const [rotation, setRotation] = useState(0);
 
   const currentWeapon = gameStore.getCurrentWeapon();
 
@@ -345,55 +346,70 @@ function Player() {
 
   useFrame((state, delta) => {
     // Movement speed
-    const baseSpeed = isInVehicle ? 30 : 18;
-    const speed = keys.sprint ? baseSpeed * 2.0 : baseSpeed;
-    let newTargetVelocity: [number, number, number] = [0, 0, 0];
+    const baseSpeed = isInVehicle ? 30 : 20;
+    const speed = keys.sprint ? baseSpeed * 2.2 : baseSpeed;
+    const acceleration = 0.15;
+    const friction = 0.12;
+    
+    let targetVelocity: [number, number, number] = [0, 0, 0];
 
     // WASD movement
-    if (keys['w']) newTargetVelocity[2] -= speed;
-    if (keys['s']) newTargetVelocity[2] += speed;
-    if (keys['a']) newTargetVelocity[0] -= speed;
-    if (keys['d']) newTargetVelocity[0] += speed;
-
-    // Smooth acceleration/deceleration
-    const acceleration = 8;
-    const smoothVelocity: [number, number, number] = [
-      velocity[0] + (newTargetVelocity[0] - velocity[0]) * acceleration * delta,
-      velocity[1],
-      velocity[2] + (newTargetVelocity[2] - velocity[2]) * acceleration * delta
+    if (keys['w']) targetVelocity[2] -= speed;
+    if (keys['s']) targetVelocity[2] += speed;
+    if (keys['a']) targetVelocity[0] -= speed;
+    if (keys['d']) targetVelocity[0] += speed;
+    
+    // Smooth velocity interpolation
+    const newSmoothVelocity: [number, number, number] = [
+      THREE.MathUtils.lerp(smoothVelocity[0], targetVelocity[0], acceleration),
+      0,
+      THREE.MathUtils.lerp(smoothVelocity[2], targetVelocity[2], acceleration)
     ];
+    
+    // Apply friction when not moving
+    if (targetVelocity[0] === 0) newSmoothVelocity[0] *= (1 - friction);
+    if (targetVelocity[2] === 0) newSmoothVelocity[2] *= (1 - friction);
+    
+    setSmoothVelocity(newSmoothVelocity);
+    
+    // Update rotation based on movement direction
+    if (Math.abs(newSmoothVelocity[0]) > 0.1 || Math.abs(newSmoothVelocity[2]) > 0.1) {
+      const newRotation = Math.atan2(newSmoothVelocity[0], newSmoothVelocity[2]);
+      setRotation(THREE.MathUtils.lerp(rotation, newRotation, 0.1));
+    }
 
     // Apply movement
     const newPosition: [number, number, number] = [
-      position[0] + smoothVelocity[0] * delta,
-      position[1],
-      position[2] + smoothVelocity[2] * delta
+      position[0] + newSmoothVelocity[0] * delta,
+      1.5,
+      position[2] + newSmoothVelocity[2] * delta
     ];
 
     // Boundary constraints
-    newPosition[0] = Math.max(-45, Math.min(45, newPosition[0]));
-    newPosition[2] = Math.max(-45, Math.min(45, newPosition[2]));
+    newPosition[0] = Math.max(-40, Math.min(40, newPosition[0]));
+    newPosition[2] = Math.max(-40, Math.min(40, newPosition[2]));
 
     setPosition(newPosition);
-    setVelocity(smoothVelocity);
-    setTargetVelocity(newTargetVelocity);
-    setIsMoving(Math.abs(smoothVelocity[0]) > 0.1 || Math.abs(smoothVelocity[2]) > 0.1);
+    setVelocity(newSmoothVelocity);
+    setIsMoving(Math.abs(newSmoothVelocity[0]) > 0.5 || Math.abs(newSmoothVelocity[2]) > 0.5);
 
     if (isMoving) {
       gameStore.addAction('player_moved');
     }
 
     // Update threat level periodically
-    if (Math.floor(state.clock.elapsedTime) % 3 === 0) {
+    if (Math.floor(state.clock.elapsedTime) % 5 === 0) {
       const checkThreat = async () => {
         const threat = await analyzeThreatLevel(newPosition, []);
         if (threat.level > 0.7) {
           gameStore.addAction('detected_high_threat');
-          gameStore.updateStats({ wanted: Math.min(gameStore.playerStats.wanted + 1, 5) });
         }
       };
       checkThreat();
     }
+    
+    // Update player position for other components
+    gameStore.setPlayerPosition(newPosition);
   });
 
   // Increase blood level based on recent violent actions
@@ -410,8 +426,9 @@ function Player() {
         position={position}
         type="player"
         bloodLevel={bloodLevel}
-        scale={1.4}
+        scale={1.5}
         weapon={currentWeapon.id}
+        rotation={rotation}
       />
       
       <CombatSystem 
@@ -566,12 +583,12 @@ function City() {
       <Plane
         rotation={[-Math.PI / 2, 0, 0]}
         position={[0, 0, 0]}
-        args={[100, 100]}
+        args={[120, 120]}
       >
         <meshStandardMaterial 
-          color="#2a2a2a" 
+          color="#1a1a1a" 
           roughness={0.8}
-          metalness={0.2}
+          metalness={0.05}
         />
       </Plane>
       
@@ -581,12 +598,12 @@ function City() {
           <Plane
             rotation={[-Math.PI / 2, 0, 0]}
             position={[corpse.position[0], 0.01, corpse.position[2]]}
-            args={[4, 4]}
+            args={[3, 3]}
           >
             <meshBasicMaterial 
-              color="#4a0000" 
+              color="#660000" 
               transparent 
-              opacity={0.8}
+              opacity={0.9}
             />
           </Plane>
           
@@ -616,13 +633,12 @@ function City() {
       <Plane
         rotation={[-Math.PI / 2, 0, 0]}
         position={[0, 0.02, 0]}
-        args={[100, 100]}
+        args={[120, 120]}
       >
         <meshBasicMaterial 
           color="#444444" 
           transparent 
-          opacity={0.6}
-          wireframe
+          opacity={0.4}
         />
       </Plane>
       
@@ -641,9 +657,9 @@ function City() {
               scale={[width, height, depth]}
             >
               <meshStandardMaterial 
-                color={`hsl(${Math.random() * 30}, 15%, ${Math.random() * 12 + 8}%)`}
+                color={`hsl(${Math.random() * 30}, 25%, ${Math.random() * 15 + 12}%)`}
                 roughness={0.7}
-                metalness={0.3}
+                metalness={0.2}
               />
             </Box>
             
@@ -661,13 +677,11 @@ function City() {
                     scale={[0.6, 0.8, 0.1]}
                   >
                     <meshStandardMaterial 
-                      color={Math.random() > 0.7 ? "#ffff88" : "#000000"} 
-                      roughness={0.1}
-                      metalness={0.8}
+                      color={Math.random() > 0.6 ? "#ffaa44" : "#111111"} 
                       transparent
                       opacity={0.9}
-                      emissive={Math.random() > 0.7 ? "#ffff44" : "#000000"}
-                      emissiveIntensity={0.5}
+                      emissive={Math.random() > 0.6 ? "#ff6622" : "#000000"}
+                      emissiveIntensity={Math.random() > 0.6 ? 0.8 : 0}
                     />
                   </Box>
                 ))}
@@ -680,11 +694,7 @@ function City() {
                 position={[x, height + 0.5, z]}
                 scale={[1, 1, 1]}
               >
-                <meshStandardMaterial 
-                  color="#333333" 
-                  roughness={0.8}
-                  metalness={0.4}
-                />
+                <meshStandardMaterial color="#444444" roughness={0.8} />
               </Box>
             )}
             
@@ -695,10 +705,8 @@ function City() {
                 scale={[width * 0.8, 0.5, 0.1]}
               >
                 <meshStandardMaterial 
-                  color="#ff0066" 
-                  roughness={0.1}
-                  metalness={0.9}
-                  emissive="#ff0066"
+                  color="#ff3366" 
+                  emissive="#ff3366"
                   emissiveIntensity={2.0}
                 />
               </Box>
@@ -721,11 +729,7 @@ function City() {
               position={[x, 0.5, z]}
               scale={[0.4, 1, 0.4]}
             >
-              <meshStandardMaterial 
-                color="#2d2d2d" 
-                roughness={0.9}
-                metalness={0.1}
-              />
+              <meshStandardMaterial color="#3d3d3d" roughness={0.9} />
             </Cylinder>
           );
         } else if (propType < 0.6) {
@@ -733,16 +737,13 @@ function City() {
           return (
             <group key={`prop-${i}`}>
               <Cylinder position={[x, 2.5, z]} scale={[0.1, 5, 0.1]}>
-                <meshStandardMaterial 
-                  color="#444444" 
-                  roughness={0.8}
-                />
+                <meshStandardMaterial color="#555555" roughness={0.8} />
               </Cylinder>
               <Sphere position={[x, 4.5, z]} scale={[0.3, 0.3, 0.3]}>
                 <meshStandardMaterial 
-                  color="#ffff88" 
-                  emissive="#ffff44"
-                  emissiveIntensity={0.8}
+                  color="#ffaa44" 
+                  emissive="#ff6622"
+                  emissiveIntensity={1.2}
                 />
               </Sphere>
             </group>
@@ -756,7 +757,7 @@ function City() {
               scale={[Math.random() * 0.8 + 0.2, 0.4, Math.random() * 0.8 + 0.2]}
               rotation={[0, Math.random() * Math.PI, 0]}
             >
-              <meshStandardMaterial color="#1a1a1a" />
+              <meshStandardMaterial color="#2a2a2a" roughness={0.9} />
             </Box>
           );
         }
@@ -815,17 +816,14 @@ function City() {
 
 function CameraController() {
   const { camera } = useThree();
-  const [targetPosition, setTargetPosition] = useState(new THREE.Vector3(15, 18, 15));
+  const gameStore = useGameStore();
   
   useFrame(() => {
-    // Smooth camera movement that follows action
-    const newTarget = new THREE.Vector3(12, 16, 12);
-    setTargetPosition(prev => prev.lerp(newTarget, 0.02));
+    // Follow player smoothly
+    const playerPos = gameStore.playerPosition || [0, 0, 0];
+    const targetPosition = new THREE.Vector3(playerPos[0] + 15, 25, playerPos[2] + 15);
     camera.position.lerp(targetPosition, 0.05);
-    
-    // Smooth look-at with slight offset for dynamic feel
-    const lookTarget = new THREE.Vector3(0, 2, 0);
-    camera.lookAt(lookTarget);
+    camera.lookAt(playerPos[0], 0, playerPos[2]);
   });
   
   return null;
@@ -942,9 +940,9 @@ function HUD() {
           <div className="flex justify-between items-center">
             <span className="text-gray-400">Health:</span>
             <div className="flex items-center">
-              <div className="w-16 h-3 bg-gray-700 rounded-full mr-2 border border-gray-600">
+              <div className="w-24 h-3 bg-gray-800 rounded-full mr-2 border border-gray-600 overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-red-500 to-green-500 rounded-full transition-all duration-300"
+                  className="h-full bg-gradient-to-r from-red-400 via-yellow-400 to-green-400 rounded-full transition-all duration-500 ease-out"
                   style={{ width: `${gameStore.playerStats.health}%` }}
                 ></div>
               </div>
@@ -956,9 +954,9 @@ function HUD() {
             <span className="text-gray-400">Reputation:</span>
             <div className="text-right">
               <div className="flex items-center">
-                <div className="w-16 h-3 bg-gray-700 rounded-full mr-2 border border-gray-600">
+                <div className="w-24 h-3 bg-gray-800 rounded-full mr-2 border border-gray-600 overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-yellow-600 to-red-500 rounded-full transition-all duration-500 ease-out"
+                    className="h-full bg-gradient-to-r from-yellow-500 to-red-500 rounded-full transition-all duration-500 ease-out"
                     style={{ width: `${gameStore.playerStats.reputation}%` }}
                   ></div>
                 </div>
@@ -970,7 +968,7 @@ function HUD() {
           
           <div className="flex justify-between items-center">
             <span className="text-gray-400">Heat Level:</span>
-            <span className="text-red-400 font-bold text-lg">
+            <span className="text-red-400 font-bold text-lg animate-pulse">
               {'★'.repeat(gameStore.playerStats.wanted)}
               {'☆'.repeat(5 - gameStore.playerStats.wanted)}
             </span>
@@ -978,12 +976,12 @@ function HUD() {
           
           <div className="flex justify-between items-center">
             <span className="text-gray-400">Blood Money:</span>
-            <span className="text-green-400 font-bold text-sm">${gameStore.playerStats.money.toLocaleString()}</span>
+            <span className="text-green-400 font-bold text-lg">${gameStore.playerStats.money.toLocaleString()}</span>
           </div>
 
           <div className="flex justify-between items-center">
             <span className="text-gray-400">Body Count:</span>
-            <span className="text-red-500 font-bold text-lg">{killCount}</span>
+            <span className="text-red-500 font-bold text-xl animate-bounce">{killCount}</span>
           </div>
         </div>
       </div>
@@ -992,11 +990,12 @@ function HUD() {
       <div className="p-3 bg-black/90 text-white rounded-lg border border-blue-500/70 backdrop-blur-sm shadow-2xl">
         <h3 className="text-lg font-bold text-blue-400 mb-3 border-b border-blue-500/30 pb-1">CONTROLS</h3>
         <div className="space-y-1 text-xs leading-tight">
-          <p><span className="text-blue-400 font-bold">WASD:</span> <span className="text-gray-300">Move</span></p>
-          <p><span className="text-blue-400 font-bold">Shift:</span> <span className="text-gray-300">Sprint</span></p>
-          <p><span className="text-blue-400 font-bold">1-6:</span> <span className="text-gray-300">Weapons</span></p>
-          <p><span className="text-blue-400 font-bold">Click:</span> <span className="text-gray-300">Attack</span></p>
-          <p><span className="text-blue-400 font-bold">Mouse:</span> <span className="text-gray-300">Camera</span></p>
+          <p><span className="text-blue-400 font-bold">WASD:</span> <span className="text-white">Smooth Movement</span></p>
+          <p><span className="text-blue-400 font-bold">Shift:</span> <span className="text-white">Sprint (Fast!)</span></p>
+          <p><span className="text-blue-400 font-bold">1-6:</span> <span className="text-white">Quick Weapons</span></p>
+          <p><span className="text-blue-400 font-bold">Click NPCs:</span> <span className="text-white">Interact</span></p>
+          <p><span className="text-blue-400 font-bold">Red Spheres:</span> <span className="text-white">Attack!</span></p>
+          <p><span className="text-blue-400 font-bold">Mouse Drag:</span> <span className="text-white">Camera</span></p>
         </div>
       </div>
 
@@ -1015,14 +1014,15 @@ const Game: React.FC = () => {
   return (
     <div className="w-full h-screen relative bg-gradient-to-b from-red-900/20 to-black">
       <Canvas 
-        camera={{ position: [15, 20, 15], fov: 60 }}
+        camera={{ position: [15, 25, 15], fov: 70 }}
         shadows
+        gl={{ antialias: true, alpha: false }}
       >
         {/* Dramatic lighting setup */}
-        <ambientLight intensity={0.4} color="#4a4a4a" />
+        <ambientLight intensity={0.6} color="#553333" />
         <directionalLight 
           position={[10, 20, 10]} 
-          intensity={0.8} 
+          intensity={1.2} 
           color="#ffffff"
           castShadow
           shadow-mapSize-width={2048}
@@ -1030,13 +1030,13 @@ const Game: React.FC = () => {
         />
         
         {/* Multiple colored lights for atmosphere */}
-        <pointLight position={[0, 15, 0]} intensity={1.2} color="#ff6644" distance={60} />
-        <pointLight position={[-20, 8, -20]} intensity={0.8} color="#ff8844" distance={50} />
-        <pointLight position={[20, 8, 20]} intensity={0.8} color="#ff8844" distance={50} />
-        <pointLight position={[0, 5, -30]} intensity={0.6} color="#4488ff" distance={40} />
+        <pointLight position={[0, 15, 0]} intensity={1.5} color="#ff4422" distance={60} />
+        <pointLight position={[-25, 8, -25]} intensity={1.0} color="#ff6644" distance={50} />
+        <pointLight position={[25, 8, 25]} intensity={1.0} color="#ff6644" distance={50} />
+        <pointLight position={[0, 5, -35]} intensity={0.8} color="#4466ff" distance={40} />
         
         {/* Heavy atmospheric fog */}
-        <fog attach="fog" args={['#2a1a1a', 40, 120]} />
+        <fog attach="fog" args={['#331111', 35, 120]} />
         
         <Player />
         <City />
@@ -1045,11 +1045,11 @@ const Game: React.FC = () => {
           enablePan={true}
           enableZoom={true}
           enableRotate={true}
-          maxDistance={35}
-          minDistance={6}
+          maxDistance={60}
+          minDistance={12}
           maxPolarAngle={Math.PI / 2.2}
-          dampingFactor={0.05}
           enableDamping={true}
+          dampingFactor={0.05}
         />
       </Canvas>
       
@@ -1060,7 +1060,7 @@ const Game: React.FC = () => {
       {/* Game Controls Help */}
       <div className="absolute bottom-4 right-1/2 transform translate-x-1/2 text-white text-center">
         <div className="bg-black/80 px-6 py-3 rounded-lg border border-red-500/30 backdrop-blur-sm">
-          <div className="text-sm text-gray-300 mb-2">🎮 Smooth WASD movement • Click glowing outlines to interact • Red spheres to attack</div>
+          <div className="text-sm text-gray-300 mb-2">🎮 WASD = Move | Shift = Sprint | Click NPCs | Red = Attack | Mouse = Camera</div>
           <div className="flex space-x-2 text-xs justify-center">
             <span className="bg-red-600 px-2 py-1 rounded">MATURE 17+</span>
             <span className="bg-gray-800 px-2 py-1 rounded">CRIME SIMULATOR</span>
@@ -1070,13 +1070,7 @@ const Game: React.FC = () => {
 
       {/* Atmospheric overlay with film grain effect */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-red-900/10 pointer-events-none"></div>
-      <div 
-        className="absolute inset-0 opacity-20 pointer-events-none"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.3'/%3E%3C/svg%3E")`,
-          mixBlendMode: 'multiply'
-        }}
-      ></div>
+      <div className="absolute inset-0 bg-black/5 pointer-events-none"></div>
     </div>
   );
 };

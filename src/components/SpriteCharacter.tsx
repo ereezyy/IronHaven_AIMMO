@@ -12,6 +12,7 @@ interface SpriteCharacterProps {
   onHover?: () => void;
   bloodLevel?: number;
   weapon?: string;
+  rotation?: number;
 }
 
 const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
@@ -22,7 +23,8 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
   onClick,
   onHover,
   bloodLevel = 0,
-  weapon
+  weapon,
+  rotation = 0
 }) => {
   const spriteRef = useRef<THREE.Sprite>(null);
   const [animationFrame, setAnimationFrame] = useState(0);
@@ -31,24 +33,24 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
   // Create detailed sprite texture based on character type
   const createCharacterTexture = () => {
     const canvas = document.createElement('canvas');
-    canvas.width = 128;
-    canvas.height = 128;
+    canvas.width = 256;
+    canvas.height = 256;
     const ctx = canvas.getContext('2d')!;
 
     // Clear canvas
-    ctx.clearRect(0, 0, 128, 128);
+    ctx.clearRect(0, 0, 256, 256);
 
     if (type === 'corpse') {
       // Draw detailed corpse
       ctx.fillStyle = '#4a0000';
-      ctx.fillRect(40, 90, 48, 16); // Body lying down
+      ctx.fillRect(80, 180, 96, 32); // Body lying down
       ctx.fillStyle = '#2d1810';
-      ctx.fillRect(36, 84, 16, 16); // Head
+      ctx.fillRect(72, 168, 32, 32); // Head
       
       // Large blood pool
       ctx.fillStyle = '#8B0000';
       ctx.beginPath();
-      ctx.ellipse(64, 100, 30, 16, 0, 0, 2 * Math.PI);
+      ctx.ellipse(128, 200, 60, 32, 0, 0, 2 * Math.PI);
       ctx.fill();
       
       // Blood splatter pattern
@@ -56,8 +58,8 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
         ctx.fillStyle = `rgba(139, 0, 0, ${Math.random() * 0.8 + 0.2})`;
         ctx.beginPath();
         ctx.arc(
-          40 + Math.random() * 48,
-          80 + Math.random() * 30,
+          80 + Math.random() * 96,
+          160 + Math.random() * 60,
           Math.random() * 6 + 2,
           0,
           2 * Math.PI
@@ -70,8 +72,8 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
         ctx.fillStyle = '#000000';
         ctx.beginPath();
         ctx.arc(
-          50 + Math.random() * 28,
-          88 + Math.random() * 12,
+          100 + Math.random() * 56,
+          176 + Math.random() * 24,
           2,
           0,
           2 * Math.PI
@@ -83,8 +85,8 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
     }
 
     // Character colors and details based on type
-    let bodyColor = '#4A5568';
-    let headColor = '#D69E2E';
+    let bodyColor = '#5A6578';
+    let headColor = '#E6A53E';
     let accessoryColor = '#2D3748';
     let clothingDetails = [];
 
@@ -128,41 +130,41 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
 
     // Adjust colors based on mood
     if (mood === 'hostile' || mood === 'aggressive') {
-      bodyColor = '#C53030';
+      bodyColor = '#D53040';
     } else if (mood === 'friendly') {
-      bodyColor = '#38A169';
+      bodyColor = '#48B179';
     } else if (mood === 'terrified') {
-      bodyColor = '#9F7AEA';
+      bodyColor = '#AF8AFA';
     }
 
     // Draw shadow
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.beginPath();
-    ctx.ellipse(64, 120, 20, 8, 0, 0, 2 * Math.PI);
+    ctx.ellipse(128, 240, 40, 16, 0, 0, 2 * Math.PI);
     ctx.fill();
 
     // Draw body
     ctx.fillStyle = bodyColor;
-    ctx.fillRect(48, 64, 32, 40);
+    ctx.fillRect(96, 128, 64, 80);
 
     // Draw head
     ctx.fillStyle = headColor;
-    ctx.fillRect(52, 40, 24, 24);
+    ctx.fillRect(104, 80, 48, 48);
 
     // Draw facial features
     ctx.fillStyle = '#000000';
     // Eyes
-    ctx.fillRect(56, 48, 4, 4);
-    ctx.fillRect(68, 48, 4, 4);
+    ctx.fillRect(112, 96, 8, 8);
+    ctx.fillRect(136, 96, 8, 8);
     // Mouth
     if (mood === 'hostile' || mood === 'aggressive') {
-      ctx.fillRect(60, 56, 8, 2); // Angry mouth
+      ctx.fillRect(120, 112, 16, 4); // Angry mouth
     } else if (mood === 'terrified') {
       ctx.beginPath();
-      ctx.arc(64, 58, 3, 0, Math.PI);
+      ctx.arc(128, 116, 6, 0, Math.PI);
       ctx.fill();
     } else {
-      ctx.fillRect(62, 56, 4, 2); // Neutral mouth
+      ctx.fillRect(124, 112, 8, 4); // Neutral mouth
     }
 
     // Draw clothing details
@@ -170,54 +172,54 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
     clothingDetails.forEach(detail => {
       switch (detail) {
         case 'leather_jacket':
-          ctx.fillRect(48, 64, 4, 40); // Left side
-          ctx.fillRect(76, 64, 4, 40); // Right side
-          ctx.fillRect(48, 64, 32, 4); // Collar
+          ctx.fillRect(96, 128, 8, 80); // Left side
+          ctx.fillRect(152, 128, 8, 80); // Right side
+          ctx.fillRect(96, 128, 64, 8); // Collar
           break;
         case 'suit':
-          ctx.fillRect(48, 64, 32, 4); // Lapels
-          ctx.fillRect(62, 68, 4, 36); // Tie
+          ctx.fillRect(96, 128, 64, 8); // Lapels
+          ctx.fillRect(124, 136, 8, 72); // Tie
           break;
         case 'uniform':
-          ctx.fillRect(48, 64, 32, 4); // Collar
-          ctx.fillRect(56, 68, 16, 2); // Pocket
+          ctx.fillRect(96, 128, 64, 8); // Collar
+          ctx.fillRect(112, 136, 32, 4); // Pocket
           break;
         case 'hoodie':
-          ctx.fillRect(46, 62, 36, 6); // Hood
-          ctx.fillRect(48, 64, 32, 4); // Hood opening
+          ctx.fillRect(92, 124, 72, 12); // Hood
+          ctx.fillRect(96, 128, 64, 8); // Hood opening
           break;
         case 'fedora':
           ctx.fillStyle = '#1A1A1A';
-          ctx.fillRect(50, 36, 28, 8);
-          ctx.fillRect(48, 40, 32, 4);
+          ctx.fillRect(100, 72, 56, 16);
+          ctx.fillRect(96, 80, 64, 8);
           break;
         case 'badge':
           ctx.fillStyle = '#FFD700';
-          ctx.fillRect(58, 70, 6, 6);
+          ctx.fillRect(116, 140, 12, 12);
           break;
         case 'gun':
           ctx.fillStyle = '#2D3748';
-          ctx.fillRect(82, 70, 12, 4);
+          ctx.fillRect(164, 140, 24, 8);
           break;
         case 'sunglasses':
           ctx.fillStyle = '#000000';
-          ctx.fillRect(54, 46, 20, 8);
+          ctx.fillRect(108, 92, 40, 16);
           break;
         case 'chains':
           ctx.fillStyle = '#FFD700';
           for (let i = 0; i < 3; i++) {
-            ctx.fillRect(60 + i * 2, 68 + i * 2, 8, 2);
+            ctx.fillRect(120 + i * 4, 136 + i * 4, 16, 4);
           }
           break;
         case 'gold_watch':
           ctx.fillStyle = '#FFD700';
-          ctx.fillRect(46, 80, 8, 4);
+          ctx.fillRect(92, 160, 16, 8);
           break;
         case 'cigar':
           ctx.fillStyle = '#8B4513';
-          ctx.fillRect(76, 54, 8, 2);
+          ctx.fillRect(152, 108, 16, 4);
           ctx.fillStyle = '#FF4500';
-          ctx.fillRect(84, 54, 2, 2);
+          ctx.fillRect(168, 108, 4, 4);
           break;
       }
       ctx.fillStyle = accessoryColor; // Reset color
@@ -225,13 +227,13 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
 
     // Draw legs
     ctx.fillStyle = '#2D3748';
-    ctx.fillRect(52, 104, 10, 20);
-    ctx.fillRect(66, 104, 10, 20);
+    ctx.fillRect(104, 208, 20, 40);
+    ctx.fillRect(132, 208, 20, 40);
 
     // Draw shoes
     ctx.fillStyle = '#000000';
-    ctx.fillRect(50, 124, 14, 4);
-    ctx.fillRect(64, 124, 14, 4);
+    ctx.fillRect(100, 248, 28, 8);
+    ctx.fillRect(128, 248, 28, 8);
 
     // Add weapon if specified
     if (weapon) {
@@ -242,26 +244,26 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
           break;
         case 'knife':
           ctx.fillStyle = '#C0C0C0';
-          ctx.fillRect(82, 68, 2, 12);
+          ctx.fillRect(164, 136, 4, 24);
           ctx.fillStyle = '#8B4513';
-          ctx.fillRect(82, 76, 2, 4);
+          ctx.fillRect(164, 152, 4, 8);
           break;
         case 'bat':
           ctx.fillStyle = '#8B4513';
-          ctx.fillRect(84, 60, 4, 20);
+          ctx.fillRect(168, 120, 8, 40);
           break;
         case 'pistol':
           ctx.fillStyle = '#2D3748';
-          ctx.fillRect(82, 70, 12, 6);
+          ctx.fillRect(164, 140, 24, 12);
           break;
         case 'shotgun':
           ctx.fillStyle = '#2D3748';
-          ctx.fillRect(82, 68, 16, 8);
+          ctx.fillRect(164, 136, 32, 16);
           break;
         case 'uzi':
           ctx.fillStyle = '#2D3748';
-          ctx.fillRect(82, 70, 14, 6);
-          ctx.fillRect(82, 66, 6, 4);
+          ctx.fillRect(164, 140, 28, 12);
+          ctx.fillRect(164, 132, 12, 8);
           break;
       }
     }
@@ -273,8 +275,8 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
       // Blood on clothes
       for (let i = 0; i < bloodLevel * 15; i++) {
         ctx.fillRect(
-          48 + Math.random() * 32,
-          64 + Math.random() * 40,
+          96 + Math.random() * 64,
+          128 + Math.random() * 80,
           Math.random() * 4 + 1,
           Math.random() * 4 + 1
         );
@@ -283,20 +285,20 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
       // Blood on hands
       if (bloodLevel > 0.3) {
         ctx.fillStyle = 'rgba(139, 0, 0, 0.9)';
-        ctx.fillRect(44, 80, 8, 8); // Left hand
-        ctx.fillRect(76, 80, 8, 8); // Right hand
+        ctx.fillRect(88, 160, 16, 16); // Left hand
+        ctx.fillRect(152, 160, 16, 16); // Right hand
       }
       
       // Blood on face for extreme violence
       if (bloodLevel > 0.7) {
         ctx.fillStyle = 'rgba(139, 0, 0, 0.8)';
-        ctx.fillRect(52, 56, 24, 8); // Face blood
+        ctx.fillRect(104, 112, 48, 16); // Face blood
         
         // Blood drips
         for (let i = 0; i < 3; i++) {
           ctx.fillRect(
-            56 + i * 6,
-            64,
+            112 + i * 12,
+            128,
             2,
             Math.random() * 10 + 5
           );
@@ -311,8 +313,8 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
       for (let i = 0; i < Math.floor(bloodLevel * 3); i++) {
         ctx.beginPath();
         ctx.arc(
-          52 + Math.random() * 24,
-          68 + Math.random() * 32,
+          104 + Math.random() * 48,
+          136 + Math.random() * 64,
           1.5,
           0,
           2 * Math.PI
@@ -331,30 +333,35 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
       // Billboard effect - always face camera
       spriteRef.current.lookAt(state.camera.position);
       
+      // Apply rotation for movement direction
+      if (rotation !== 0) {
+        spriteRef.current.material.rotation = rotation;
+      }
+      
       // Floating animation for living characters
       if (type !== 'corpse') {
-        spriteRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 3) * 0.06;
+        spriteRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 3) * 0.12;
         
         // Breathing animation
         const breathe = 1 + Math.sin(state.clock.elapsedTime * 6) * 0.03;
-        spriteRef.current.scale.y = scale * 3 * breathe;
+        spriteRef.current.scale.y = scale * 4 * breathe;
       }
       
       // Walking animation
       if (isWalking && type !== 'corpse') {
         const walkCycle = Math.sin(state.clock.elapsedTime * 12);
-        spriteRef.current.scale.x = scale * 3 * (1 + walkCycle * 0.08);
+        spriteRef.current.scale.x = scale * 4 * (1 + walkCycle * 0.15);
       }
       
       // Mood-based animations
       if (mood === 'terrified' && type !== 'corpse') {
-        const shake = Math.sin(state.clock.elapsedTime * 25) * 0.08;
+        const shake = Math.sin(state.clock.elapsedTime * 25) * 0.15;
         spriteRef.current.position.x = position[0] + shake;
       }
       
       if (mood === 'aggressive' && type !== 'corpse') {
-        const aggressive = Math.sin(state.clock.elapsedTime * 8) * 0.12;
-        spriteRef.current.scale.setScalar(scale * 3 * (1 + aggressive));
+        const aggressive = Math.sin(state.clock.elapsedTime * 8) * 0.2;
+        spriteRef.current.scale.setScalar(scale * 4 * (1 + aggressive));
       }
     }
   });
@@ -363,7 +370,7 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
     <sprite
       ref={spriteRef}
       position={position}
-      scale={[scale * 3, scale * 3, 1]}
+      scale={[scale * 4, scale * 4, 1]}
       onClick={onClick}
       onPointerOver={onHover}
     >

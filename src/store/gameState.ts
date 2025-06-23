@@ -18,6 +18,7 @@ interface GameState {
   recentActions: string[];
   activeMission: any;
   currentWeaponId: string;
+  playerPosition: [number, number, number];
   getCurrentWeapon: () => Weapon;
   addAction: (action: string) => void;
   updateStats: (stats: Partial<GameState['playerStats']>) => void;
@@ -25,6 +26,7 @@ interface GameState {
   setActiveMission: (mission: any) => void;
   updateSkills: (skillUpdates: Partial<GameState['playerStats']['skills']>) => void;
   setCurrentWeaponId: (weaponId: string) => void;
+  setPlayerPosition: (position: [number, number, number]) => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -44,6 +46,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   recentActions: [],
   activeMission: null,
   currentWeaponId: 'fists',
+  playerPosition: [0, 1.5, 0],
   getCurrentWeapon: () => {
     const state = get();
     return weapons.find(w => w.id === state.currentWeaponId) || weapons[0];
@@ -71,5 +74,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   setCurrentWeaponId: (weaponId) =>
     set(() => ({
       currentWeaponId: weaponId
+    })),
+  setPlayerPosition: (position) =>
+    set(() => ({
+      playerPosition: position
     }))
 }));
