@@ -3,6 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Box, Plane, Text, Sphere, Cylinder } from '@react-three/drei';
 import { useGameStore } from '../store/gameState';
 import { generateNPCResponse, analyzeThreatLevel, generateDynamicMission } from '../lib/ai';
+import { worldGenerator, WorldChunk } from '../lib/worldGenerator';
 import SpriteCharacter from './SpriteCharacter';
 import { WeaponSystem, weapons, Weapon } from './WeaponSystem';
 import { CombatSystem, CombatEffect } from './CombatSystem';
@@ -245,6 +246,7 @@ function Player() {
   const [isInVehicle, setIsInVehicle] = useState(false);
   const [currentVehicle, setCurrentVehicle] = useState<Vehicle | null>(null);
   const [rotation, setRotation] = useState(0);
+  const [worldChunks, setWorldChunks] = useState<WorldChunk[]>([]);
 
   const currentWeapon = gameStore.getCurrentWeapon();
   
@@ -282,12 +284,6 @@ function Player() {
       const weaponIndex = parseInt(key) - 1;
       if (weaponIndex >= 0 && weaponIndex < weapons.length) {
         gameStore.setCurrentWeaponId(weapons[weaponIndex].id);
-      }
-      
-      // Exit vehicle
-      if (key === 'f' && isInVehicle) {
-        setIsInVehicle(false);
-        setCurrentVehicle(null);
       }
       
       // Sprint with shift
@@ -430,6 +426,7 @@ function Player() {
     // No boundary constraints for infinite world
 
     setPosition(newPosition);
+    gameStore.setPlayerPosition(newPosition);
     setVelocity(finalVelocity);
     setIsMoving(Math.abs(finalVelocity[0]) > 2 || Math.abs(finalVelocity[2]) > 2);
 
@@ -459,6 +456,16 @@ function Player() {
     ).length;
     setBloodLevel(Math.min(violentActions * 0.15, 1));
   }, [gameStore.recentActions]);
+
+  // Update world based on player position
+  useEffect(() => {
+    const updateWorld = async () => {
+      const chunks = await worldGenerator.updateWorld(position);
+      setWorldChunks(chunks);
+    };
+    
+    updateWorld();
+  }, [Math.floor(position[0] / 50), Math.floor(position[2] / 50)]); // Update when player moves to new chunk
 
   return (
     <>
@@ -501,7 +508,21 @@ function City() {
 
   const [playerPosition, setPlayerPosition] = useState<[number, number, number]>([0, 1, 0]);
 
+  const [worldChunks, setWorldChunks] = useState<WorldChunk[]>([]);
   const currentWeapon = gameStore.getCurrentWeapon();
+
+  // Update world chunks based on player position
+  useEffect(() => {
+    const updateWorld = async () => {
+      const chunks = await worldGenerator.updateWorld(playerPosition);
+      setWorldChunks(chunks);
+    };
+    
+    updateWorld();
+    
+    // Update player position from game store
+    setPlayerPosition(gameStore.playerPosition);
+  }, [gameStore.playerPosition]);
   
   // Pass world chunks to Player component
   const PlayerWithCollision = () => {
@@ -911,6 +932,128 @@ function City() {
 
   return (
     <>
+      {/* Dynamic World Rendering */}
+      {worldChunks.map(chunk => (
+        <group key={chunk.id}>
+          {/* Render buildings */}
+          {chunk.buildings.map(building => (
+            <group key={building.id}>
+              <Box
+                position={building.position}
+                scale={building.size}
+              >
+                <meshStandardMaterial 
+                  color={building.color}
+                  roughness={0.9}
+                  metalness={0.1}
+                />
+              </Box>
+              
+              {/* Windows */}
+              {building.windows && Array.from({ length: Math.floor(building.size[1] / 3) }).map((_, floor) => (
+                <group key={floor}>
+                  {Array.from({ length: 3 }).map((_, window) => (
+                    <Box
+                      key={window}
+                      position={[
+                        building.position[0] + (window - 1) * building.size[0] / 4,
+                        building.position[1] - building.size[1]/2 + (floor + 1) * 3,
+                        building.position[2] + building.size[2]/2 + 0.1
+                      ]}
+                      scale={[0.6, 0.8, 0.1]}
+                    >
+                      <meshStandardMaterial 
+                        color={Math.random() > 0.7 ? "#ffff88" : "#000000"} 
+                        transparent
+                        opacity={0.8}
+                        emissive={Math.random() > 0.7 ? "#ffff44" : "#000000"}
+                        emissiveIntensity={0.3}
+                      />
+                    </Box>
+                  ))}
+                </group>
+              ))}
+              
+              {/* Neon signs */}
+              {building.neonSign && (
+                <Box
+                  position={[
+                    building.position[0], 
+                    building.position[1] + building.size[1] * 0.3, 
+                    building.position[2] + building.size[2]/2 + 0.2
+                  ]}
+                  scale={[building.size[0] * 0.8, 0.5, 0.1]}
+                >
+                  <meshStandardMaterial 
+                    color="#ff0066" 
+                    emissive="#ff0066"
+                    emissiveIntensity={1.5}
+                  />
+                </Box>
+              )}
+            </group>
+          ))}
+          
+          {/* Render props */}
+          {chunk.props.map(prop => {
+            if (prop.type === 'street_light') {
+              return (
+                <group key={prop.id}>
+                  <Cylinder position={prop.position} scale={prop.scale}>
+                    <meshStandardMaterial color="#444444" />
+                  </Cylinder>
+                  <Sphere 
+                    position={[prop.position[0], prop.position[1] + 4, prop.position[2]]} 
+                    scale={[0.3, 0.3, 0.3]}
+                  >
+                    <meshStandardMaterial 
+                      color="#ffff88" 
+                      emissive="#ffff44"
+                      emissiveIntensity={0.8}
+                    />
+                  </Sphere>
+                </group>
+              );
+            } else if (prop.type === 'trash_can') {
+              return (
+                <Cylinder
+                  key={prop.id}
+                  position={prop.position}
+                  scale={prop.scale}
+                  rotation={[0, prop.rotation, 0]}
+                >
+                  <meshStandardMaterial color="#2d2d2d" />
+                </Cylinder>
+              );
+            } else {
+              return (
+                <Box
+                  key={prop.id}
+                  position={prop.position}
+                  scale={prop.scale}
+                  rotation={[0, prop.rotation, 0]}
+                >
+                  <meshStandardMaterial color="#1a1a1a" />
+                </Box>
+              );
+            }
+          })}
+          
+          {/* Render chunk NPCs */}
+          {chunk.npcs.map(npc => (
+            <NPC 
+              key={npc.id} 
+              npc={npc} 
+              onInteract={handleNPCInteract}
+              onKill={handleNPCKill}
+              onDamage={handleNPCDamage}
+              playerPosition={playerPosition}
+              currentWeapon={currentWeapon}
+            />
+          ))}
+        </group>
+      ))}
+
       {/* Ground with improved textures */}
       <Plane
         rotation={[-Math.PI / 2, 0, 0]}
@@ -1424,7 +1567,7 @@ const Game: React.FC = () => {
   return (
     <div className="w-full h-screen relative bg-gradient-to-b from-red-900/20 to-black">
       <Canvas 
-        camera={{ position: [12, 22, 12], fov: 65 }}
+        camera={{ position: [0, 25, 25], fov: 75 }}
         shadows
         gl={{ 
           antialias: true, 
@@ -1457,6 +1600,26 @@ const Game: React.FC = () => {
         <Player />
         <City />
         <CameraController />
+        
+        {/* New Systems */}
+        <AudioSystem />
+        <PoliceSystem 
+          playerPosition={gameStore.playerPosition} 
+          onPoliceKilled={(id) => {
+            gameStore.incrementPoliceKillCount();
+            gameStore.addAction(`killed_police_${id}`);
+          }}
+        />
+        <VehicleSystem 
+          playerPosition={gameStore.playerPosition}
+          onPlayerEnterVehicle={(vehicleId) => {
+            gameStore.addAction(`entered_vehicle_${vehicleId}`);
+          }}
+          onPlayerExitVehicle={() => {
+            gameStore.addAction('exited_vehicle');
+          }}
+        />
+        
         <OrbitControls 
           enablePan={false}
           enableZoom={false}
@@ -1479,12 +1642,11 @@ const Game: React.FC = () => {
       {/* Game Controls Help */}
       <div className="absolute bottom-4 right-1/2 transform translate-x-1/2 text-white text-center">
         <div className="bg-black/80 px-6 py-3 rounded-lg border border-red-500/30 backdrop-blur-sm">
-          <div className="text-sm text-gray-300 mb-2">🌍 <span className="text-green-400 font-bold">INFINITE AI WORLD</span> | <span className="text-yellow-400">WASD = MOVE</span> | <span className="text-red-400">Red Spheres = ATTACK</span> | <span className="text-purple-400">F = ENTER/EXIT VEHICLE</span></div>
+          <div className="text-sm text-gray-300 mb-2">Welcome to Ironhaven - WASD: Move | 1-6: Weapons | F: Enter/Exit Vehicle</div>
           <div className="flex space-x-2 text-xs justify-center">
             <span className="bg-red-600 px-2 py-1 rounded">MATURE 17+</span>
-            <span className="bg-blue-600 px-2 py-1 rounded animate-pulse">🚔 DYNAMIC POLICE</span>
-            <span className="bg-green-600 px-2 py-1 rounded animate-pulse">🚗 DRIVE VEHICLES</span>
-            <span className="bg-purple-600 px-2 py-1 rounded animate-pulse">AI GENERATED WORLD</span>
+            <span className="bg-gray-800 px-2 py-1 rounded">CRIME SIMULATOR</span>
+            <span className="bg-blue-600 px-2 py-1 rounded">INFINITE WORLD</span>
           </div>
         </div>
       </div>
