@@ -755,7 +755,7 @@ const Game: React.FC = () => {
       <WeaponSystem />
 
       {/* Audio System */}
-      <AudioSystem />
+      <AudioSystem enabled={true} />
       
       {/* Inventory System */}
       <InventorySystem />

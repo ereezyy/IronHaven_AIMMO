@@ -43,16 +43,16 @@ const DayNightCycle: React.FC<DayNightCycleProps> = ({ timeScale = 120, onTimeUp
       directionalLightRef.current.position.set(sunX, sunY, sunZ);
       
       // Adjust light intensity based on time
-      let intensity = 0.5;
+      let intensity = 0.8;
       if (currentTime >= 6 && currentTime <= 18) {
         // Daytime
-        intensity = 0.8;
+        intensity = 1.0;
       } else if ((currentTime >= 5 && currentTime < 6) || (currentTime > 18 && currentTime <= 19)) {
         // Dawn/Dusk
-        intensity = 0.4;
+        intensity = 0.6;
       } else {
         // Nighttime
-        intensity = 0.1;
+        intensity = 0.3;
       }
       
       directionalLightRef.current.intensity = intensity;
