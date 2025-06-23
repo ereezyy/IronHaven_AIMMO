@@ -6,6 +6,9 @@ import { generateNPCResponse, analyzeThreatLevel, generateDynamicMission } from 
 import SpriteCharacter from './SpriteCharacter';
 import { WeaponSystem, weapons, Weapon } from './WeaponSystem';
 import { CombatSystem, CombatEffect } from './CombatSystem';
+import AudioSystem from './AudioSystem';
+import PoliceSystem from './PoliceSystem';
+import VehicleSystem from './VehicleSystem';
 import * as THREE from 'three';
 
 interface NPCData {
@@ -242,7 +245,6 @@ function Player() {
   const [isInVehicle, setIsInVehicle] = useState(false);
   const [currentVehicle, setCurrentVehicle] = useState<Vehicle | null>(null);
   const [rotation, setRotation] = useState(0);
-  const [worldChunks, setWorldChunks] = useState<import('../lib/worldGenerator').WorldChunk[]>([]);
 
   const currentWeapon = gameStore.getCurrentWeapon();
   
@@ -481,6 +483,8 @@ function City() {
   const gameStore = useGameStore();
   const [worldChunks, setWorldChunks] = useState<import('../lib/worldGenerator').WorldChunk[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [policeKillCount, setPoliceKillCount] = useState(0);
+  const [vehicleSystemActive, setVehicleSystemActive] = useState(false);
   
   // Fixed NPC positions to prevent flutter
   const [npcs, setNpcs] = useState<NPCData[]>([]);
@@ -872,6 +876,25 @@ function City() {
     ));
   };
 
+  const handlePoliceKilled = (policeId: string) => {
+    setPoliceKillCount(prev => prev + 1);
+    gameStore.addAction('killed_police_officer');
+    gameStore.updateStats({ 
+      reputation: gameStore.playerStats.reputation + 30,
+      money: gameStore.playerStats.money + 500
+    });
+  };
+
+  const handlePlayerEnterVehicle = (vehicleId: string) => {
+    setVehicleSystemActive(true);
+    gameStore.addAction(`entered_vehicle_${vehicleId}`);
+  };
+
+  const handlePlayerExitVehicle = () => {
+    setVehicleSystemActive(false);
+    gameStore.addAction('exited_vehicle');
+  };
+
   const handleVehicleSteal = (id: string) => {
     const vehicle = vehicles.find(v => v.id === id);
     if (vehicle && !vehicle.occupied) {
@@ -1117,6 +1140,19 @@ function City() {
 
       <PlayerWithCollision />
       
+      {/* Enhanced Police System */}
+      <PoliceSystem 
+        playerPosition={gameStore.playerPosition || [0, 0, 0]}
+        onPoliceKilled={handlePoliceKilled}
+      />
+      
+      {/* Drivable Vehicle System */}
+      <VehicleSystem 
+        playerPosition={gameStore.playerPosition || [0, 0, 0]}
+        onPlayerEnterVehicle={handlePlayerEnterVehicle}
+        onPlayerExitVehicle={handlePlayerExitVehicle}
+      />
+      
       {/* NPCs */}
       {npcs.map((npc) => (
         <NPC 
@@ -1348,7 +1384,12 @@ function HUD() {
 
           <div className="flex justify-between items-center">
             <span className="text-gray-400">Body Count:</span>
-            <span className="text-red-500 font-bold text-xl animate-bounce">{killCount}</span>
+            <span className="text-red-500 font-bold text-xl animate-bounce">{killCount + policeKillCount}</span>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <span className="text-gray-400">Cops Killed:</span>
+            <span className="text-blue-400 font-bold text-lg animate-pulse">{policeKillCount}</span>
           </div>
         </div>
       </div>
@@ -1362,6 +1403,8 @@ function HUD() {
           <p><span className="text-blue-400 font-bold">1-6:</span> <span className="text-white">Quick Weapons</span></p>
           <p><span className="text-blue-400 font-bold">Click NPCs:</span> <span className="text-white">Interact</span></p>
           <p><span className="text-red-400 font-bold">Red Spheres:</span> <span className="text-white">ATTACK!</span></p>
+          <p><span className="text-purple-400 font-bold">F Key:</span> <span className="text-white">Enter/Exit Vehicle</span></p>
+          <p><span className="text-blue-400 font-bold">Yellow Orbs:</span> <span className="text-white">Available Vehicles</span></p>
           <p><span className="text-purple-400 font-bold">🌍 EXPLORE:</span> <span className="text-white">Infinite AI World!</span></p>
         </div>
       </div>
@@ -1431,13 +1474,16 @@ const Game: React.FC = () => {
       <HUD />
       <MissionPanel />
       <WeaponSystem />
+      <AudioSystem />
       
       {/* Game Controls Help */}
       <div className="absolute bottom-4 right-1/2 transform translate-x-1/2 text-white text-center">
         <div className="bg-black/80 px-6 py-3 rounded-lg border border-red-500/30 backdrop-blur-sm">
-          <div className="text-sm text-gray-300 mb-2">🌍 <span className="text-green-400 font-bold">INFINITE AI WORLD</span> | <span className="text-yellow-400">WASD = MOVE</span> | <span className="text-red-400">Red Spheres = ATTACK</span> | <span className="text-blue-400">Mouse Drag = CAMERA</span></div>
+          <div className="text-sm text-gray-300 mb-2">🌍 <span className="text-green-400 font-bold">INFINITE AI WORLD</span> | <span className="text-yellow-400">WASD = MOVE</span> | <span className="text-red-400">Red Spheres = ATTACK</span> | <span className="text-purple-400">F = ENTER/EXIT VEHICLE</span></div>
           <div className="flex space-x-2 text-xs justify-center">
             <span className="bg-red-600 px-2 py-1 rounded">MATURE 17+</span>
+            <span className="bg-blue-600 px-2 py-1 rounded animate-pulse">🚔 DYNAMIC POLICE</span>
+            <span className="bg-green-600 px-2 py-1 rounded animate-pulse">🚗 DRIVE VEHICLES</span>
             <span className="bg-purple-600 px-2 py-1 rounded animate-pulse">AI GENERATED WORLD</span>
           </div>
         </div>
