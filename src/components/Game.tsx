@@ -10,6 +10,9 @@ import { CombatSystem, CombatEffect } from './CombatSystem';
 import VehicleSystem from './VehicleSystem';
 import PoliceSystem from './PoliceSystem';
 import AudioSystem from './AudioSystem';
+import MissionSystem from './MissionSystem';
+import CrimeSystem from './CrimeSystem';
+import DynamicEvents from './DynamicEvents';
 import * as THREE from 'three';
 
 // Collision detection helper
@@ -219,6 +222,7 @@ const Game: React.FC = () => {
   const [selectedNPC, setSelectedNPC] = useState<NPCData | null>(null);
   const [threatLevel, setThreatLevel] = useState(0);
   const [lastUpdate, setLastUpdate] = useState(0);
+  const [missionActive, setMissionActive] = useState(false);
 
   // Memoize buildings for collision detection
   const allBuildings = useMemo(() => {
@@ -328,6 +332,28 @@ const Game: React.FC = () => {
     };
     setCombatEffects(prev => [...prev, effect]);
   }, [gameStore, playerPosition]);
+
+  const handleMissionUpdate = useCallback((mission: any) => {
+    setMissionActive(!mission.completed && !mission.failed);
+  }, []);
+
+  const handleCrimeCommitted = useCallback((crime: any) => {
+    // Add visual effects for serious crimes
+    if (crime.severity > 70) {
+      const effect: CombatEffect = {
+        id: `crime_${Date.now()}`,
+        position: crime.location,
+        type: crime.type === 'murder' ? 'blood_splatter' : 'impact',
+        duration: 8000,
+        startTime: Date.now()
+      };
+      setCombatEffects(prev => [...prev, effect]);
+    }
+  }, []);
+
+  const handleEventTriggered = useCallback((event: any) => {
+    gameStore.addAction(`event_${event.type}_started`);
+  }, [gameStore]);
 
   return (
     <div className="w-full h-screen bg-black relative overflow-hidden">
@@ -496,6 +522,25 @@ const Game: React.FC = () => {
 
       {/* Audio System */}
       <AudioSystem />
+
+      {/* Mission System */}
+      <MissionSystem
+        playerPosition={playerPosition}
+        onMissionUpdate={handleMissionUpdate}
+      />
+
+      {/* Crime System */}
+      <CrimeSystem
+        playerPosition={playerPosition}
+        nearbyNPCs={visibleNPCs}
+        onCrimeCommitted={handleCrimeCommitted}
+      />
+
+      {/* Dynamic Events */}
+      <DynamicEvents
+        playerPosition={playerPosition}
+        onEventTriggered={handleEventTriggered}
+      />
     </div>
   );
 };

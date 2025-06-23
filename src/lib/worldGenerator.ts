@@ -187,23 +187,23 @@ export class WorldGenerator {
     switch (biome) {
       case 'downtown':
         npcCount = 8;
-        npcTypes = ['civilian', 'police', 'dealer', 'gangster'];
+        npcTypes = ['civilian', 'police', 'dealer', 'gangster', 'hitman'];
         break;
       case 'residential':
         npcCount = 6;
-        npcTypes = ['civilian', 'civilian', 'civilian', 'police'];
+        npcTypes = ['civilian', 'civilian', 'dealer', 'police'];
         break;
       case 'industrial':
         npcCount = 4;
-        npcTypes = ['gangster', 'dealer', 'hitman', 'civilian'];
+        npcTypes = ['gangster', 'dealer', 'hitman', 'boss'];
         break;
       case 'warehouse':
         npcCount = 3;
-        npcTypes = ['gangster', 'hitman', 'boss'];
+        npcTypes = ['gangster', 'hitman', 'boss', 'dealer'];
         break;
       case 'slums':
         npcCount = 10;
-        npcTypes = ['civilian', 'dealer', 'gangster', 'gangster'];
+        npcTypes = ['civilian', 'dealer', 'gangster', 'gangster', 'hitman'];
         break;
     }
 
@@ -251,6 +251,11 @@ export class WorldGenerator {
         hitman: ["...", "You didn't see me.", "This conversation never happened."],
         civilian: ["I mind my own business.", "Don't see nothing, don't say nothing.", "Just here to work."]
       }
+    },
+    residential: {
+      civilian: ["Just trying to get by.", "This used to be a nice neighborhood.", "Kids can't even play outside anymore."],
+      dealer: ["Quiet around here, good for business.", "Family man's gotta eat.", "Keep it low-key."],
+      police: ["Patrol's been doubled.", "Keeping the community safe.", "Report anything suspicious."]
     };
 
     const biomeDialogues = dialogues[biome as keyof typeof dialogues];
