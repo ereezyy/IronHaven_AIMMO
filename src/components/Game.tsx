@@ -16,7 +16,9 @@ import DynamicEvents from './DynamicEvents';
 import InventorySystem from './InventorySystem';
 import ParticleSystem from './ParticleSystem';
 import DayNightCycle from './DayNightCycle';
+import DayNightUI from './DayNightUI';
 import WeatherSystem from './WeatherSystem';
+import WeatherUI from './WeatherUI';
 import EnhancedUI from './EnhancedUI';
 import * as THREE from 'three';
 
@@ -230,6 +232,10 @@ const Game: React.FC = () => {
   const [missionActive, setMissionActive] = useState(false);
   const [particleEffects, setParticleEffects] = useState<any[]>([]);
 
+  // Add state for UI updates
+  const [dayNightData, setDayNightData] = useState({ currentTime: 12, isNight: false });
+  const [currentWeather, setCurrentWeather] = useState<'clear' | 'rain' | 'fog' | 'storm'>('clear');
+
   // Memoize buildings for collision detection
   const allBuildings = useMemo(() => {
     return worldChunks.flatMap(chunk => chunk.buildings);
@@ -386,6 +392,15 @@ const Game: React.FC = () => {
   const handleParticleEffectComplete = useCallback((id: string) => {
     setParticleEffects(prev => prev.filter(effect => effect.id !== id));
   }, []);
+
+  const handleTimeUpdate = useCallback((currentTime: number, isNight: boolean) => {
+    setDayNightData({ currentTime, isNight });
+  }, []);
+
+  const handleWeatherUpdate = useCallback((weather: 'clear' | 'rain' | 'fog' | 'storm') => {
+    setCurrentWeather(weather);
+  }, []);
+
   return (
     <div className="w-full h-screen bg-black relative overflow-hidden">
       <Canvas
@@ -398,10 +413,10 @@ const Game: React.FC = () => {
         }}
       >
         {/* Day/Night Cycle with Dynamic Lighting */}
-        <DayNightCycle timeScale={180} />
+        <DayNightCycle timeScale={180} onTimeUpdate={handleTimeUpdate} />
         
         {/* Weather System */}
-        <WeatherSystem />
+        <WeatherSystem onWeatherUpdate={handleWeatherUpdate} />
 
         {/* Ground */}
         <mesh position={[0, -0.5, 0]} receiveShadow>
@@ -495,6 +510,15 @@ const Game: React.FC = () => {
             })
         )}
       </Canvas>
+
+      {/* Day/Night UI (outside Canvas) */}
+      <DayNightUI 
+        currentTime={dayNightData.currentTime} 
+        isNight={dayNightData.isNight} 
+      />
+
+      {/* Weather UI (outside Canvas) */}
+      <WeatherUI weather={currentWeather} />
 
       {/* UI Elements */}
       <div className="absolute top-4 left-4 p-4 bg-black/90 text-white rounded-lg border border-red-500/70 backdrop-blur-sm">

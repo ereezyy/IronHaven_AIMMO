@@ -4,9 +4,10 @@ import * as THREE from 'three';
 
 interface DayNightCycleProps {
   timeScale?: number; // How fast time passes (1 = real time, 60 = 1 minute = 1 hour)
+  onTimeUpdate?: (time: number, isNight: boolean) => void;
 }
 
-const DayNightCycle: React.FC<DayNightCycleProps> = ({ timeScale = 120 }) => {
+const DayNightCycle: React.FC<DayNightCycleProps> = ({ timeScale = 120, onTimeUpdate }) => {
   const { scene } = useThree();
   const [currentTime, setCurrentTime] = useState(12); // Start at noon
   const [isNight, setIsNight] = useState(false);
@@ -22,6 +23,11 @@ const DayNightCycle: React.FC<DayNightCycleProps> = ({ timeScale = 120 }) => {
   });
 
   useEffect(() => {
+    // Call the callback to update parent component
+    if (onTimeUpdate) {
+      onTimeUpdate(currentTime, isNight);
+    }
+
     // Determine if it's night
     setIsNight(currentTime < 6 || currentTime > 20);
 
@@ -103,24 +109,7 @@ const DayNightCycle: React.FC<DayNightCycleProps> = ({ timeScale = 120 }) => {
         isNight ? 80 : 120
       );
     }
-  }, [currentTime, isNight, scene]);
-
-  const formatTime = (time: number): string => {
-    const hours = Math.floor(time);
-    const minutes = Math.floor((time - hours) * 60);
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-  };
-
-  const getTimeOfDay = (): string => {
-    if (currentTime >= 5 && currentTime < 7) return 'Dawn';
-    if (currentTime >= 7 && currentTime < 12) return 'Morning';
-    if (currentTime >= 12 && currentTime < 17) return 'Afternoon';
-    if (currentTime >= 17 && currentTime < 19) return 'Evening';
-    if (currentTime >= 19 && currentTime < 21) return 'Dusk';
-    return 'Night';
-  };
+  }, [currentTime, isNight, scene, onTimeUpdate]);
 
   return (
     <>
@@ -159,25 +148,6 @@ const DayNightCycle: React.FC<DayNightCycleProps> = ({ timeScale = 120 }) => {
           <pointLight position={[-5, 5, -25]} intensity={0.3} color="#ffaa00" distance={15} />
         </>
       )}
-      
-      {/* Time display */}
-      <group position={[0, 0, 0]}>
-        <mesh position={[0, 50, 0]}>
-          <planeGeometry args={[0.1, 0.1]} />
-          <meshBasicMaterial transparent opacity={0} />
-        </mesh>
-      </group>
-      
-      {/* UI Time Display */}
-      <div className="absolute top-44 left-4 p-3 bg-black/90 text-white rounded-lg border border-red-500/70 backdrop-blur-sm">
-        <div className="text-center">
-          <div className="text-lg font-bold text-yellow-400">{formatTime(currentTime)}</div>
-          <div className="text-sm text-gray-400">{getTimeOfDay()}</div>
-          <div className="text-xs text-gray-500 mt-1">
-            {isNight ? '🌙 Night' : '☀️ Day'}
-          </div>
-        </div>
-      </div>
     </>
   );
 };

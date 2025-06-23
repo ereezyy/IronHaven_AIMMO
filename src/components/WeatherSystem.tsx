@@ -4,9 +4,10 @@ import * as THREE from 'three';
 
 interface WeatherSystemProps {
   currentWeather?: 'clear' | 'rain' | 'fog' | 'storm';
+  onWeatherUpdate?: (weather: 'clear' | 'rain' | 'fog' | 'storm') => void;
 }
 
-const WeatherSystem: React.FC<WeatherSystemProps> = ({ currentWeather = 'clear' }) => {
+const WeatherSystem: React.FC<WeatherSystemProps> = ({ currentWeather = 'clear', onWeatherUpdate }) => {
   const [weather, setWeather] = useState(currentWeather);
   const [rainDrops, setRainDrops] = useState<THREE.Vector3[]>([]);
   const rainRef = useRef<THREE.Points>(null);
@@ -17,11 +18,14 @@ const WeatherSystem: React.FC<WeatherSystemProps> = ({ currentWeather = 'clear' 
       const weatherTypes = ['clear', 'rain', 'fog', 'storm'];
       const randomWeather = weatherTypes[Math.floor(Math.random() * weatherTypes.length)] as any;
       setWeather(randomWeather);
+      if (onWeatherUpdate) {
+        onWeatherUpdate(randomWeather);
+      }
     };
 
     const interval = setInterval(changeWeather, 120000 + Math.random() * 180000); // 2-5 minutes
     return () => clearInterval(interval);
-  }, []);
+  }, [onWeatherUpdate]);
 
   // Generate rain particles
   useEffect(() => {
@@ -58,26 +62,6 @@ const WeatherSystem: React.FC<WeatherSystemProps> = ({ currentWeather = 'clear' 
       );
     }
   });
-
-  const getWeatherIcon = () => {
-    switch (weather) {
-      case 'clear': return '☀️';
-      case 'rain': return '🌧️';
-      case 'fog': return '🌫️';
-      case 'storm': return '⛈️';
-      default: return '☀️';
-    }
-  };
-
-  const getWeatherDescription = () => {
-    switch (weather) {
-      case 'clear': return 'Clear skies';
-      case 'rain': return 'Light rain';
-      case 'fog': return 'Heavy fog';
-      case 'storm': return 'Thunderstorm';
-      default: return 'Unknown';
-    }
-  };
 
   return (
     <>
@@ -128,14 +112,6 @@ const WeatherSystem: React.FC<WeatherSystemProps> = ({ currentWeather = 'clear' 
           ))}
         </group>
       )}
-
-      {/* Weather UI */}
-      <div className="absolute top-56 left-4 p-2 bg-black/90 text-white rounded-lg border border-red-500/70 backdrop-blur-sm">
-        <div className="flex items-center text-sm">
-          <span className="text-lg mr-2">{getWeatherIcon()}</span>
-          <span className="text-gray-300">{getWeatherDescription()}</span>
-        </div>
-      </div>
     </>
   );
 };
