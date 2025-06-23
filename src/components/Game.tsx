@@ -3,7 +3,6 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Box, Plane, Text, Sphere, Cylinder } from '@react-three/drei';
 import { useGameStore } from '../store/gameState';
 import { generateNPCResponse, analyzeThreatLevel, generateDynamicMission } from '../lib/ai';
-import { useGameStore } from '../store/gameState';
 import { worldGenerator, WorldChunk } from '../lib/worldGenerator';
 import SpriteCharacter from './SpriteCharacter';
 import { WeaponSystem, weapons, Weapon } from './WeaponSystem';
