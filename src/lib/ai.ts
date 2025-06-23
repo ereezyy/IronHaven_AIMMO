@@ -98,14 +98,6 @@ function generateFallbackNPCResponse(
     memory: [`Met player with reputation ${playerReputation}`, ...playerActions.slice(-2)]
   };
 }
-    return {
-      dialogue: "...",
-      action: "stand_guard",
-      mood: "neutral",
-      memory: []
-    };
-  }
-}
 
 export async function analyzeThreatLevel(
   playerPosition: [number, number, number],
@@ -234,6 +226,6 @@ export async function generateMissionOutcome(
       reputation_change: -5,
       consequences: ["Local gang tensions increased"],
       future_implications: ["Expect retaliation"]
-    }
+    };
   }
 }
