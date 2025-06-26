@@ -10,7 +10,7 @@ import FeaturesSection from './components/FeaturesSection';
 import FooterSection from './components/FooterSection';
 import AIStatusDisplay from './components/AIStatusDisplay';
 import MobileWarning from './components/MobileWarning';
-import EpicIntro from './components/EpicIntro';
+import SimpleIntro from './components/SimpleIntro';
 import InstantAction from './components/InstantAction';
 
 function App() {
@@ -19,7 +19,7 @@ function App() {
   // Epic intro sequence (first 20 seconds)
   if (currentView === 'intro') {
     return (
-      <EpicIntro onComplete={() => setCurrentView('instant-action')} />
+      <SimpleIntro onComplete={() => setCurrentView('instant-action')} />
     );
   }
 
