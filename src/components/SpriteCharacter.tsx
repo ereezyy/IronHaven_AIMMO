@@ -13,6 +13,14 @@ interface SpriteCharacterProps {
   bloodLevel?: number;
   weapon?: string;
   rotation?: number;
+  // New props for enhanced gameplay
+  isPlayer?: boolean;
+  velocity?: [number, number, number];
+  isSprinting?: boolean;
+  stamina?: number;
+  health?: number;
+  isInCombat?: boolean;
+  lastHitTime?: number;
 }
 
 const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
@@ -24,7 +32,15 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
   onHover,
   bloodLevel = 0,
   weapon,
-  rotation = 0
+  rotation = 0,
+  // New props with safe defaults
+  isPlayer = false,
+  velocity = [0, 0, 0],
+  isSprinting = false,
+  stamina = 100,
+  health = 100,
+  isInCombat = false,
+  lastHitTime = 0
 }) => {
   const spriteRef = useRef<THREE.Sprite>(null);
   const [animationFrame, setAnimationFrame] = useState(0);

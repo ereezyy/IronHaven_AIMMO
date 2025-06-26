@@ -116,8 +116,8 @@ const OptimizedNPC = React.memo(({
   );
 });
 
-// Player Component with collision detection
-const Player: React.FC<{ 
+// Enhanced Player Component with Modern Movement
+const Player: React.FC<{
   position: [number, number, number];
   rotation: number;
   buildings: Building[];
@@ -128,16 +128,40 @@ const Player: React.FC<{
   const { camera } = useThree();
   const [keys, setKeys] = useState<{[key: string]: boolean}>({});
   const [isInVehicle, setIsInVehicle] = useState(false);
+  const [velocity, setVelocity] = useState<[number, number, number]>([0, 0, 0]);
+  const [stamina, setStamina] = useState(100);
+  const [isSprinting, setIsSprinting] = useState(false);
+  const [lastDashTime, setLastDashTime] = useState(0);
   
   const currentWeapon = gameStore.getCurrentWeapon();
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       setKeys(prev => ({ ...prev, [event.key.toLowerCase()]: true }));
+      
+      // Sprint toggle
+      if (event.key.toLowerCase() === 'shift') {
+        setIsSprinting(true);
+      }
+      
+      // Dash/dodge on space
+      if (event.key === ' ') {
+        const now = Date.now();
+        if (now - lastDashTime > 1000 && stamina > 20) { // 1 second cooldown
+          setLastDashTime(now);
+          setStamina(prev => Math.max(0, prev - 20));
+          // Dash will be handled in useFrame
+        }
+        event.preventDefault();
+      }
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
       setKeys(prev => ({ ...prev, [event.key.toLowerCase()]: false }));
+      
+      if (event.key.toLowerCase() === 'shift') {
+        setIsSprinting(false);
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -147,77 +171,177 @@ const Player: React.FC<{
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [lastDashTime, stamina]);
 
   useFrame((state, delta) => {
-    if (isInVehicle) return; // Don't move player if in vehicle
+    if (isInVehicle) return;
 
     let newPosition = [...position] as [number, number, number];
-    let newRotation = rotation;
-    const moveSpeed = 12;
-    const rotateSpeed = 3;
-
-    // Handle rotation first
-    if (keys['a'] || keys['arrowleft']) {
-      newRotation -= rotateSpeed * delta;
-    }
-    if (keys['d'] || keys['arrowright']) {
-      newRotation += rotateSpeed * delta;
-    }
-
-    // Calculate movement direction based on rotation
-    let moveX = 0;
-    let moveZ = 0;
-
-    if (keys['w'] || keys['arrowup']) {
-      moveX = Math.sin(newRotation) * moveSpeed * delta;
-      moveZ = Math.cos(newRotation) * moveSpeed * delta;
-    }
-    if (keys['s'] || keys['arrowdown']) {
-      moveX = -Math.sin(newRotation) * moveSpeed * delta * 0.5;
-      moveZ = -Math.cos(newRotation) * moveSpeed * delta * 0.5;
-    }
-
-    // Check collision before moving
-    const testPosition: [number, number, number] = [
-      newPosition[0] + moveX,
-      newPosition[1],
-      newPosition[2] + moveZ
-    ];
-
-    if (!checkCollision(testPosition, buildings)) {
-      newPosition[0] += moveX;
-      newPosition[2] += moveZ;
-    }
-
-    // Update camera to follow player with offset
-    const cameraDistance = 15;
-    const cameraHeight = 12;
-    const cameraX = newPosition[0] - Math.sin(newRotation) * cameraDistance;
-    const cameraZ = newPosition[2] - Math.cos(newRotation) * cameraDistance;
+    let newVelocity = [...velocity] as [number, number, number];
     
-    camera.position.set(cameraX, newPosition[1] + cameraHeight, cameraZ);
-    camera.lookAt(newPosition[0], newPosition[1], newPosition[2]);
-
-    // Update positions if they changed
-    if (newPosition[0] !== position[0] || newPosition[2] !== position[2]) {
-      onPositionChange(newPosition);
+    // Movement parameters
+    const baseSpeed = 8;
+    const sprintMultiplier = 1.8;
+    const acceleration = 25;
+    const friction = 12;
+    const dashForce = 40;
+    
+    // Calculate current speed multiplier
+    const speedMultiplier = (isSprinting && stamina > 0) ? sprintMultiplier : 1;
+    const currentMaxSpeed = baseSpeed * speedMultiplier;
+    
+    // Handle stamina
+    if (isSprinting && (keys['w'] || keys['a'] || keys['s'] || keys['d'])) {
+      setStamina(prev => Math.max(0, prev - 30 * delta));
+    } else {
+      setStamina(prev => Math.min(100, prev + 20 * delta));
     }
-    if (newRotation !== rotation) {
-      onRotationChange(newRotation);
+    
+    // Modern FPS-style movement (WASD relative to camera)
+    let inputX = 0;
+    let inputZ = 0;
+    
+    if (keys['w'] || keys['arrowup']) inputZ += 1;
+    if (keys['s'] || keys['arrowdown']) inputZ -= 1;
+    if (keys['a'] || keys['arrowleft']) inputX -= 1;
+    if (keys['d'] || keys['arrowright']) inputX += 1;
+    
+    // Normalize diagonal movement
+    if (inputX !== 0 && inputZ !== 0) {
+      inputX *= 0.707;
+      inputZ *= 0.707;
     }
-
-    // Update game store position
-    gameStore.setPlayerPosition(newPosition);
+    
+    // Apply acceleration
+    if (inputX !== 0 || inputZ !== 0) {
+      newVelocity[0] += inputX * acceleration * delta;
+      newVelocity[2] += inputZ * acceleration * delta;
+    }
+    
+    // Handle dash
+    const now = Date.now();
+    if (now - lastDashTime < 200) { // Dash lasts 200ms
+      const dashProgress = (now - lastDashTime) / 200;
+      const dashStrength = (1 - dashProgress) * dashForce;
+      
+      if (inputX !== 0 || inputZ !== 0) {
+        newVelocity[0] += inputX * dashStrength * delta;
+        newVelocity[2] += inputZ * dashStrength * delta;
+      }
+    }
+    
+    // Apply friction
+    newVelocity[0] *= Math.pow(1 - friction * delta, delta);
+    newVelocity[2] *= Math.pow(1 - friction * delta, delta);
+    
+    // Limit max speed
+    const currentSpeed = Math.sqrt(newVelocity[0] * newVelocity[0] + newVelocity[2] * newVelocity[2]);
+    if (currentSpeed > currentMaxSpeed) {
+      const scale = currentMaxSpeed / currentSpeed;
+      newVelocity[0] *= scale;
+      newVelocity[2] *= scale;
+    }
+    
+    // Calculate new position
+    const testPosition: [number, number, number] = [
+      newPosition[0] + newVelocity[0] * delta,
+      newPosition[1],
+      newPosition[2] + newVelocity[2] * delta
+    ];
+    
+    // Enhanced collision detection with sliding
+    if (!checkCollision(testPosition, buildings)) {
+      newPosition[0] = testPosition[0];
+      newPosition[2] = testPosition[2];
+    } else {
+      // Try sliding along walls
+      const testX: [number, number, number] = [newPosition[0] + newVelocity[0] * delta, newPosition[1], newPosition[2]];
+      const testZ: [number, number, number] = [newPosition[0], newPosition[1], newPosition[2] + newVelocity[2] * delta];
+      
+      if (!checkCollision(testX, buildings)) {
+        newPosition[0] = testX[0];
+        newVelocity[2] *= 0.1; // Reduce velocity in blocked direction
+      } else if (!checkCollision(testZ, buildings)) {
+        newPosition[2] = testZ[2];
+        newVelocity[0] *= 0.1;
+      } else {
+        // Full stop if can't slide
+        newVelocity[0] *= 0.1;
+        newVelocity[2] *= 0.1;
+      }
+    }
+    
+    // Smooth camera following with dynamic distance
+    const cameraDistance = 12 + (currentSpeed * 0.5); // Camera pulls back when moving fast
+    const cameraHeight = 8 + (currentSpeed * 0.3);
+    const cameraSmoothing = 8;
+    
+    const targetCameraX = newPosition[0] - newVelocity[0] * 2;
+    const targetCameraZ = newPosition[2] - newVelocity[2] * 2;
+    
+    camera.position.x += (targetCameraX - camera.position.x) * cameraSmoothing * delta;
+    camera.position.y += (newPosition[1] + cameraHeight - camera.position.y) * cameraSmoothing * delta;
+    camera.position.z += (targetCameraZ - camera.position.z) * cameraSmoothing * delta;
+    
+    // Look slightly ahead of player
+    const lookAheadX = newPosition[0] + newVelocity[0] * 0.5;
+    const lookAheadZ = newPosition[2] + newVelocity[2] * 0.5;
+    camera.lookAt(lookAheadX, newPosition[1] + 2, lookAheadZ);
+    
+    // Update position and velocity
+    setVelocity(newVelocity);
+    onPositionChange(newPosition);
+    
+    // Screen shake for dash
+    if (now - lastDashTime < 100) {
+      const shakeIntensity = 0.2;
+      camera.position.x += (Math.random() - 0.5) * shakeIntensity;
+      camera.position.y += (Math.random() - 0.5) * shakeIntensity;
+      camera.position.z += (Math.random() - 0.5) * shakeIntensity;
+    }
   });
 
   return (
-    <SpriteCharacter
-      position={position}
-      type="player"
-      weapon={currentWeapon.id}
-      rotation={rotation}
-    />
+    <group position={position}>
+      {/* Player visual representation */}
+      <SpriteCharacter
+        position={[0, 0, 0]}
+        type="player"
+        mood="neutral"
+        bloodLevel={0}
+        isPlayer={true}
+        velocity={velocity}
+        isSprinting={isSprinting}
+        stamina={stamina}
+      />
+      
+      {/* Movement effects */}
+      {(Math.abs(velocity[0]) > 1 || Math.abs(velocity[2]) > 1) && (
+        <group>
+          {/* Dust particles when moving */}
+          <Box position={[0, -0.8, 0]} scale={[0.5, 0.1, 0.5]}>
+            <meshBasicMaterial 
+              color="#444444" 
+              transparent 
+              opacity={Math.min(0.3, (Math.abs(velocity[0]) + Math.abs(velocity[2])) * 0.1)}
+            />
+          </Box>
+        </group>
+      )}
+      
+      {/* Sprint effect */}
+      {isSprinting && stamina > 0 && (
+        <Box position={[0, 1, 0]} scale={[2, 2, 0.1]}>
+          <meshBasicMaterial 
+            color="#00ffff" 
+            transparent 
+            opacity={0.1}
+            emissive="#00ffff"
+            emissiveIntensity={0.2}
+          />
+        </Box>
+      )}
+    </group>
   );
 };
 
