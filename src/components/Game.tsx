@@ -5,7 +5,7 @@ import { useGameStore } from '../store/gameState';
 import { generateNPCResponse, analyzeThreatLevel } from '../lib/ai';
 import { worldGenerator, WorldChunk, Building, NPCData } from '../lib/worldGenerator';
 import SpriteCharacter from './SpriteCharacter';
-import { WeaponSystem, weapons, Weapon } from './WeaponSystem';
+import WeaponSystem, { weapons, Weapon } from './WeaponSystem';
 import EnhancedCombat, { CombatEffect } from './EnhancedCombat';
 import SmartNPC from './SmartNPC';
 import ImmersiveWorld from './ImmersiveWorld';
