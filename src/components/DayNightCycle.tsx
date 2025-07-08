@@ -13,6 +13,11 @@ const DayNightCycle: React.FC<DayNightCycleProps> = ({ timeScale = 120, onTimeUp
   const [isNight, setIsNight] = useState(false);
   const directionalLightRef = useRef<THREE.DirectionalLight>(null);
   const ambientLightRef = useRef<THREE.AmbientLight>(null);
+  
+  // Create persistent color objects to avoid recreation every frame
+  const directionalColorRef = useRef(new THREE.Color(1, 1, 1));
+  const ambientColorRef = useRef(new THREE.Color(1, 1, 1));
+  const fogColorRef = useRef(new THREE.Color(0.05, 0.05, 0.1));
 
   useFrame((state, delta) => {
     // Update time
@@ -57,18 +62,20 @@ const DayNightCycle: React.FC<DayNightCycleProps> = ({ timeScale = 120, onTimeUp
       
       directionalLightRef.current.intensity = intensity;
       
-      // Adjust light color based on time
-      let color = new THREE.Color(1, 1, 1); // White
+      // Adjust light color based on time using persistent color object
       if (currentTime < 6 || currentTime > 20) {
         // Night - blue tint
-        color = new THREE.Color(0.4, 0.6, 1);
+        directionalColorRef.current.setRGB(0.4, 0.6, 1);
       } else if ((currentTime >= 5 && currentTime < 7) || (currentTime >= 18 && currentTime < 20)) {
         // Dawn/Dusk - orange tint
         const t = currentTime < 12 ? (currentTime - 5) / 2 : (20 - currentTime) / 2;
-        color = new THREE.Color(1, 0.6 + t * 0.4, 0.2 + t * 0.8);
+        directionalColorRef.current.setRGB(1, 0.6 + t * 0.4, 0.2 + t * 0.8);
+      } else {
+        // Day - white
+        directionalColorRef.current.setRGB(1, 1, 1);
       }
       
-      directionalLightRef.current.color = color;
+      directionalLightRef.current.color = directionalColorRef.current;
     }
 
     // Update ambient light
@@ -82,29 +89,36 @@ const DayNightCycle: React.FC<DayNightCycleProps> = ({ timeScale = 120, onTimeUp
       
       ambientLightRef.current.intensity = ambientIntensity;
       
-      // Ambient color
-      let ambientColor = new THREE.Color(1, 1, 1);
+      // Ambient color using persistent color object
       if (currentTime < 6 || currentTime > 20) {
-        ambientColor = new THREE.Color(0.2, 0.3, 0.6);
+        ambientColorRef.current.setRGB(0.2, 0.3, 0.6);
+      } else {
+        ambientColorRef.current.setRGB(1, 1, 1);
       }
       
-      ambientLightRef.current.color = ambientColor;
+      ambientLightRef.current.color = ambientColorRef.current;
     }
 
     // Update fog for atmosphere
     if (scene.fog) {
       const fog = scene.fog as THREE.Fog;
       if (isNight) {
-        fog.color = new THREE.Color(0.02, 0.02, 0.05);
+        fogColorRef.current.setRGB(0.02, 0.02, 0.05);
         fog.far = 80;
       } else {
-        fog.color = new THREE.Color(0.05, 0.05, 0.1);
+        fogColorRef.current.setRGB(0.05, 0.05, 0.1);
         fog.far = 120;
       }
+      fog.color = fogColorRef.current;
     } else {
       // Add fog if it doesn't exist
+      if (isNight) {
+        fogColorRef.current.setRGB(0.02, 0.02, 0.05);
+      } else {
+        fogColorRef.current.setRGB(0.05, 0.05, 0.1);
+      }
       scene.fog = new THREE.Fog(
-        isNight ? new THREE.Color(0.02, 0.02, 0.05) : new THREE.Color(0.05, 0.05, 0.1),
+        fogColorRef.current,
         20,
         isNight ? 80 : 120
       );
