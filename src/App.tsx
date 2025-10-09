@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import MinimalGame from './components/MinimalGame';
+import MMOGame from './components/MMOGame';
 import SimpleIntro from './components/SimpleIntro';
 import InstantAction from './components/InstantAction';
 
@@ -25,7 +25,7 @@ function App() {
   }
 
   if (currentView === 'game') {
-    return <MinimalGame />;
+    return <MMOGame />;
   }
 
   return (
