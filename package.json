@@ -44,6 +44,7 @@
     "@huggingface/inference": "^4.0.6",
     "@react-three/drei": "^9.102.3",
     "@react-three/fiber": "^8.15.19",
+    "@supabase/supabase-js": "^2.74.0",
     "axios": "^1.6.7",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",

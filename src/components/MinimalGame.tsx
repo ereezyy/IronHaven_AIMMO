@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useGameStore } from '../store/gameState';
 
 const MinimalGame = () => {
+  const initializePlayer = useGameStore(state => state.initializePlayer);
   const [playerPos, setPlayerPos] = useState({ x: 50, y: 50 });
   const [score, setScore] = useState(0);
   const [enemies, setEnemies] = useState([
@@ -8,6 +10,10 @@ const MinimalGame = () => {
     { id: 2, x: 80, y: 30 },
     { id: 3, x: 30, y: 80 }
   ]);
+
+  useEffect(() => {
+    initializePlayer();
+  }, [initializePlayer]);
 
   // Movement with arrow keys
   useEffect(() => {

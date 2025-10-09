@@ -180,11 +180,11 @@ const Player: React.FC<{
     let newVelocity = [...velocity] as [number, number, number];
     
     // Movement parameters
-    const baseSpeed = 8;
-    const sprintMultiplier = 1.8;
-    const acceleration = 25;
-    const friction = 12;
-    const dashForce = 40;
+    const baseSpeed = 10;
+    const sprintMultiplier = 2.0;
+    const acceleration = 30;
+    const friction = 15;
+    const dashForce = 50;
     
     // Calculate current speed multiplier
     const speedMultiplier = (isSprinting && stamina > 0) ? sprintMultiplier : 1;
@@ -272,21 +272,21 @@ const Player: React.FC<{
     }
     
     // Smooth camera following with dynamic distance
-    const cameraDistance = 12 + (currentSpeed * 0.5); // Camera pulls back when moving fast
-    const cameraHeight = 8 + (currentSpeed * 0.3);
-    const cameraSmoothing = 8;
-    
-    const targetCameraX = newPosition[0] - newVelocity[0] * 2;
-    const targetCameraZ = newPosition[2] - newVelocity[2] * 2;
-    
+    const cameraDistance = 15 + (currentSpeed * 0.4);
+    const cameraHeight = 10 + (currentSpeed * 0.25);
+    const cameraSmoothing = 10;
+
+    const targetCameraX = newPosition[0] - newVelocity[0] * 1.5;
+    const targetCameraZ = newPosition[2] - newVelocity[2] * 1.5;
+
     camera.position.x += (targetCameraX - camera.position.x) * cameraSmoothing * delta;
     camera.position.y += (newPosition[1] + cameraHeight - camera.position.y) * cameraSmoothing * delta;
     camera.position.z += (targetCameraZ - camera.position.z) * cameraSmoothing * delta;
-    
+
     // Look slightly ahead of player
-    const lookAheadX = newPosition[0] + newVelocity[0] * 0.5;
-    const lookAheadZ = newPosition[2] + newVelocity[2] * 0.5;
-    camera.lookAt(lookAheadX, newPosition[1] + 2, lookAheadZ);
+    const lookAheadX = newPosition[0] + newVelocity[0] * 0.3;
+    const lookAheadZ = newPosition[2] + newVelocity[2] * 0.3;
+    camera.lookAt(lookAheadX, newPosition[1] + 1.5, lookAheadZ);
     
     // Update position and velocity
     setVelocity(newVelocity);
@@ -592,13 +592,21 @@ const Game: React.FC = () => {
   return (
     <div className="w-full h-screen bg-black relative overflow-hidden">
       <Canvas
-        camera={{ position: [0, 12, 15], fov: 60 }}
-        gl={{ antialias: true, alpha: false }}
+        camera={{ position: [0, 12, 15], fov: 70 }}
+        gl={{
+          antialias: true,
+          alpha: false,
+          powerPreference: 'high-performance',
+          stencil: false,
+          depth: true
+        }}
         onCreated={({ gl }) => {
           gl.setClearColor('#0a0a0a');
           gl.shadowMap.enabled = true;
           gl.shadowMap.type = THREE.PCFSoftShadowMap;
+          gl.physicallyCorrectLights = true;
         }}
+        dpr={[1, 2]}
       >
         {/* Day/Night Cycle with Dynamic Lighting */}
         <DayNightCycle timeScale={180} onTimeUpdate={handleTimeUpdate} />
@@ -661,14 +669,14 @@ const Game: React.FC = () => {
         />
 
         {/* Enhanced Smart NPCs with better AI */}
-        {allNPCs.slice(0, 20).map(npc => {
+        {allNPCs.slice(0, 25).map(npc => {
           const distance = Math.sqrt(
             Math.pow(npc.position[0] - playerPosition[0], 2) +
             Math.pow(npc.position[2] - playerPosition[2], 2)
           );
-          
+
           if (distance > 60 || npc.isDead) return null;
-          
+
           return (
             <SmartNPC
               key={npc.id}
@@ -679,26 +687,6 @@ const Game: React.FC = () => {
               onInteraction={handleNPCClick}
             />
           );
-        })}
-        {/* Enhanced Smart NPCs */}
-        {allNPCs.slice(0, 15).map(npc => {
-          const distance = Math.sqrt(
-            Math.pow(npc.position[0] - playerPosition[0], 2) +
-            Math.pow(npc.position[2] - playerPosition[2], 2)
-          );
-          
-          if (distance > 50 || npc.isDead) return null;
-          
-          return (
-          <SmartNPC
-            key={npc.id}
-            id={npc.id}
-            position={npc.position}
-            type={npc.type}
-            playerPosition={playerPosition}
-            onInteraction={handleNPCClick}
-          />
-        );
         })}
 
         {/* Persistent Blood Pools */}
