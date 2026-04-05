@@ -245,14 +245,14 @@ CREATE POLICY "Anyone can view players"
 
 CREATE POLICY "Players can insert own data"
   ON players FOR INSERT
-  TO anon, authenticated
-  WITH CHECK (true);
+  TO authenticated
+  WITH CHECK (auth.uid() = id);
 
 CREATE POLICY "Players can update own data"
   ON players FOR UPDATE
-  TO anon, authenticated
-  USING (true)
-  WITH CHECK (true);
+  TO authenticated
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
 
 -- Guilds policies
 CREATE POLICY "Anyone can view guilds"
@@ -262,14 +262,14 @@ CREATE POLICY "Anyone can view guilds"
 
 CREATE POLICY "Anyone can create guilds"
   ON guilds FOR INSERT
-  TO anon, authenticated
-  WITH CHECK (true);
+  TO authenticated
+  WITH CHECK (auth.uid() = leader_id);
 
 CREATE POLICY "Guild leaders can update"
   ON guilds FOR UPDATE
-  TO anon, authenticated
-  USING (true)
-  WITH CHECK (true);
+  TO authenticated
+  USING (auth.uid() = leader_id)
+  WITH CHECK (auth.uid() = leader_id);
 
 -- Parties policies
 CREATE POLICY "Anyone can view parties"
@@ -279,14 +279,14 @@ CREATE POLICY "Anyone can view parties"
 
 CREATE POLICY "Anyone can create parties"
   ON parties FOR INSERT
-  TO anon, authenticated
-  WITH CHECK (true);
+  TO authenticated
+  WITH CHECK (auth.uid() = leader_id);
 
 CREATE POLICY "Party leaders can update"
   ON parties FOR UPDATE
-  TO anon, authenticated
-  USING (true)
-  WITH CHECK (true);
+  TO authenticated
+  USING (auth.uid() = leader_id)
+  WITH CHECK (auth.uid() = leader_id);
 
 -- Quests policies (public read)
 CREATE POLICY "Anyone can view quests"
@@ -297,19 +297,19 @@ CREATE POLICY "Anyone can view quests"
 -- Player quests policies
 CREATE POLICY "Players can view own quests"
   ON player_quests FOR SELECT
-  TO anon, authenticated
-  USING (true);
+  TO authenticated
+  USING (auth.uid() = player_id);
 
 CREATE POLICY "Players can insert own quests"
   ON player_quests FOR INSERT
-  TO anon, authenticated
-  WITH CHECK (true);
+  TO authenticated
+  WITH CHECK (auth.uid() = player_id);
 
 CREATE POLICY "Players can update own quests"
   ON player_quests FOR UPDATE
-  TO anon, authenticated
-  USING (true)
-  WITH CHECK (true);
+  TO authenticated
+  USING (auth.uid() = player_id)
+  WITH CHECK (auth.uid() = player_id);
 
 -- Chat policies (public read/write for real-time chat)
 CREATE POLICY "Anyone can view chat"
@@ -319,8 +319,8 @@ CREATE POLICY "Anyone can view chat"
 
 CREATE POLICY "Anyone can send chat"
   ON chat_messages FOR INSERT
-  TO anon, authenticated
-  WITH CHECK (true);
+  TO authenticated
+  WITH CHECK (auth.uid() = player_id);
 
 -- NPCs policies (public read)
 CREATE POLICY "Anyone can view NPCs"
@@ -336,8 +336,8 @@ CREATE POLICY "Anyone can view combat logs"
 
 CREATE POLICY "Anyone can insert combat logs"
   ON combat_logs FOR INSERT
-  TO anon, authenticated
-  WITH CHECK (true);
+  TO authenticated
+  WITH CHECK (auth.uid() = attacker_id);
 
 -- Trigger for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at()
