@@ -176,8 +176,8 @@ const Player: React.FC<{
   useFrame((state, delta) => {
     if (isInVehicle) return;
 
-    let newPosition = [...position] as [number, number, number];
-    let newVelocity = [...velocity] as [number, number, number];
+    const newPosition = [...position] as [number, number, number];
+    const newVelocity = [...velocity] as [number, number, number];
     
     // Movement parameters
     const baseSpeed = 10;

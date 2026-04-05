@@ -78,7 +78,7 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
     if (state.mood === 'dead') return;
 
     // Calculate threat level based on multiple factors
-    let threatLevel = (playerWanted * 2 + playerRep / 10 + playerKills / 5) / 15;
+    const threatLevel = (playerWanted * 2 + playerRep / 10 + playerKills / 5) / 15;
     
     if (type === 'civilian') {
       if (state.awareness > 0.5 || playerWanted > 1 || playerKills > 5) {
