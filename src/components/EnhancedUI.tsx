@@ -15,6 +15,8 @@ import {
   Skull
 } from 'lucide-react';
 
+const STARS_ARRAY = new Array(5).fill(0);
+
 const EnhancedUI: React.FC = () => {
   const gameStore = useGameStore();
   const [showSettings, setShowSettings] = useState(false);
@@ -117,7 +119,7 @@ const EnhancedUI: React.FC = () => {
   };
 
   const getWantedStars = () => {
-    return Array.from({ length: 5 }, (_, i) => (
+    return STARS_ARRAY.map((_, i) => (
       <span
         key={i}
         className={`text-lg ${
