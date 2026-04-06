@@ -337,7 +337,7 @@ CREATE POLICY "Anyone can view combat logs"
 CREATE POLICY "Anyone can insert combat logs"
   ON combat_logs FOR INSERT
   TO authenticated
-  WITH CHECK (auth.uid() = attacker_id);
+  WITH CHECK (auth.uid() = attacker_id OR auth.uid() = target_id);
 
 -- Trigger for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at()

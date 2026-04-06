@@ -104,8 +104,8 @@ const VehicleSystem: React.FC<VehicleSystemProps> = ({
           // Try to enter nearby vehicle
           const nearbyVehicle = vehicles.find(v => {
             const distance = Math.sqrt(
-              Math.pow(v.position[0] - playerPosition[0], 2) +
-              Math.pow(v.position[2] - playerPosition[2], 2)
+              (v.position[0] - playerPosition[0]) * (v.position[0] - playerPosition[0]) +
+              (v.position[2] - playerPosition[2]) * (v.position[2] - playerPosition[2])
             );
             return distance < 5 && !v.isPlayerDriving;
           });
@@ -286,8 +286,8 @@ const VehicleSystem: React.FC<VehicleSystemProps> = ({
           {!vehicle.isPlayerDriving && (
             (() => {
               const distance = Math.sqrt(
-                Math.pow(vehicle.position[0] - playerPosition[0], 2) +
-                Math.pow(vehicle.position[2] - playerPosition[2], 2)
+                (vehicle.position[0] - playerPosition[0]) * (vehicle.position[0] - playerPosition[0]) +
+                (vehicle.position[2] - playerPosition[2]) * (vehicle.position[2] - playerPosition[2])
               );
               return distance < 5 ? (
                 <Box position={[0, 2.5, 0]} scale={[0.3, 0.3, 0.3]}>

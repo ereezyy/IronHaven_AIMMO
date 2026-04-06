@@ -71,8 +71,8 @@ const CrimeSystem: React.FC<CrimeSystemProps> = ({ playerPosition, nearbyNPCs, o
     if (crimeType) {
       const witnessCount = nearbyNPCs.filter(npc => {
         const distance = Math.sqrt(
-          Math.pow(npc.position[0] - playerPosition[0], 2) +
-          Math.pow(npc.position[2] - playerPosition[2], 2)
+          (npc.position[0] - playerPosition[0]) * (npc.position[0] - playerPosition[0]) +
+          (npc.position[2] - playerPosition[2]) * (npc.position[2] - playerPosition[2])
         );
         return distance < 20 && npc.type === 'civilian';
       }).length;

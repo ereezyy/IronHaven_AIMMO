@@ -92,27 +92,32 @@ const WeatherSystem: React.FC<WeatherSystemProps> = ({ currentWeather = 'clear',
 
       {/* Fog effect */}
       {weather === 'fog' && (
-        <group>
-          {Array.from({ length: 20 }).map((_, i) => (
-            <mesh
-              key={i}
-              position={[
-                (Math.random() - 0.5) * 100,
-                Math.random() * 10 + 2,
-                (Math.random() - 0.5) * 100
-              ]}
-            >
-              <sphereGeometry args={[5 + Math.random() * 10, 8, 8]} />
-              <meshBasicMaterial
-                color="#cccccc"
-                transparent
-                opacity={0.3}
-              />
-            </mesh>
-          ))}
-        </group>
+        <FogEffect />
       )}
     </>
+  );
+};
+
+const FOG_PARTICLES = Array.from({ length: 20 }).map((_, i) => ({
+  id: i,
+  position: [
+    (Math.random() - 0.5) * 100,
+    Math.random() * 10 + 2,
+    (Math.random() - 0.5) * 100
+  ] as [number, number, number],
+  args: [5 + Math.random() * 10, 8, 8] as [number, number, number]
+}));
+
+const FogEffect: React.FC = () => {
+  return (
+    <group>
+      {FOG_PARTICLES.map((particle) => (
+        <mesh key={particle.id} position={particle.position}>
+          <sphereGeometry args={particle.args} />
+          <meshBasicMaterial color="#cccccc" transparent opacity={0.3} />
+        </mesh>
+      ))}
+    </group>
   );
 };
 

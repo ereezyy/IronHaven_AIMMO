@@ -69,24 +69,7 @@ const EffectRenderer: React.FC<{ effect: CombatEffect }> = ({ effect }) => {
         </mesh>
         
         {/* Blood droplets */}
-        {Array.from({ length: 8 }).map((_, i) => (
-          <mesh 
-            key={i}
-            position={[
-              (Math.random() - 0.5) * 3,
-              0.02,
-              (Math.random() - 0.5) * 3
-            ]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            <planeGeometry args={[0.2, 0.2]} />
-            <meshBasicMaterial 
-              color="#8B0000" 
-              transparent 
-              opacity={0.6}
-            />
-          </mesh>
-        ))}
+        <BloodDroplets />
       </group>
     );
   }
@@ -141,6 +124,36 @@ const EffectRenderer: React.FC<{ effect: CombatEffect }> = ({ effect }) => {
         opacity={0.7}
       />
     </mesh>
+  );
+};
+
+const BLOOD_DROPLETS = Array.from({ length: 8 }).map((_, i) => ({
+  id: i,
+  position: [
+    (Math.random() - 0.5) * 3,
+    0.02,
+    (Math.random() - 0.5) * 3
+  ] as [number, number, number]
+}));
+
+const BloodDroplets: React.FC = () => {
+  return (
+    <>
+      {BLOOD_DROPLETS.map((droplet) => (
+        <mesh
+          key={droplet.id}
+          position={droplet.position}
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          <planeGeometry args={[0.2, 0.2]} />
+          <meshBasicMaterial
+            color="#8B0000"
+            transparent
+            opacity={0.6}
+          />
+        </mesh>
+      ))}
+    </>
   );
 };
 

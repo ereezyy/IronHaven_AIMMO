@@ -649,8 +649,8 @@ const Game: React.FC = () => {
         {/* Render Buildings with LOD */}
         {allBuildings.map((building, index) => {
           const distance = Math.sqrt(
-            Math.pow(building.position[0] - playerPosition[0], 2) +
-            Math.pow(building.position[2] - playerPosition[2], 2)
+            (building.position[0] - playerPosition[0]) * (building.position[0] - playerPosition[0]) +
+            (building.position[2] - playerPosition[2]) * (building.position[2] - playerPosition[2])
           );
           
           // Only render buildings within a certain distance
@@ -671,8 +671,8 @@ const Game: React.FC = () => {
         {/* Enhanced Smart NPCs with better AI */}
         {allNPCs.slice(0, 25).map(npc => {
           const distance = Math.sqrt(
-            Math.pow(npc.position[0] - playerPosition[0], 2) +
-            Math.pow(npc.position[2] - playerPosition[2], 2)
+            (npc.position[0] - playerPosition[0]) * (npc.position[0] - playerPosition[0]) +
+            (npc.position[2] - playerPosition[2]) * (npc.position[2] - playerPosition[2])
           );
 
           if (distance > 60 || npc.isDead) return null;
@@ -762,8 +762,8 @@ const Game: React.FC = () => {
             .slice(0, 5) // Limit street lights per chunk
             .map(prop => {
               const distance = Math.sqrt(
-                Math.pow(prop.position[0] - playerPosition[0], 2) +
-                Math.pow(prop.position[2] - playerPosition[2], 2)
+                (prop.position[0] - playerPosition[0]) * (prop.position[0] - playerPosition[0]) +
+                (prop.position[2] - playerPosition[2]) * (prop.position[2] - playerPosition[2])
               );
               
               if (distance > 50) return null;
@@ -883,8 +883,8 @@ const Game: React.FC = () => {
         playerPosition={playerPosition}
         nearbyNPCs={allNPCs.filter(npc => {
           const distance = Math.sqrt(
-            Math.pow(npc.position[0] - playerPosition[0], 2) +
-            Math.pow(npc.position[2] - playerPosition[2], 2)
+            (npc.position[0] - playerPosition[0]) * (npc.position[0] - playerPosition[0]) +
+            (npc.position[2] - playerPosition[2]) * (npc.position[2] - playerPosition[2])
           );
           return distance < 25;
         })}

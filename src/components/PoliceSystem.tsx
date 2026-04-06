@@ -123,8 +123,8 @@ const PoliceSystem: React.FC<PoliceSystemProps> = ({ playerPosition, onPoliceKil
   useEffect(() => {
     policeUnits.forEach(unit => {
       const distance = Math.sqrt(
-        Math.pow(unit.position[0] - playerPosition[0], 2) +
-        Math.pow(unit.position[2] - playerPosition[2], 2)
+        (unit.position[0] - playerPosition[0]) * (unit.position[0] - playerPosition[0]) +
+        (unit.position[2] - playerPosition[2]) * (unit.position[2] - playerPosition[2])
       );
       
       if (distance < 15 && Math.random() > 0.95) {
