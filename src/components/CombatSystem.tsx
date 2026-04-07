@@ -34,6 +34,8 @@ const CombatSystem: React.FC<CombatSystemProps> = ({ effects, onEffectComplete }
   );
 };
 
+const BLOOD_DROPLETS = Array(8).fill(0);
+
 const EffectRenderer: React.FC<{ effect: CombatEffect }> = ({ effect }) => {
   const getEffectColor = () => {
     switch (effect.type) {
@@ -69,7 +71,7 @@ const EffectRenderer: React.FC<{ effect: CombatEffect }> = ({ effect }) => {
         </mesh>
         
         {/* Blood droplets */}
-        {Array.from({ length: 8 }).map((_, i) => (
+        {BLOOD_DROPLETS.map((_, i) => (
           <mesh 
             key={i}
             position={[
