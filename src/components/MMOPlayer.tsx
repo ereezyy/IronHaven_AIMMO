@@ -60,7 +60,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({ playerId, onUpdate }) => {
     const jumpForce = 8;
     const gravity = -25;
 
-    let inputVector = new THREE.Vector3(0, 0, 0);
+    const inputVector = new THREE.Vector3(0, 0, 0);
 
     if (forward) inputVector.z -= 1;
     if (backward) inputVector.z += 1;

@@ -20,7 +20,7 @@ const MinimalGame = () => {
     const handleKeyPress = (e: KeyboardEvent) => {
       const speed = 2;
       setPlayerPos(prev => {
-        let newPos = { ...prev };
+        const newPos = { ...prev };
         
         switch(e.key) {
           case 'ArrowUp':
