@@ -654,6 +654,11 @@ const Game: React.FC = () => {
           
           // Only render buildings within a certain distance
           if (distSq > 6400) return null; // 80 squared
+          const distSq = (building.position[0] - playerPosition[0]) * (building.position[0] - playerPosition[0]) +
+                         (building.position[2] - playerPosition[2]) * (building.position[2] - playerPosition[2]);
+          
+          // Only render buildings within a certain distance
+          if (distSq > 6400) return null; // 80 * 80
           
           return <OptimizedBuilding key={building.id} building={building} />;
         })}
@@ -674,6 +679,10 @@ const Game: React.FC = () => {
           const distSq = dx * dx + dz * dz;
 
           if (distSq > 3600 || npc.isDead) return null; // 60 squared
+          const distSq = (npc.position[0] - playerPosition[0]) * (npc.position[0] - playerPosition[0]) +
+                         (npc.position[2] - playerPosition[2]) * (npc.position[2] - playerPosition[2]);
+
+          if (distSq > 3600 || npc.isDead) return null; // 60 * 60
 
           return (
             <SmartNPC
@@ -764,6 +773,10 @@ const Game: React.FC = () => {
               const distSq = dx * dx + dz * dz;
               
               if (distSq > 2500) return null; // 50 squared
+              const distSq = (prop.position[0] - playerPosition[0]) * (prop.position[0] - playerPosition[0]) +
+                             (prop.position[2] - playerPosition[2]) * (prop.position[2] - playerPosition[2]);
+              
+              if (distSq > 2500) return null; // 50 * 50
               
               return (
                 <group key={prop.id} position={prop.position}>
@@ -882,6 +895,9 @@ const Game: React.FC = () => {
           const dx = npc.position[0] - playerPosition[0];
           const dz = npc.position[2] - playerPosition[2];
           return dx * dx + dz * dz < 625; // 25 squared
+          const distSq = (npc.position[0] - playerPosition[0]) * (npc.position[0] - playerPosition[0]) +
+                         (npc.position[2] - playerPosition[2]) * (npc.position[2] - playerPosition[2]);
+          return distSq < 625; // 25 * 25
         })}
         onCrimeCommitted={handleCrimeCommitted}
       />

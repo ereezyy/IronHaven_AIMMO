@@ -120,6 +120,7 @@ const EnhancedUI: React.FC = () => {
 
   const getWantedStars = () => {
     return WANTED_STARS.map((i) => (
+    return [0, 1, 2, 3, 4].map((i) => (
       <span
         key={i}
         className={`text-lg ${
