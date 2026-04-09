@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import * as THREE from 'three';
 
+const BLOOD_DROPLETS_ARRAY = new Array(8).fill(0);
+
 interface CombatEffect {
   id: string;
   position: [number, number, number];
@@ -33,6 +35,9 @@ const CombatSystem: React.FC<CombatSystemProps> = ({ effects, onEffectComplete }
     </>
   );
 };
+
+const BLOOD_DROPLETS = Array(8).fill(0);
+const BLOOD_DROPLETS = [...Array(8).keys()];
 
 const EffectRenderer: React.FC<{ effect: CombatEffect }> = ({ effect }) => {
   const getEffectColor = () => {
@@ -70,6 +75,26 @@ const EffectRenderer: React.FC<{ effect: CombatEffect }> = ({ effect }) => {
         
         {/* Blood droplets */}
         <BloodDroplets />
+        {BLOOD_DROPLETS_ARRAY.map((_, i) => (
+        {BLOOD_DROPLETS.map((_, i) => (
+        {BLOOD_DROPLETS.map((i) => (
+          <mesh 
+            key={i}
+            position={[
+              (Math.random() - 0.5) * 3,
+              0.02,
+              (Math.random() - 0.5) * 3
+            ]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <planeGeometry args={[0.2, 0.2]} />
+            <meshBasicMaterial 
+              color="#8B0000" 
+              transparent 
+              opacity={0.6}
+            />
+          </mesh>
+        ))}
       </group>
     );
   }

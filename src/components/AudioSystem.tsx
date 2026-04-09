@@ -9,7 +9,7 @@ const AudioSystem: React.FC<AudioSystemProps> = ({ enabled = true }) => {
   const gameStore = useGameStore();
   const audioContextRef = useRef<AudioContext | null>(null);
   const soundsRef = useRef<{ [key: string]: AudioBuffer }>({});
-  const backgroundMusicRef = useRef<AudioBufferSourceNode | null>(null);
+  const backgroundMusicRef = useRef<OscillatorNode | null>(null);
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [userInteracted, setUserInteracted] = useState(false);
 
@@ -169,7 +169,7 @@ const AudioSystem: React.FC<AudioSystemProps> = ({ enabled = true }) => {
       gainNode.connect(ctx.destination);
       
       oscillator.start();
-      backgroundMusicRef.current = oscillator as any;
+      backgroundMusicRef.current = oscillator;
     } catch (error) {
       console.warn('Error starting background music:', error);
     }
@@ -180,7 +180,7 @@ const AudioSystem: React.FC<AudioSystemProps> = ({ enabled = true }) => {
     return () => {
       if (backgroundMusicRef.current) {
         try {
-          (backgroundMusicRef.current as any).stop();
+          backgroundMusicRef.current.stop();
         } catch (error) {
           // Ignore cleanup errors
         }
