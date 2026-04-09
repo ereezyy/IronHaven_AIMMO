@@ -140,7 +140,7 @@ const VehicleSystem: React.FC<VehicleSystemProps> = ({
 
     setVehicles(prev => prev.map(vehicle => {
       if (vehicle.id === playerVehicle && vehicle.isPlayerDriving) {
-        const newVelocity = [...vehicle.velocity] as [number, number, number];
+        let newVelocity = [...vehicle.velocity] as [number, number, number];
         let newRotation = vehicle.rotation;
         
         const maxSpeed = vehicle.maxSpeed;
