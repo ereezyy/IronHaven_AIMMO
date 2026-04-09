@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameState';
 import SpriteCharacter from './SpriteCharacter';
-import * as THREE from 'three';
 
 interface PoliceUnit {
   id: string;
@@ -22,7 +21,6 @@ interface PoliceSystemProps {
 const PoliceSystem: React.FC<PoliceSystemProps> = ({ playerPosition, onPoliceKilled }) => {
   const gameStore = useGameStore();
   const [policeUnits, setPoliceUnits] = useState<PoliceUnit[]>([]);
-  const [responseTimer, setResponseTimer] = useState(0);
 
   // Spawn police based on wanted level
   useEffect(() => {
@@ -124,6 +122,9 @@ const PoliceSystem: React.FC<PoliceSystemProps> = ({ playerPosition, onPoliceKil
     policeUnits.forEach(unit => {
       const dx = unit.position[0] - playerPosition[0];
       const dz = unit.position[2] - playerPosition[2];
+      const radius = 15;
+      
+      if ((dx * dx + dz * dz) < (radius * radius) && Math.random() > 0.95) {
       const distanceSquared = dx * dx + dz * dz;
       
       if (distanceSquared < 225 && Math.random() > 0.95) {

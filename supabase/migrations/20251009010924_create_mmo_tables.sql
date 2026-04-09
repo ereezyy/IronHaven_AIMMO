@@ -399,6 +399,7 @@ ON CONFLICT DO NOTHING;
 -- Game sessions table
 CREATE TABLE IF NOT EXISTS game_sessions (
   id text PRIMARY KEY,
+  player_id text NOT NULL,
   player_id uuid NOT NULL,
   start_time timestamptz NOT NULL,
   end_time timestamptz,
@@ -433,6 +434,16 @@ CREATE TABLE IF NOT EXISTS world_events (
   location_x float NOT NULL,
   location_y float NOT NULL,
   location_z float NOT NULL,
+  severity integer DEFAULT 0,
+  description text,
+  active boolean DEFAULT true,
+  created_at timestamptz DEFAULT now(),
+  expires_at timestamptz
+);
+
+-- Multiplayer players table
+CREATE TABLE IF NOT EXISTS multiplayer_players (
+  id text PRIMARY KEY,
   severity integer NOT NULL,
   description text NOT NULL,
   active boolean DEFAULT true,
@@ -461,6 +472,41 @@ CREATE TABLE IF NOT EXISTS multiplayer_players (
   health integer NOT NULL,
   stamina integer NOT NULL,
   level integer NOT NULL,
+  is_in_combat boolean DEFAULT false,
+  last_seen timestamptz DEFAULT now()
+);
+
+-- Enable Row Level Security
+ALTER TABLE game_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE multiplayer_players ENABLE ROW LEVEL SECURITY;
+
+-- Game sessions policies
+CREATE POLICY "Players can view own game sessions"
+  ON game_sessions FOR SELECT
+  TO authenticated
+  USING (auth.uid()::text = player_id);
+
+CREATE POLICY "Players can insert own game sessions"
+  ON game_sessions FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid()::text = player_id);
+
+CREATE POLICY "Players can update own game sessions"
+  ON game_sessions FOR UPDATE
+  TO authenticated
+  USING (auth.uid()::text = player_id)
+  WITH CHECK (auth.uid()::text = player_id);
+
+-- World events policies
+CREATE POLICY "Anyone can view world events"
+  ON world_events FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+-- No insert/update for world events by players, usually handled by server/admin
+
+-- Multiplayer players policies
   is_in_combat boolean NOT NULL,
   last_seen timestamptz DEFAULT now()
 );
@@ -472,6 +518,16 @@ CREATE POLICY "Anyone can view multiplayer players"
   TO anon, authenticated
   USING (true);
 
+CREATE POLICY "Players can insert own multiplayer player data"
+  ON multiplayer_players FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid()::text = id);
+
+CREATE POLICY "Players can update own multiplayer player data"
+  ON multiplayer_players FOR UPDATE
+  TO authenticated
+  USING (auth.uid()::text = id)
+  WITH CHECK (auth.uid()::text = id);
 CREATE POLICY "Players can insert own multiplayer state"
   ON multiplayer_players FOR INSERT
   TO authenticated
