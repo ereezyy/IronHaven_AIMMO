@@ -10,6 +10,6 @@ Experience the world's FIRST fully AI-powered Cyberpunk MMORPG, right in your br
 
 No downloads. No installs. Just instant action.
 
-Play NOW: https://ironhaven-aimmo.com
+Play NOW: ironhaven-aimmo.com
 
-`#IndieGame` `#GameDev` `#Cyberpunk` `#MMORPG` `#AI` `#BrowserGame` `#ThreeJS`
+#IndieGame #GameDev #Cyberpunk #MMORPG #AI #BrowserGame #ThreeJS

@@ -56,9 +56,11 @@ const MinimalGame = () => {
   // Enemy collision detection
   useEffect(() => {
     enemies.forEach(enemy => {
-      const distanceSq = (playerPos.x - enemy.x) * (playerPos.x - enemy.x) + (playerPos.y - enemy.y) * (playerPos.y - enemy.y);
+      const distance = Math.sqrt(
+        (playerPos.x - enemy.x) * (playerPos.x - enemy.x) + (playerPos.y - enemy.y) * (playerPos.y - enemy.y)
+      );
       
-      if (distanceSq < 25) {
+      if (distance < 5) {
         setScore(prev => prev + 10);
         setEnemies(prev => prev.filter(e => e.id !== enemy.id));
       }
