@@ -1,0 +1,5 @@
+<<<<<<< SEARCH
+  const backgroundMusicRef = useRef<AudioBufferSourceNode | null>(null);
+=======
+  const backgroundMusicRef = useRef<OscillatorNode | null>(null);
+>>>>>>> REPLACE
