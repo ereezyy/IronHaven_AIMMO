@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import * as THREE from 'three';
 
+const BLOOD_DROPLETS_ARRAY = new Array(8).fill(0);
+
 interface CombatEffect {
   id: string;
   position: [number, number, number];
@@ -33,6 +35,9 @@ const CombatSystem: React.FC<CombatSystemProps> = ({ effects, onEffectComplete }
     </>
   );
 };
+
+const BLOOD_DROPLETS = Array(8).fill(0);
+const BLOOD_DROPLETS = [...Array(8).keys()];
 
 const EffectRenderer: React.FC<{ effect: CombatEffect }> = ({ effect }) => {
   const getEffectColor = () => {
@@ -69,7 +74,9 @@ const EffectRenderer: React.FC<{ effect: CombatEffect }> = ({ effect }) => {
         </mesh>
         
         {/* Blood droplets */}
-        {Array.from({ length: 8 }).map((_, i) => (
+        {BLOOD_DROPLETS_ARRAY.map((_, i) => (
+        {BLOOD_DROPLETS.map((_, i) => (
+        {BLOOD_DROPLETS.map((i) => (
           <mesh 
             key={i}
             position={[
