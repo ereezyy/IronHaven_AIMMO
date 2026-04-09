@@ -117,7 +117,7 @@ const EnhancedUI: React.FC = () => {
   };
 
   const getWantedStars = () => {
-    return Array.from({ length: 5 }, (_, i) => (
+    return [0, 1, 2, 3, 4].map((i) => (
       <span
         key={i}
         className={`text-lg ${
