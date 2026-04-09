@@ -71,7 +71,7 @@ const TestGame = () => {
   useEffect(() => {
     const moveLoop = setInterval(() => {
       setPlayerPos(prev => {
-        let newPos: [number, number, number] = [...prev];
+        const newPos: [number, number, number] = [...prev];
         const speed = 0.1;
 
         if (keys.has('KeyW') || keys.has('ArrowUp')) newPos[2] -= speed;

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 
 const STARS_ARRAY = new Array(5).fill(0);
+const WANTED_STARS = [0, 1, 2, 3, 4];
 
 const EnhancedUI: React.FC = () => {
   const gameStore = useGameStore();
@@ -120,6 +121,8 @@ const EnhancedUI: React.FC = () => {
 
   const getWantedStars = () => {
     return STARS_ARRAY.map((_, i) => (
+    return WANTED_STARS.map((i) => (
+    return [0, 1, 2, 3, 4].map((i) => (
       <span
         key={i}
         className={`text-lg ${

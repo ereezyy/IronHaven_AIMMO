@@ -382,10 +382,8 @@ BEGIN
     p.level
   FROM players p
   WHERE 
-    sqrt(
-      power(p.position_x - player_x, 2) +
-      power(p.position_z - player_z, 2)
-    ) <= radius
+        (power(p.position_x - player_x, 2) +
+        power(p.position_z - player_z, 2)) <= power(radius, 2)
     AND p.last_online > now() - interval '1 minute';
 END;
 $$ LANGUAGE plpgsql;
@@ -402,6 +400,7 @@ ON CONFLICT DO NOTHING;
 CREATE TABLE IF NOT EXISTS game_sessions (
   id text PRIMARY KEY,
   player_id text NOT NULL,
+  player_id uuid NOT NULL,
   start_time timestamptz NOT NULL,
   end_time timestamptz,
   total_kills integer DEFAULT 0,
@@ -409,6 +408,24 @@ CREATE TABLE IF NOT EXISTS game_sessions (
   max_wanted_level integer DEFAULT 0,
   created_at timestamptz DEFAULT now()
 );
+
+ALTER TABLE game_sessions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view game sessions"
+  ON game_sessions FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+CREATE POLICY "Players can insert own game sessions"
+  ON game_sessions FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = player_id);
+
+CREATE POLICY "Players can update own game sessions"
+  ON game_sessions FOR UPDATE
+  TO authenticated
+  USING (auth.uid() = player_id)
+  WITH CHECK (auth.uid() = player_id);
 
 -- World events table
 CREATE TABLE IF NOT EXISTS world_events (
@@ -427,6 +444,23 @@ CREATE TABLE IF NOT EXISTS world_events (
 -- Multiplayer players table
 CREATE TABLE IF NOT EXISTS multiplayer_players (
   id text PRIMARY KEY,
+  severity integer NOT NULL,
+  description text NOT NULL,
+  active boolean DEFAULT true,
+  created_at timestamptz DEFAULT now(),
+  expires_at timestamptz NOT NULL
+);
+
+ALTER TABLE world_events ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view world events"
+  ON world_events FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+-- Multiplayer players table
+CREATE TABLE IF NOT EXISTS multiplayer_players (
+  id uuid PRIMARY KEY,
   username text NOT NULL,
   position_x float NOT NULL,
   position_y float NOT NULL,
@@ -473,6 +507,12 @@ CREATE POLICY "Anyone can view world events"
 -- No insert/update for world events by players, usually handled by server/admin
 
 -- Multiplayer players policies
+  is_in_combat boolean NOT NULL,
+  last_seen timestamptz DEFAULT now()
+);
+
+ALTER TABLE multiplayer_players ENABLE ROW LEVEL SECURITY;
+
 CREATE POLICY "Anyone can view multiplayer players"
   ON multiplayer_players FOR SELECT
   TO anon, authenticated
@@ -488,3 +528,13 @@ CREATE POLICY "Players can update own multiplayer player data"
   TO authenticated
   USING (auth.uid()::text = id)
   WITH CHECK (auth.uid()::text = id);
+CREATE POLICY "Players can insert own multiplayer state"
+  ON multiplayer_players FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = id);
+
+CREATE POLICY "Players can update own multiplayer state"
+  ON multiplayer_players FOR UPDATE
+  TO authenticated
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);

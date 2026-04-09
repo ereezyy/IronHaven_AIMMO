@@ -9,6 +9,9 @@ interface WeatherSystemProps {
   onWeatherUpdate?: (weather: 'clear' | 'rain' | 'fog' | 'storm') => void;
 }
 
+const FOG_PARTICLES = Array(20).fill(0);
+const FOG_PARTICLES = [...Array(20).keys()];
+
 const WeatherSystem: React.FC<WeatherSystemProps> = ({ currentWeather = 'clear', onWeatherUpdate }) => {
   const [weather, setWeather] = useState(currentWeather);
   const [rainDrops, setRainDrops] = useState<THREE.Vector3[]>([]);
@@ -96,6 +99,8 @@ const WeatherSystem: React.FC<WeatherSystemProps> = ({ currentWeather = 'clear',
       {weather === 'fog' && (
         <group>
           {FOG_ARRAY.map((_, i) => (
+          {FOG_PARTICLES.map((_, i) => (
+          {FOG_PARTICLES.map((i) => (
             <mesh
               key={i}
               position={[
