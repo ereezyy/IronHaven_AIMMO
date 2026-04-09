@@ -1,12 +1,13 @@
-🚀 Ready to enter the next generation of MMOs?
+🚀 Step into the next generation of MMOs with IronHaven AIMMO!
 
-Welcome to IronHaven AIMMO — a living, breathing cyberpunk metropolis powered by AI! 🏙️🤖
+Welcome to a living, breathing cyberpunk metropolis powered by AI! 🏙️🤖
 
-Fight, drive, and survive in an infinite world with real-time multiplayer, smart NPCs, and tactical combat. ⚔️🚗
+We've just rolled out MASSIVE upgrades:
+⚡ Blazing-fast math performance for smoother gameplay & massive rendering!
+⚔️ Tactical combat, smarter NPCs, and real-time multiplayer!
 
-Play directly in your browser! 🎮🌐
-
+Play seamlessly directly in your browser! 🎮🌐
 Join the beta now and claim your turf in the neon streets. 🌃✨
 
 🔗 ironhaven-aimmo.com
-#IronHaven #AIMMO #Cyberpunk #IndieGame #Web3 #MMORPG
+#IronHaven #AIMMO #Cyberpunk #IndieGame #Web3 #MMORPG #GameDev
