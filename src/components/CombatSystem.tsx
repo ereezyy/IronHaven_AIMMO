@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import * as THREE from 'three';
 
+const BLOOD_DROPLETS_ARRAY = new Array(8).fill(0);
+
 interface CombatEffect {
   id: string;
   position: [number, number, number];
@@ -72,6 +74,7 @@ const EffectRenderer: React.FC<{ effect: CombatEffect }> = ({ effect }) => {
         </mesh>
         
         {/* Blood droplets */}
+        {BLOOD_DROPLETS_ARRAY.map((_, i) => (
         {BLOOD_DROPLETS.map((_, i) => (
         {BLOOD_DROPLETS.map((i) => (
           <mesh 

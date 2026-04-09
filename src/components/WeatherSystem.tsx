@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
+const FOG_ARRAY = new Array(20).fill(0);
+
 interface WeatherSystemProps {
   currentWeather?: 'clear' | 'rain' | 'fog' | 'storm';
   onWeatherUpdate?: (weather: 'clear' | 'rain' | 'fog' | 'storm') => void;
@@ -96,6 +98,7 @@ const WeatherSystem: React.FC<WeatherSystemProps> = ({ currentWeather = 'clear',
       {/* Fog effect */}
       {weather === 'fog' && (
         <group>
+          {FOG_ARRAY.map((_, i) => (
           {FOG_PARTICLES.map((_, i) => (
           {FOG_PARTICLES.map((i) => (
             <mesh
