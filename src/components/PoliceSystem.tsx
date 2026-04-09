@@ -125,6 +125,9 @@ const PoliceSystem: React.FC<PoliceSystemProps> = ({ playerPosition, onPoliceKil
       const radius = 15;
       
       if ((dx * dx + dz * dz) < (radius * radius) && Math.random() > 0.95) {
+      const distanceSquared = dx * dx + dz * dz;
+      
+      if (distanceSquared < 225 && Math.random() > 0.95) {
         // Police shoots at player
         const damage = unit.type === 'swat' ? 25 : unit.type === 'helicopter' ? 35 : 15;
         if (gameStore.playerStats.health > damage) {

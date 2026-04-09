@@ -382,10 +382,8 @@ BEGIN
     p.level
   FROM players p
   WHERE 
-    sqrt(
-      power(p.position_x - player_x, 2) +
-      power(p.position_z - player_z, 2)
-    ) <= radius
+        (power(p.position_x - player_x, 2) +
+        power(p.position_z - player_z, 2)) <= power(radius, 2)
     AND p.last_online > now() - interval '1 minute';
 END;
 $$ LANGUAGE plpgsql;
@@ -397,3 +395,146 @@ VALUES
   ('The Gang War', 'Help restore peace to the streets', '["Defeat 10 gang members", "Secure 3 territories"]'::jsonb, '{"experience": 500, "money": 200}'::jsonb, 5, 'main'),
   ('Cybernetic Enhancement', 'Find a ripperdoc to upgrade your implants', '["Find the ripperdoc", "Collect 1000 credits"]'::jsonb, '{"experience": 300, "item": "cyber_arm"}'::jsonb, 3, 'side')
 ON CONFLICT DO NOTHING;
+
+-- Game sessions table
+CREATE TABLE IF NOT EXISTS game_sessions (
+  id text PRIMARY KEY,
+  player_id text NOT NULL,
+  player_id uuid NOT NULL,
+  start_time timestamptz NOT NULL,
+  end_time timestamptz,
+  total_kills integer DEFAULT 0,
+  total_money_earned integer DEFAULT 0,
+  max_wanted_level integer DEFAULT 0,
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE game_sessions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view game sessions"
+  ON game_sessions FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+CREATE POLICY "Players can insert own game sessions"
+  ON game_sessions FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = player_id);
+
+CREATE POLICY "Players can update own game sessions"
+  ON game_sessions FOR UPDATE
+  TO authenticated
+  USING (auth.uid() = player_id)
+  WITH CHECK (auth.uid() = player_id);
+
+-- World events table
+CREATE TABLE IF NOT EXISTS world_events (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_type text NOT NULL,
+  location_x float NOT NULL,
+  location_y float NOT NULL,
+  location_z float NOT NULL,
+  severity integer DEFAULT 0,
+  description text,
+  active boolean DEFAULT true,
+  created_at timestamptz DEFAULT now(),
+  expires_at timestamptz
+);
+
+-- Multiplayer players table
+CREATE TABLE IF NOT EXISTS multiplayer_players (
+  id text PRIMARY KEY,
+  severity integer NOT NULL,
+  description text NOT NULL,
+  active boolean DEFAULT true,
+  created_at timestamptz DEFAULT now(),
+  expires_at timestamptz NOT NULL
+);
+
+ALTER TABLE world_events ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view world events"
+  ON world_events FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+-- Multiplayer players table
+CREATE TABLE IF NOT EXISTS multiplayer_players (
+  id uuid PRIMARY KEY,
+  username text NOT NULL,
+  position_x float NOT NULL,
+  position_y float NOT NULL,
+  position_z float NOT NULL,
+  rotation float NOT NULL,
+  velocity_x float NOT NULL,
+  velocity_y float NOT NULL,
+  velocity_z float NOT NULL,
+  health integer NOT NULL,
+  stamina integer NOT NULL,
+  level integer NOT NULL,
+  is_in_combat boolean DEFAULT false,
+  last_seen timestamptz DEFAULT now()
+);
+
+-- Enable Row Level Security
+ALTER TABLE game_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE world_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE multiplayer_players ENABLE ROW LEVEL SECURITY;
+
+-- Game sessions policies
+CREATE POLICY "Players can view own game sessions"
+  ON game_sessions FOR SELECT
+  TO authenticated
+  USING (auth.uid()::text = player_id);
+
+CREATE POLICY "Players can insert own game sessions"
+  ON game_sessions FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid()::text = player_id);
+
+CREATE POLICY "Players can update own game sessions"
+  ON game_sessions FOR UPDATE
+  TO authenticated
+  USING (auth.uid()::text = player_id)
+  WITH CHECK (auth.uid()::text = player_id);
+
+-- World events policies
+CREATE POLICY "Anyone can view world events"
+  ON world_events FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+-- No insert/update for world events by players, usually handled by server/admin
+
+-- Multiplayer players policies
+  is_in_combat boolean NOT NULL,
+  last_seen timestamptz DEFAULT now()
+);
+
+ALTER TABLE multiplayer_players ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view multiplayer players"
+  ON multiplayer_players FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+CREATE POLICY "Players can insert own multiplayer player data"
+  ON multiplayer_players FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid()::text = id);
+
+CREATE POLICY "Players can update own multiplayer player data"
+  ON multiplayer_players FOR UPDATE
+  TO authenticated
+  USING (auth.uid()::text = id)
+  WITH CHECK (auth.uid()::text = id);
+CREATE POLICY "Players can insert own multiplayer state"
+  ON multiplayer_players FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = id);
+
+CREATE POLICY "Players can update own multiplayer state"
+  ON multiplayer_players FOR UPDATE
+  TO authenticated
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
