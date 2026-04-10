@@ -187,8 +187,8 @@ const DynamicEvents: React.FC<DynamicEventsProps> = ({ playerPosition, onEventTr
   useEffect(() => {
     setActiveEvents(prev => prev.map(event => {
       const distance = Math.sqrt(
-        Math.pow(event.location[0] - playerPosition[0], 2) +
-        Math.pow(event.location[2] - playerPosition[2], 2)
+        (event.location[0] - playerPosition[0]) * (event.location[0] - playerPosition[0]) +
+        (event.location[2] - playerPosition[2]) * (event.location[2] - playerPosition[2])
       );
       
       const wasInvolved = event.playerInvolved;
@@ -286,8 +286,8 @@ const DynamicEvents: React.FC<DynamicEventsProps> = ({ playerPosition, onEventTr
             {activeEvents.map(event => {
               const timeLeft = Math.max(0, event.duration - (Date.now() - event.startTime));
               const distance = Math.sqrt(
-                Math.pow(event.location[0] - playerPosition[0], 2) +
-                Math.pow(event.location[2] - playerPosition[2], 2)
+                (event.location[0] - playerPosition[0]) * (event.location[0] - playerPosition[0]) +
+                (event.location[2] - playerPosition[2]) * (event.location[2] - playerPosition[2])
               );
               
               return (

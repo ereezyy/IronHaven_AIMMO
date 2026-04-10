@@ -20,7 +20,7 @@ const MinimalGame = () => {
     const handleKeyPress = (e: KeyboardEvent) => {
       const speed = 2;
       setPlayerPos(prev => {
-        const newPos = { ...prev };
+        let newPos = { ...prev };
         
         switch(e.key) {
           case 'ArrowUp':
@@ -57,7 +57,7 @@ const MinimalGame = () => {
   useEffect(() => {
     enemies.forEach(enemy => {
       const distance = Math.sqrt(
-        Math.pow(playerPos.x - enemy.x, 2) + Math.pow(playerPos.y - enemy.y, 2)
+        (playerPos.x - enemy.x) * (playerPos.x - enemy.x) + (playerPos.y - enemy.y) * (playerPos.y - enemy.y)
       );
       
       if (distance < 5) {

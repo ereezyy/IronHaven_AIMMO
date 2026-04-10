@@ -176,8 +176,8 @@ const Player: React.FC<{
   useFrame((state, delta) => {
     if (isInVehicle) return;
 
-    const newPosition = [...position] as [number, number, number];
-    const newVelocity = [...velocity] as [number, number, number];
+    let newPosition = [...position] as [number, number, number];
+    let newVelocity = [...velocity] as [number, number, number];
     
     // Movement parameters
     const baseSpeed = 10;
@@ -648,17 +648,13 @@ const Game: React.FC = () => {
         
         {/* Render Buildings with LOD */}
         {allBuildings.map((building, index) => {
-          const dx = building.position[0] - playerPosition[0];
-          const dz = building.position[2] - playerPosition[2];
-          const distSq = dx * dx + dz * dz;
+          const distance = Math.sqrt(
+            (building.position[0] - playerPosition[0]) * (building.position[0] - playerPosition[0]) +
+            (building.position[2] - playerPosition[2]) * (building.position[2] - playerPosition[2])
+          );
           
           // Only render buildings within a certain distance
-          if (distSq > 6400) return null; // 80 squared
-          const distSq = (building.position[0] - playerPosition[0]) * (building.position[0] - playerPosition[0]) +
-                         (building.position[2] - playerPosition[2]) * (building.position[2] - playerPosition[2]);
-          
-          // Only render buildings within a certain distance
-          if (distSq > 6400) return null; // 80 * 80
+          if (distance > 80) return null;
           
           return <OptimizedBuilding key={building.id} building={building} />;
         })}
@@ -674,15 +670,12 @@ const Game: React.FC = () => {
 
         {/* Enhanced Smart NPCs with better AI */}
         {allNPCs.slice(0, 25).map(npc => {
-          const dx = npc.position[0] - playerPosition[0];
-          const dz = npc.position[2] - playerPosition[2];
-          const distSq = dx * dx + dz * dz;
+          const distance = Math.sqrt(
+            (npc.position[0] - playerPosition[0]) * (npc.position[0] - playerPosition[0]) +
+            (npc.position[2] - playerPosition[2]) * (npc.position[2] - playerPosition[2])
+          );
 
-          if (distSq > 3600 || npc.isDead) return null; // 60 squared
-          const distSq = (npc.position[0] - playerPosition[0]) * (npc.position[0] - playerPosition[0]) +
-                         (npc.position[2] - playerPosition[2]) * (npc.position[2] - playerPosition[2]);
-
-          if (distSq > 3600 || npc.isDead) return null; // 60 * 60
+          if (distance > 60 || npc.isDead) return null;
 
           return (
             <SmartNPC
@@ -768,15 +761,12 @@ const Game: React.FC = () => {
             .filter(prop => prop.type === 'street_light')
             .slice(0, 5) // Limit street lights per chunk
             .map(prop => {
-              const dx = prop.position[0] - playerPosition[0];
-              const dz = prop.position[2] - playerPosition[2];
-              const distSq = dx * dx + dz * dz;
+              const distance = Math.sqrt(
+                (prop.position[0] - playerPosition[0]) * (prop.position[0] - playerPosition[0]) +
+                (prop.position[2] - playerPosition[2]) * (prop.position[2] - playerPosition[2])
+              );
               
-              if (distSq > 2500) return null; // 50 squared
-              const distSq = (prop.position[0] - playerPosition[0]) * (prop.position[0] - playerPosition[0]) +
-                             (prop.position[2] - playerPosition[2]) * (prop.position[2] - playerPosition[2]);
-              
-              if (distSq > 2500) return null; // 50 * 50
+              if (distance > 50) return null;
               
               return (
                 <group key={prop.id} position={prop.position}>
@@ -892,12 +882,11 @@ const Game: React.FC = () => {
       <CrimeSystem
         playerPosition={playerPosition}
         nearbyNPCs={allNPCs.filter(npc => {
-          const dx = npc.position[0] - playerPosition[0];
-          const dz = npc.position[2] - playerPosition[2];
-          return dx * dx + dz * dz < 625; // 25 squared
-          const distSq = (npc.position[0] - playerPosition[0]) * (npc.position[0] - playerPosition[0]) +
-                         (npc.position[2] - playerPosition[2]) * (npc.position[2] - playerPosition[2]);
-          return distSq < 625; // 25 * 25
+          const distance = Math.sqrt(
+            (npc.position[0] - playerPosition[0]) * (npc.position[0] - playerPosition[0]) +
+            (npc.position[2] - playerPosition[2]) * (npc.position[2] - playerPosition[2])
+          );
+          return distance < 25;
         })}
         onCrimeCommitted={handleCrimeCommitted}
       />

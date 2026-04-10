@@ -50,8 +50,8 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
   // Advanced AI Decision Making
   const makeDecision = () => {
     const distanceToPlayer = Math.sqrt(
-      Math.pow(position[0] - playerPosition[0], 2) +
-      Math.pow(position[2] - playerPosition[2], 2)
+      (position[0] - playerPosition[0]) * (position[0] - playerPosition[0]) +
+      (position[2] - playerPosition[2]) * (position[2] - playerPosition[2])
     );
 
     const playerWanted = gameStore.playerStats.wanted;
@@ -78,7 +78,7 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
     if (state.mood === 'dead') return;
 
     // Calculate threat level based on multiple factors
-    const threatLevel = (playerWanted * 2 + playerRep / 10 + playerKills / 5) / 15;
+    let threatLevel = (playerWanted * 2 + playerRep / 10 + playerKills / 5) / 15;
     
     if (type === 'civilian') {
       if (state.awareness > 0.5 || playerWanted > 1 || playerKills > 5) {
@@ -214,8 +214,8 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
           moveToTarget(state.target, delta, 8);
           // Attack logic
           const distanceToTarget = Math.sqrt(
-            Math.pow(position[0] - state.target[0], 2) +
-            Math.pow(position[2] - state.target[2], 2)
+            (position[0] - state.target[0]) * (position[0] - state.target[0]) +
+            (position[2] - state.target[2]) * (position[2] - state.target[2])
           );
           if (distanceToTarget < 5 && Math.random() > 0.93) {
             // NPC attacks player
