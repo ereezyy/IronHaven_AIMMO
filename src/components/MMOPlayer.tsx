@@ -77,8 +77,8 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({ playerId, onUpdate }) => {
     newVelocity.x += inputVector.x * acceleration * delta;
     newVelocity.z += inputVector.z * acceleration * delta;
 
-    newVelocity.x *= Math.pow(1 - friction * delta, delta);
-    newVelocity.z *= Math.pow(1 - friction * delta, delta);
+    newVelocity.x *= Math.max(0, 1 - friction * delta);
+    newVelocity.z *= Math.max(0, 1 - friction * delta);
 
     const horizontalSpeedSq = newVelocity.x ** 2 + newVelocity.z ** 2;
     if (horizontalSpeedSq > moveSpeed * moveSpeed) {
