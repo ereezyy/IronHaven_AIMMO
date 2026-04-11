@@ -231,8 +231,8 @@ const Player: React.FC<{
     }
     
     // Apply friction
-    newVelocity[0] *= Math.pow(1 - friction * delta, delta);
-    newVelocity[2] *= Math.pow(1 - friction * delta, delta);
+    newVelocity[0] *= Math.max(0, 1 - friction * delta);
+    newVelocity[2] *= Math.max(0, 1 - friction * delta);
     
     // Limit max speed
     const currentSpeed = Math.sqrt(newVelocity[0] * newVelocity[0] + newVelocity[2] * newVelocity[2]);
