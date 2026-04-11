@@ -356,12 +356,10 @@ const ImprovedGame = () => {
           projectile.position[2] += projectile.direction[2] * projectile.speed;
           
           // Remove projectiles that are too far
-          const distance = Math.sqrt(
-            projectile.position[0] ** 2 + 
+          const distanceSq = projectile.position[0] ** 2 +
             projectile.position[1] ** 2 + 
-            projectile.position[2] ** 2
-          );
-          return distance < 100;
+            projectile.position[2] ** 2;
+          return distanceSq < 100 * 100;
         });
 
         // Enemy AI
@@ -369,10 +367,11 @@ const ImprovedGame = () => {
           // Simple AI: move towards player
           const dx = newState.player.position[0] - enemy.position[0];
           const dz = newState.player.position[2] - enemy.position[2];
-          const distance = Math.sqrt(dx * dx + dz * dz);
+          const distanceSq = dx * dx + dz * dz;
           
-          if (distance > 2) {
+          if (distanceSq > 2 * 2) {
             const moveSpeed = 0.05;
+            const distance = Math.sqrt(distanceSq);
             enemy.position[0] += (dx / distance) * moveSpeed;
             enemy.position[2] += (dz / distance) * moveSpeed;
             enemy.isMoving = true;
