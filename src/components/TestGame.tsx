@@ -71,7 +71,7 @@ const TestGame = () => {
   useEffect(() => {
     const moveLoop = setInterval(() => {
       setPlayerPos(prev => {
-        let newPos: [number, number, number] = [...prev];
+        const newPos: [number, number, number] = [...prev];
         const speed = 0.1;
 
         if (keys.has('KeyW') || keys.has('ArrowUp')) newPos[2] -= speed;
@@ -132,7 +132,7 @@ const TestGame = () => {
       {/* Status */}
       <div className="absolute bottom-4 right-4 text-white text-sm z-10">
         <div className="bg-black bg-opacity-70 p-2 rounded">
-          <div>Keys pressed: {Array.from(keys).join(', ') || 'None'}</div>
+          <div>Keys pressed: {[...keys].join(', ') || 'None'}</div>
           <div>Status: {keys.size > 0 ? 'Moving' : 'Idle'}</div>
         </div>
       </div>

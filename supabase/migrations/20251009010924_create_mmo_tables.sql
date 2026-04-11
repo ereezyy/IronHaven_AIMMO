@@ -337,7 +337,7 @@ CREATE POLICY "Anyone can view combat logs"
 CREATE POLICY "Anyone can insert combat logs"
   ON combat_logs FOR INSERT
   TO authenticated
-  WITH CHECK (auth.uid() = attacker_id OR auth.uid() = target_id);
+  WITH CHECK (auth.uid() = attacker_id);
 
 -- Trigger for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at()
@@ -382,10 +382,8 @@ BEGIN
     p.level
   FROM players p
   WHERE 
-    sqrt(
-      power(p.position_x - player_x, 2) +
-      power(p.position_z - player_z, 2)
-    ) <= radius
+    (p.position_x - player_x) * (p.position_x - player_x) +
+    (p.position_z - player_z) * (p.position_z - player_z) <= radius * radius
     AND p.last_online > now() - interval '1 minute';
 END;
 $$ LANGUAGE plpgsql;

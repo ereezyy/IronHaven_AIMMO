@@ -60,7 +60,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({ playerId, onUpdate }) => {
     const jumpForce = 8;
     const gravity = -25;
 
-    let inputVector = new THREE.Vector3(0, 0, 0);
+    const inputVector = new THREE.Vector3(0, 0, 0);
 
     if (forward) inputVector.z -= 1;
     if (backward) inputVector.z += 1;
@@ -80,8 +80,9 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({ playerId, onUpdate }) => {
     newVelocity.x *= Math.pow(1 - friction * delta, delta);
     newVelocity.z *= Math.pow(1 - friction * delta, delta);
 
-    const horizontalSpeed = Math.sqrt(newVelocity.x ** 2 + newVelocity.z ** 2);
-    if (horizontalSpeed > moveSpeed) {
+    const horizontalSpeedSq = newVelocity.x ** 2 + newVelocity.z ** 2;
+    if (horizontalSpeedSq > moveSpeed * moveSpeed) {
+      const horizontalSpeed = Math.sqrt(horizontalSpeedSq);
       const scale = moveSpeed / horizontalSpeed;
       newVelocity.x *= scale;
       newVelocity.z *= scale;
@@ -116,8 +117,8 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({ playerId, onUpdate }) => {
     }
 
     const worldRadius = 100;
-    const distFromCenter = Math.sqrt(newPosition.x ** 2 + newPosition.z ** 2);
-    if (distFromCenter > worldRadius) {
+    const distFromCenterSq = newPosition.x ** 2 + newPosition.z ** 2;
+    if (distFromCenterSq > worldRadius * worldRadius) {
       const angle = Math.atan2(newPosition.z, newPosition.x);
       newPosition.x = Math.cos(angle) * worldRadius;
       newPosition.z = Math.sin(angle) * worldRadius;

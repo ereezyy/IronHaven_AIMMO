@@ -133,7 +133,7 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
 
     // Character colors and details based on type
     let bodyColor = '#5A6578';
-    let headColor = '#E6A53E';
+    const headColor = '#E6A53E';
     let accessoryColor = '#2D3748';
     let clothingDetails = [];
 
