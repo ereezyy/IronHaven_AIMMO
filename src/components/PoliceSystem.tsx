@@ -95,9 +95,10 @@ const PoliceSystem: React.FC<PoliceSystemProps> = ({ playerPosition, onPoliceKil
         // Move towards player
         const dx = playerPosition[0] - unit.position[0];
         const dz = playerPosition[2] - unit.position[2];
-        const distance = Math.sqrt(dx * dx + dz * dz);
+        const distanceSq = dx * dx + dz * dz;
         
-        if (distance > 2) {
+        if (distanceSq > 4) {
+          const distance = Math.sqrt(distanceSq);
           const moveX = (dx / distance) * unit.speed * 0.1;
           const moveZ = (dz / distance) * unit.speed * 0.1;
           
@@ -122,12 +123,11 @@ const PoliceSystem: React.FC<PoliceSystemProps> = ({ playerPosition, onPoliceKil
   // Auto-attack player if in range
   useEffect(() => {
     policeUnits.forEach(unit => {
-      const distance = Math.sqrt(
+      const distanceSq =
         (unit.position[0] - playerPosition[0]) * (unit.position[0] - playerPosition[0]) +
-        (unit.position[2] - playerPosition[2]) * (unit.position[2] - playerPosition[2])
-      );
+        (unit.position[2] - playerPosition[2]) * (unit.position[2] - playerPosition[2]);
       
-      if (distance < 15 && Math.random() > 0.95) {
+      if (distanceSq < 225 && Math.random() > 0.95) {
         // Police shoots at player
         const damage = unit.type === 'swat' ? 25 : unit.type === 'helicopter' ? 35 : 15;
         if (gameStore.playerStats.health > damage) {
