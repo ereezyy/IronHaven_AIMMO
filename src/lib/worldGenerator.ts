@@ -73,16 +73,16 @@ export class WorldGenerator {
   }
 
   getBiomeForChunk(chunkX: number, chunkZ: number): WorldChunk['biome'] {
-    const distance = Math.sqrt(chunkX * chunkX + chunkZ * chunkZ);
+    const distanceSq = chunkX * chunkX + chunkZ * chunkZ;
     
     // Center is downtown
-    if (distance < 1) return 'downtown';
+    if (distanceSq < 1) return 'downtown';
     
     // Ring around center is commercial/residential
-    if (distance < 2) return Math.random() > 0.5 ? 'residential' : 'downtown';
+    if (distanceSq < 4) return Math.random() > 0.5 ? 'residential' : 'downtown';
     
     // Further out becomes industrial and slums
-    if (distance < 4) {
+    if (distanceSq < 16) {
       const rand = Math.random();
       if (rand < 0.3) return 'industrial';
       if (rand < 0.6) return 'residential';
