@@ -186,7 +186,7 @@ const DynamicEvents: React.FC<DynamicEventsProps> = ({ playerPosition, onEventTr
   // Check if player is in event area
   useEffect(() => {
     setActiveEvents(prev => prev.map(event => {
-      const distance = Math.sqrt(
+      const distanceSq = (
         (event.location[0] - playerPosition[0]) * (event.location[0] - playerPosition[0]) +
         (event.location[2] - playerPosition[2]) * (event.location[2] - playerPosition[2])
       );
@@ -285,7 +285,7 @@ const DynamicEvents: React.FC<DynamicEventsProps> = ({ playerPosition, onEventTr
           <div className="space-y-2 max-h-40 overflow-y-auto">
             {activeEvents.map(event => {
               const timeLeft = Math.max(0, event.duration - (Date.now() - event.startTime));
-              const distance = Math.sqrt(
+              const distanceSq = (
                 (event.location[0] - playerPosition[0]) * (event.location[0] - playerPosition[0]) +
                 (event.location[2] - playerPosition[2]) * (event.location[2] - playerPosition[2])
               );
