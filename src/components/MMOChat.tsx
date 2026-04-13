@@ -17,18 +17,20 @@ const MMOChat: React.FC = () => {
       username: 'System',
       message: 'Welcome to IronHaven AIMMO!',
       channel: 'global',
-      timestamp: Date.now()
+      timestamp: Date.now(),
     },
     {
       id: '2',
       username: 'System',
       message: 'Use WASD to move, mouse to look around',
       channel: 'global',
-      timestamp: Date.now()
-    }
+      timestamp: Date.now(),
+    },
   ]);
   const [inputMessage, setInputMessage] = useState('');
-  const [activeChannel, setActiveChannel] = useState<'global' | 'local' | 'party' | 'guild'>('global');
+  const [activeChannel, setActiveChannel] = useState<
+    'global' | 'local' | 'party' | 'guild'
+  >('global');
   const [isExpanded, setIsExpanded] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
@@ -38,7 +40,7 @@ const MMOChat: React.FC = () => {
 
     channel
       .on('broadcast', { event: 'chat-message' }, ({ payload }) => {
-        setMessages(prev => [...prev, payload]);
+        setMessages((prev) => [...prev, payload]);
       })
       .subscribe();
 
@@ -60,16 +62,16 @@ const MMOChat: React.FC = () => {
         username: 'You',
         message: inputMessage.trim(),
         channel: activeChannel,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       channelRef.current.send({
         type: 'broadcast',
         event: 'chat-message',
-        payload: newMessage
+        payload: newMessage,
       });
 
-      setMessages(prev => [...prev, newMessage]);
+      setMessages((prev) => [...prev, newMessage]);
       setInputMessage('');
     }
   };
@@ -111,7 +113,7 @@ const MMOChat: React.FC = () => {
     <div className="absolute bottom-20 left-4 w-96 bg-black/90 backdrop-blur-sm border border-cyan-500/50 rounded-lg overflow-hidden">
       <div className="bg-gradient-to-r from-cyan-900/50 to-blue-900/50 p-2 flex items-center justify-between">
         <div className="flex gap-2">
-          {['global', 'local', 'party', 'guild'].map(channel => (
+          {['global', 'local', 'party', 'guild'].map((channel) => (
             <button
               key={channel}
               onClick={() => setActiveChannel(channel as any)}
@@ -134,7 +136,7 @@ const MMOChat: React.FC = () => {
       </div>
 
       <div className="h-64 overflow-y-auto p-3 space-y-2 text-sm">
-        {messages.map(msg => (
+        {messages.map((msg) => (
           <div key={msg.id} className="animate-fadeIn">
             <span className={`font-bold ${getChannelColor(msg.channel)}`}>
               [{msg.channel.toUpperCase()}]
@@ -152,7 +154,7 @@ const MMOChat: React.FC = () => {
         <input
           type="text"
           value={inputMessage}
-          onChange={e => setInputMessage(e.target.value)}
+          onChange={(e) => setInputMessage(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder={`Message to ${activeChannel}...`}
           className="flex-1 bg-gray-900 border border-cyan-500/30 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-400 transition-colors"

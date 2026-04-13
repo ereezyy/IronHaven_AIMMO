@@ -38,7 +38,7 @@ const InventorySystem: React.FC = () => {
       quantity: 1,
       unlockLevel: 20,
       description: 'Military-grade body armor. Reduces incoming damage by 50%.',
-      stats: { protection: 50 }
+      stats: { protection: 50 },
     },
     {
       id: 'health_kit',
@@ -49,7 +49,7 @@ const InventorySystem: React.FC = () => {
       quantity: 1,
       unlockLevel: 0,
       description: 'Restores 50 health points instantly.',
-      stats: { healing: 50 }
+      stats: { healing: 50 },
     },
     {
       id: 'ammo_pack',
@@ -59,7 +59,7 @@ const InventorySystem: React.FC = () => {
       price: 150,
       quantity: 1,
       unlockLevel: 10,
-      description: 'Refills ammunition for all weapons.'
+      description: 'Refills ammunition for all weapons.',
     },
     {
       id: 'silencer',
@@ -69,7 +69,7 @@ const InventorySystem: React.FC = () => {
       price: 3000,
       quantity: 1,
       unlockLevel: 40,
-      description: 'Reduces noise when firing weapons. Lower police detection.'
+      description: 'Reduces noise when firing weapons. Lower police detection.',
     },
     {
       id: 'lockpick_set',
@@ -79,8 +79,8 @@ const InventorySystem: React.FC = () => {
       price: 500,
       quantity: 1,
       unlockLevel: 15,
-      description: 'Allows access to locked vehicles and buildings.'
-    }
+      description: 'Allows access to locked vehicles and buildings.',
+    },
   ];
 
   // Initialize inventory with some basic items
@@ -92,26 +92,38 @@ const InventorySystem: React.FC = () => {
         type: 'misc',
         value: 50,
         quantity: 1,
-        description: 'Basic street clothing.'
-      }
+        description: 'Basic street clothing.',
+      },
     ]);
   }, []);
 
   const buyItem = (item: ShopItem) => {
-    if (gameStore.playerStats.money >= item.price && gameStore.playerStats.reputation >= item.unlockLevel) {
-      gameStore.updateStats({ money: gameStore.playerStats.money - item.price });
-      
-      const existingItem = inventory.find(inv => inv.id === item.id);
+    if (
+      gameStore.playerStats.money >= item.price &&
+      gameStore.playerStats.reputation >= item.unlockLevel
+    ) {
+      gameStore.updateStats({
+        money: gameStore.playerStats.money - item.price,
+      });
+
+      const existingItem = inventory.find((inv) => inv.id === item.id);
       if (existingItem) {
-        setInventory(prev => prev.map(inv => 
-          inv.id === item.id 
-            ? { ...inv, quantity: inv.quantity + 1 }
-            : inv
-        ));
+        setInventory((prev) =>
+          prev.map((inv) =>
+            inv.id === item.id ? { ...inv, quantity: inv.quantity + 1 } : inv
+          )
+        );
       } else {
-        setInventory(prev => [...prev, { ...item, price: undefined, unlockLevel: undefined } as InventoryItem]);
+        setInventory((prev) => [
+          ...prev,
+          {
+            ...item,
+            price: undefined,
+            unlockLevel: undefined,
+          } as InventoryItem,
+        ]);
       }
-      
+
       gameStore.addAction(`bought_${item.id}`);
     }
   };
@@ -119,59 +131,72 @@ const InventorySystem: React.FC = () => {
   const sellItem = (item: InventoryItem) => {
     const sellPrice = Math.floor(item.value * 0.6); // Sell for 60% of value
     gameStore.updateStats({ money: gameStore.playerStats.money + sellPrice });
-    
+
     if (item.quantity > 1) {
-      setInventory(prev => prev.map(inv => 
-        inv.id === item.id 
-          ? { ...inv, quantity: inv.quantity - 1 }
-          : inv
-      ));
+      setInventory((prev) =>
+        prev.map((inv) =>
+          inv.id === item.id ? { ...inv, quantity: inv.quantity - 1 } : inv
+        )
+      );
     } else {
-      setInventory(prev => prev.filter(inv => inv.id !== item.id));
+      setInventory((prev) => prev.filter((inv) => inv.id !== item.id));
     }
-    
+
     gameStore.addAction(`sold_${item.id}`);
   };
 
   const useItem = (item: InventoryItem) => {
     if (item.type === 'consumable') {
       if (item.stats?.healing) {
-        const newHealth = Math.min(gameStore.playerStats.health + item.stats.healing, 100);
+        const newHealth = Math.min(
+          gameStore.playerStats.health + item.stats.healing,
+          100
+        );
         gameStore.updateStats({ health: newHealth });
       }
-      
+
       // Remove one from inventory
       if (item.quantity > 1) {
-        setInventory(prev => prev.map(inv => 
-          inv.id === item.id 
-            ? { ...inv, quantity: inv.quantity - 1 }
-            : inv
-        ));
+        setInventory((prev) =>
+          prev.map((inv) =>
+            inv.id === item.id ? { ...inv, quantity: inv.quantity - 1 } : inv
+          )
+        );
       } else {
-        setInventory(prev => prev.filter(inv => inv.id !== item.id));
+        setInventory((prev) => prev.filter((inv) => inv.id !== item.id));
       }
-      
+
       gameStore.addAction(`used_${item.id}`);
     }
   };
 
   const getTypeColor = (type: InventoryItem['type']) => {
     switch (type) {
-      case 'weapon': return 'text-red-400';
-      case 'armor': return 'text-blue-400';
-      case 'consumable': return 'text-green-400';
-      case 'misc': return 'text-gray-400';
-      default: return 'text-white';
+      case 'weapon':
+        return 'text-red-400';
+      case 'armor':
+        return 'text-blue-400';
+      case 'consumable':
+        return 'text-green-400';
+      case 'misc':
+        return 'text-gray-400';
+      default:
+        return 'text-white';
     }
   };
 
   const getTypeIcon = (type: InventoryItem['type']) => {
     switch (type) {
-      case 'weapon': return '⚔️';
-      case 'armor': return '🛡️';
-      case 'consumable': return '💊';
-      case 'misc': return '📦';
-      default: return '❓';
+      case 'weapon':
+        return '⚔️';
+      case 'armor':
+        return '🛡️';
+      case 'consumable':
+        return '💊';
+      case 'misc':
+        return '📦';
+      default:
+        return '❓';
     }
   };
 
@@ -216,11 +241,16 @@ const InventorySystem: React.FC = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {inventory.map(item => (
-                  <div key={item.id} className="bg-zinc-800 p-4 rounded border border-zinc-700 hover:border-red-500/50 transition-colors">
+                {inventory.map((item) => (
+                  <div
+                    key={item.id}
+                    className="bg-zinc-800 p-4 rounded border border-zinc-700 hover:border-red-500/50 transition-colors"
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-bold text-white flex items-center">
-                        <span className="text-xl mr-2">{getTypeIcon(item.type)}</span>
+                        <span className="text-xl mr-2">
+                          {getTypeIcon(item.type)}
+                        </span>
                         {item.name}
                       </h3>
                       {item.quantity > 1 && (
@@ -229,13 +259,17 @@ const InventorySystem: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    
-                    <p className="text-gray-300 text-sm mb-3">{item.description}</p>
-                    
+
+                    <p className="text-gray-300 text-sm mb-3">
+                      {item.description}
+                    </p>
+
                     <div className="space-y-1 text-xs mb-4">
                       <div className="flex justify-between">
                         <span className="text-gray-400">Type:</span>
-                        <span className={getTypeColor(item.type)}>{item.type.toUpperCase()}</span>
+                        <span className={getTypeColor(item.type)}>
+                          {item.type.toUpperCase()}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Value:</span>
@@ -246,19 +280,25 @@ const InventorySystem: React.FC = () => {
                           {item.stats.damage && (
                             <div className="flex justify-between">
                               <span className="text-gray-400">Damage:</span>
-                              <span className="text-red-400">+{item.stats.damage}</span>
+                              <span className="text-red-400">
+                                +{item.stats.damage}
+                              </span>
                             </div>
                           )}
                           {item.stats.protection && (
                             <div className="flex justify-between">
                               <span className="text-gray-400">Protection:</span>
-                              <span className="text-blue-400">+{item.stats.protection}%</span>
+                              <span className="text-blue-400">
+                                +{item.stats.protection}%
+                              </span>
                             </div>
                           )}
                           {item.stats.healing && (
                             <div className="flex justify-between">
                               <span className="text-gray-400">Healing:</span>
-                              <span className="text-green-400">+{item.stats.healing} HP</span>
+                              <span className="text-green-400">
+                                +{item.stats.healing} HP
+                              </span>
                             </div>
                           )}
                         </>
@@ -313,35 +353,51 @@ const InventorySystem: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {shopItems.map(item => {
+              {shopItems.map((item) => {
                 const canAfford = gameStore.playerStats.money >= item.price;
-                const hasAccess = gameStore.playerStats.reputation >= item.unlockLevel;
+                const hasAccess =
+                  gameStore.playerStats.reputation >= item.unlockLevel;
                 const canBuy = canAfford && hasAccess;
 
                 return (
-                  <div key={item.id} className={`bg-zinc-800 p-4 rounded border transition-colors ${
-                    canBuy ? 'border-zinc-700 hover:border-red-500/50' : 'border-red-900/50'
-                  }`}>
+                  <div
+                    key={item.id}
+                    className={`bg-zinc-800 p-4 rounded border transition-colors ${
+                      canBuy
+                        ? 'border-zinc-700 hover:border-red-500/50'
+                        : 'border-red-900/50'
+                    }`}
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-bold text-white flex items-center">
-                        <span className="text-xl mr-2">{getTypeIcon(item.type)}</span>
+                        <span className="text-xl mr-2">
+                          {getTypeIcon(item.type)}
+                        </span>
                         {item.name}
                       </h3>
                       <span className="bg-green-600 text-white text-xs px-2 py-1 rounded">
                         ${item.price}
                       </span>
                     </div>
-                    
-                    <p className="text-gray-300 text-sm mb-3">{item.description}</p>
-                    
+
+                    <p className="text-gray-300 text-sm mb-3">
+                      {item.description}
+                    </p>
+
                     <div className="space-y-1 text-xs mb-4">
                       <div className="flex justify-between">
                         <span className="text-gray-400">Type:</span>
-                        <span className={getTypeColor(item.type)}>{item.type.toUpperCase()}</span>
+                        <span className={getTypeColor(item.type)}>
+                          {item.type.toUpperCase()}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Unlock Level:</span>
-                        <span className={hasAccess ? 'text-green-400' : 'text-red-400'}>
+                        <span
+                          className={
+                            hasAccess ? 'text-green-400' : 'text-red-400'
+                          }
+                        >
                           {item.unlockLevel} REP
                         </span>
                       </div>
@@ -350,19 +406,25 @@ const InventorySystem: React.FC = () => {
                           {item.stats.damage && (
                             <div className="flex justify-between">
                               <span className="text-gray-400">Damage:</span>
-                              <span className="text-red-400">+{item.stats.damage}</span>
+                              <span className="text-red-400">
+                                +{item.stats.damage}
+                              </span>
                             </div>
                           )}
                           {item.stats.protection && (
                             <div className="flex justify-between">
                               <span className="text-gray-400">Protection:</span>
-                              <span className="text-blue-400">+{item.stats.protection}%</span>
+                              <span className="text-blue-400">
+                                +{item.stats.protection}%
+                              </span>
                             </div>
                           )}
                           {item.stats.healing && (
                             <div className="flex justify-between">
                               <span className="text-gray-400">Healing:</span>
-                              <span className="text-green-400">+{item.stats.healing} HP</span>
+                              <span className="text-green-400">
+                                +{item.stats.healing} HP
+                              </span>
                             </div>
                           )}
                         </>
@@ -378,7 +440,11 @@ const InventorySystem: React.FC = () => {
                           : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                       }`}
                     >
-                      {!hasAccess ? 'LOCKED' : !canAfford ? 'INSUFFICIENT FUNDS' : 'BUY'}
+                      {!hasAccess
+                        ? 'LOCKED'
+                        : !canAfford
+                          ? 'INSUFFICIENT FUNDS'
+                          : 'BUY'}
                     </button>
                   </div>
                 );

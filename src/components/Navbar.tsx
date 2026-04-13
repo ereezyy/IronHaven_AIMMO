@@ -23,7 +23,7 @@ const Navbar: React.FC<NavbarProps> = ({ onPlayGame }) => {
   }, []);
 
   return (
-    <nav 
+    <nav
       className={`fixed w-full z-50 transition-all duration-300 ${
         isScrolled ? 'bg-black/90 backdrop-blur-sm py-3' : 'bg-transparent py-5'
       }`}
@@ -32,7 +32,9 @@ const Navbar: React.FC<NavbarProps> = ({ onPlayGame }) => {
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <AlertTriangle className="h-8 w-8 text-red-500 mr-2" />
-            <span className="text-white font-bold text-xl tracking-widest">IRONHAVEN</span>
+            <span className="text-white font-bold text-xl tracking-widest">
+              IRONHAVEN
+            </span>
           </div>
 
           {/* Desktop Navigation */}
@@ -41,7 +43,7 @@ const Navbar: React.FC<NavbarProps> = ({ onPlayGame }) => {
             <NavLink href="#gameplay">GAMEPLAY</NavLink>
             <NavLink href="#city">CITY</NavLink>
             <NavLink href="#features">FEATURES</NavLink>
-            <button 
+            <button
               onClick={onPlayGame}
               className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-sm transition duration-300 transform hover:scale-105"
             >
@@ -51,7 +53,7 @@ const Navbar: React.FC<NavbarProps> = ({ onPlayGame }) => {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden">
-            <button 
+            <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="text-white focus:outline-none"
             >
@@ -68,10 +70,24 @@ const Navbar: React.FC<NavbarProps> = ({ onPlayGame }) => {
         {isMenuOpen && (
           <div className="md:hidden bg-black/95 backdrop-blur-sm mt-4 py-4 px-2 rounded-md">
             <div className="flex flex-col space-y-4">
-              <MobileNavLink href="#story" onClick={() => setIsMenuOpen(false)}>STORY</MobileNavLink>
-              <MobileNavLink href="#gameplay" onClick={() => setIsMenuOpen(false)}>GAMEPLAY</MobileNavLink>
-              <MobileNavLink href="#city" onClick={() => setIsMenuOpen(false)}>CITY</MobileNavLink>
-              <MobileNavLink href="#features" onClick={() => setIsMenuOpen(false)}>FEATURES</MobileNavLink>
+              <MobileNavLink href="#story" onClick={() => setIsMenuOpen(false)}>
+                STORY
+              </MobileNavLink>
+              <MobileNavLink
+                href="#gameplay"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                GAMEPLAY
+              </MobileNavLink>
+              <MobileNavLink href="#city" onClick={() => setIsMenuOpen(false)}>
+                CITY
+              </MobileNavLink>
+              <MobileNavLink
+                href="#features"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                FEATURES
+              </MobileNavLink>
               <button
                 onClick={() => {
                   setIsMenuOpen(false);
@@ -97,8 +113,8 @@ interface NavLinkProps {
 
 const NavLink: React.FC<NavLinkProps> = ({ href, children }) => {
   return (
-    <a 
-      href={href} 
+    <a
+      href={href}
       className="text-gray-300 hover:text-white transition duration-300 text-sm font-medium tracking-wider"
     >
       {children}
@@ -108,8 +124,8 @@ const NavLink: React.FC<NavLinkProps> = ({ href, children }) => {
 
 const MobileNavLink: React.FC<NavLinkProps> = ({ href, children, onClick }) => {
   return (
-    <a 
-      href={href} 
+    <a
+      href={href}
       className="text-gray-300 hover:text-white transition duration-300 text-base font-medium tracking-wider block py-2 px-4 border-l-2 border-red-700"
       onClick={onClick}
     >

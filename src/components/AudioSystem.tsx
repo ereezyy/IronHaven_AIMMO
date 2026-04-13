@@ -17,24 +17,25 @@ const AudioSystem: React.FC<AudioSystemProps> = ({ enabled = true }) => {
   useEffect(() => {
     const initAudio = async () => {
       if (!enabled || !userInteracted) return;
-      
+
       try {
-        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        const AudioContext =
+          window.AudioContext || (window as any).webkitAudioContext;
         if (!AudioContext) {
           console.warn('Web Audio API not supported');
           return;
         }
-        
+
         audioContextRef.current = new AudioContext();
-        
+
         // Resume context if suspended
         if (audioContextRef.current.state === 'suspended') {
           await audioContextRef.current.resume();
         }
-        
+
         generateSounds();
         setAudioInitialized(true);
-        
+
         // Only play background music if context is running
         if (audioContextRef.current.state === 'running') {
           playBackgroundMusic();
@@ -46,13 +47,13 @@ const AudioSystem: React.FC<AudioSystemProps> = ({ enabled = true }) => {
 
     initAudio();
   }, [enabled, userInteracted]);
-  
+
   // Handle user interaction to enable audio
   useEffect(() => {
     const handleInteraction = () => {
       setUserInteracted(true);
     };
-    
+
     if (!userInteracted) {
       document.addEventListener('click', handleInteraction);
       document.addEventListener('keydown', handleInteraction);
@@ -71,9 +72,13 @@ const AudioSystem: React.FC<AudioSystemProps> = ({ enabled = true }) => {
     if (!audioContextRef.current) return;
 
     const ctx = audioContextRef.current;
-    
+
     // Gunshot sound
-    const gunshotBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate);
+    const gunshotBuffer = ctx.createBuffer(
+      1,
+      ctx.sampleRate * 0.3,
+      ctx.sampleRate
+    );
     const gunshotData = gunshotBuffer.getChannelData(0);
     for (let i = 0; i < gunshotData.length; i++) {
       const decay = Math.exp(-i / (ctx.sampleRate * 0.05));
@@ -82,7 +87,11 @@ const AudioSystem: React.FC<AudioSystemProps> = ({ enabled = true }) => {
     soundsRef.current.gunshot = gunshotBuffer;
 
     // Footstep sound
-    const footstepBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.15, ctx.sampleRate);
+    const footstepBuffer = ctx.createBuffer(
+      1,
+      ctx.sampleRate * 0.15,
+      ctx.sampleRate
+    );
     const footstepData = footstepBuffer.getChannelData(0);
     for (let i = 0; i < footstepData.length; i++) {
       const decay = Math.exp(-i / (ctx.sampleRate * 0.02));
@@ -91,11 +100,17 @@ const AudioSystem: React.FC<AudioSystemProps> = ({ enabled = true }) => {
     soundsRef.current.footstep = footstepBuffer;
 
     // Car engine sound
-    const engineBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.5, ctx.sampleRate);
+    const engineBuffer = ctx.createBuffer(
+      1,
+      ctx.sampleRate * 0.5,
+      ctx.sampleRate
+    );
     const engineData = engineBuffer.getChannelData(0);
     for (let i = 0; i < engineData.length; i++) {
       const time = i / ctx.sampleRate;
-      engineData[i] = Math.sin(time * 60 * Math.PI) * 0.4 + Math.sin(time * 120 * Math.PI) * 0.2;
+      engineData[i] =
+        Math.sin(time * 60 * Math.PI) * 0.4 +
+        Math.sin(time * 120 * Math.PI) * 0.2;
     }
     soundsRef.current.engine = engineBuffer;
 
@@ -110,7 +125,11 @@ const AudioSystem: React.FC<AudioSystemProps> = ({ enabled = true }) => {
     soundsRef.current.siren = sirenBuffer;
 
     // Ambient city noise
-    const ambientBuffer = ctx.createBuffer(1, ctx.sampleRate * 5, ctx.sampleRate);
+    const ambientBuffer = ctx.createBuffer(
+      1,
+      ctx.sampleRate * 5,
+      ctx.sampleRate
+    );
     const ambientData = ambientBuffer.getChannelData(0);
     for (let i = 0; i < ambientData.length; i++) {
       ambientData[i] = (Math.random() * 2 - 1) * 0.1;
@@ -118,30 +137,40 @@ const AudioSystem: React.FC<AudioSystemProps> = ({ enabled = true }) => {
     soundsRef.current.ambient = ambientBuffer;
   };
 
-  const playSound = (soundName: string, volume: number = 1, pitch: number = 1) => {
-    if (!audioInitialized || !audioContextRef.current || !soundsRef.current[soundName] || !enabled) return;
-    
+  const playSound = (
+    soundName: string,
+    volume: number = 1,
+    pitch: number = 1
+  ) => {
+    if (
+      !audioInitialized ||
+      !audioContextRef.current ||
+      !soundsRef.current[soundName] ||
+      !enabled
+    )
+      return;
+
     try {
       const ctx = audioContextRef.current;
-      
+
       // Check if context is suspended
       if (ctx.state === 'suspended') {
         ctx.resume();
         return;
       }
-      
+
       const source = ctx.createBufferSource();
       const gainNode = ctx.createGain();
-      
+
       source.buffer = soundsRef.current[soundName];
       source.playbackRate.value = pitch;
       gainNode.gain.value = Math.min(volume * 0.3, 0.3); // Reduce volume significantly
-      
+
       source.connect(gainNode);
       gainNode.connect(ctx.destination);
-      
+
       source.start();
-      
+
       // Clean up after sound finishes
       source.onended = () => {
         source.disconnect();
@@ -154,20 +183,20 @@ const AudioSystem: React.FC<AudioSystemProps> = ({ enabled = true }) => {
 
   const playBackgroundMusic = () => {
     if (!audioInitialized || !audioContextRef.current || !enabled) return;
-    
+
     // Simplified background music - just a low drone
     try {
       const ctx = audioContextRef.current;
       const oscillator = ctx.createOscillator();
       const gainNode = ctx.createGain();
-      
+
       oscillator.type = 'sine';
       oscillator.frequency.value = 60; // Low drone
       gainNode.gain.value = 0.02; // Very quiet
-      
+
       oscillator.connect(gainNode);
       gainNode.connect(ctx.destination);
-      
+
       oscillator.start();
       backgroundMusicRef.current = oscillator as any;
     } catch (error) {
@@ -198,8 +227,9 @@ const AudioSystem: React.FC<AudioSystemProps> = ({ enabled = true }) => {
   // Listen for game events and play sounds (with reduced frequency)
   useEffect(() => {
     if (!audioInitialized || !enabled) return;
-    
-    const recentAction = gameStore.recentActions[gameStore.recentActions.length - 1];
+
+    const recentAction =
+      gameStore.recentActions[gameStore.recentActions.length - 1];
     if (!recentAction) return;
 
     // Reduce sound frequency to avoid spam
@@ -208,7 +238,7 @@ const AudioSystem: React.FC<AudioSystemProps> = ({ enabled = true }) => {
     if (recentAction.includes('fired_') || recentAction.includes('killed_')) {
       playSound('gunshot', 0.3, Math.random() * 0.4 + 0.8);
     }
-    
+
     if (recentAction.includes('stole_')) {
       playSound('engine', 0.2);
     }

@@ -18,14 +18,16 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
   level,
   experience,
   maxExperience,
-  playersOnline
+  playersOnline,
 }) => {
   return (
     <>
       <div className="absolute top-4 left-4 space-y-3">
         <div className="bg-black/80 backdrop-blur-sm border border-cyan-500/50 rounded-lg p-4 min-w-[300px]">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-cyan-400 font-bold text-lg">Level {level}</span>
+            <span className="text-cyan-400 font-bold text-lg">
+              Level {level}
+            </span>
             <span className="text-gray-400 text-sm flex items-center gap-1">
               <Users size={14} />
               {playersOnline} Online
@@ -85,7 +87,9 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
           <div className="mt-3 pt-3 border-t border-gray-700">
             <div className="flex items-center justify-between mb-1">
               <span className="text-yellow-400 text-sm">Experience</span>
-              <span className="text-white text-xs">{experience}/{maxExperience}</span>
+              <span className="text-white text-xs">
+                {experience}/{maxExperience}
+              </span>
             </div>
             <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
               <div
@@ -97,7 +101,9 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
         </div>
 
         <div className="bg-black/80 backdrop-blur-sm border border-cyan-500/50 rounded-lg p-3">
-          <div className="text-cyan-400 text-xs font-bold mb-2">QUICK STATS</div>
+          <div className="text-cyan-400 text-xs font-bold mb-2">
+            QUICK STATS
+          </div>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="flex items-center gap-1 text-gray-300">
               <Sword size={12} className="text-red-400" />
@@ -127,7 +133,9 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
 
       <div className="absolute bottom-4 right-4">
         <div className="bg-black/80 backdrop-blur-sm border border-cyan-500/50 rounded-lg p-3">
-          <div className="text-cyan-400 text-xs font-bold mb-2">ACTIVE QUESTS</div>
+          <div className="text-cyan-400 text-xs font-bold mb-2">
+            ACTIVE QUESTS
+          </div>
           <div className="space-y-2 text-xs text-gray-300">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-yellow-400 rounded-full" />
@@ -143,7 +151,7 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
 
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
         <div className="flex gap-2">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map(slot => (
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((slot) => (
             <div
               key={slot}
               className="w-12 h-12 bg-black/80 backdrop-blur-sm border border-cyan-500/50 rounded flex items-center justify-center text-cyan-400 text-xs font-bold hover:border-cyan-400 transition-colors cursor-pointer"

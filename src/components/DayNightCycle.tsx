@@ -7,13 +7,16 @@ interface DayNightCycleProps {
   onTimeUpdate?: (time: number, isNight: boolean) => void;
 }
 
-const DayNightCycle: React.FC<DayNightCycleProps> = ({ timeScale = 120, onTimeUpdate }) => {
+const DayNightCycle: React.FC<DayNightCycleProps> = ({
+  timeScale = 120,
+  onTimeUpdate,
+}) => {
   const { scene } = useThree();
   const [currentTime, setCurrentTime] = useState(12); // Start at noon
   const [isNight, setIsNight] = useState(false);
   const directionalLightRef = useRef<THREE.DirectionalLight>(null);
   const ambientLightRef = useRef<THREE.AmbientLight>(null);
-  
+
   // Create persistent color objects to avoid recreation every frame
   const directionalColorRef = useRef(new THREE.Color(1, 1, 1));
   const ambientColorRef = useRef(new THREE.Color(1, 1, 1));
@@ -21,8 +24,8 @@ const DayNightCycle: React.FC<DayNightCycleProps> = ({ timeScale = 120, onTimeUp
 
   useFrame((state, delta) => {
     // Update time
-    setCurrentTime(prev => {
-      const newTime = (prev + (delta * timeScale / 3600)) % 24; // 24 hour cycle
+    setCurrentTime((prev) => {
+      const newTime = (prev + (delta * timeScale) / 3600) % 24; // 24 hour cycle
       return newTime;
     });
   });
@@ -46,35 +49,42 @@ const DayNightCycle: React.FC<DayNightCycleProps> = ({ timeScale = 120, onTimeUp
     // Update directional light (sun)
     if (directionalLightRef.current) {
       directionalLightRef.current.position.set(sunX, sunY, sunZ);
-      
+
       // Adjust light intensity based on time
       let intensity = 0.8;
       if (currentTime >= 6 && currentTime <= 18) {
         // Daytime
         intensity = 1.0;
-      } else if ((currentTime >= 5 && currentTime < 6) || (currentTime > 18 && currentTime <= 19)) {
+      } else if (
+        (currentTime >= 5 && currentTime < 6) ||
+        (currentTime > 18 && currentTime <= 19)
+      ) {
         // Dawn/Dusk
         intensity = 0.6;
       } else {
         // Nighttime
         intensity = 0.3;
       }
-      
+
       directionalLightRef.current.intensity = intensity;
-      
+
       // Adjust light color based on time using persistent color object
       if (currentTime < 6 || currentTime > 20) {
         // Night - blue tint
         directionalColorRef.current.setRGB(0.4, 0.6, 1);
-      } else if ((currentTime >= 5 && currentTime < 7) || (currentTime >= 18 && currentTime < 20)) {
+      } else if (
+        (currentTime >= 5 && currentTime < 7) ||
+        (currentTime >= 18 && currentTime < 20)
+      ) {
         // Dawn/Dusk - orange tint
-        const t = currentTime < 12 ? (currentTime - 5) / 2 : (20 - currentTime) / 2;
+        const t =
+          currentTime < 12 ? (currentTime - 5) / 2 : (20 - currentTime) / 2;
         directionalColorRef.current.setRGB(1, 0.6 + t * 0.4, 0.2 + t * 0.8);
       } else {
         // Day - white
         directionalColorRef.current.setRGB(1, 1, 1);
       }
-      
+
       directionalLightRef.current.color = directionalColorRef.current;
     }
 
@@ -86,16 +96,16 @@ const DayNightCycle: React.FC<DayNightCycleProps> = ({ timeScale = 120, onTimeUp
       } else {
         ambientIntensity = 0.15;
       }
-      
+
       ambientLightRef.current.intensity = ambientIntensity;
-      
+
       // Ambient color using persistent color object
       if (currentTime < 6 || currentTime > 20) {
         ambientColorRef.current.setRGB(0.2, 0.3, 0.6);
       } else {
         ambientColorRef.current.setRGB(1, 1, 1);
       }
-      
+
       ambientLightRef.current.color = ambientColorRef.current;
     }
 
@@ -117,11 +127,7 @@ const DayNightCycle: React.FC<DayNightCycleProps> = ({ timeScale = 120, onTimeUp
       } else {
         fogColorRef.current.setRGB(0.05, 0.05, 0.1);
       }
-      scene.fog = new THREE.Fog(
-        fogColorRef.current,
-        20,
-        isNight ? 80 : 120
-      );
+      scene.fog = new THREE.Fog(fogColorRef.current, 20, isNight ? 80 : 120);
     }
   }, [currentTime, isNight, scene, onTimeUpdate]);
 
@@ -139,10 +145,10 @@ const DayNightCycle: React.FC<DayNightCycleProps> = ({ timeScale = 120, onTimeUp
         shadow-camera-top={50}
         shadow-camera-bottom={-50}
       />
-      
+
       {/* Ambient light */}
       <ambientLight ref={ambientLightRef} />
-      
+
       {/* Moon light (only at night) */}
       {isNight && (
         <pointLight
@@ -152,14 +158,34 @@ const DayNightCycle: React.FC<DayNightCycleProps> = ({ timeScale = 120, onTimeUp
           distance={100}
         />
       )}
-      
+
       {/* Street lights effect at night */}
       {isNight && (
         <>
-          <pointLight position={[10, 5, 10]} intensity={0.3} color="#ffaa00" distance={15} />
-          <pointLight position={[-15, 5, 20]} intensity={0.3} color="#ffaa00" distance={15} />
-          <pointLight position={[25, 5, -10]} intensity={0.3} color="#ffaa00" distance={15} />
-          <pointLight position={[-5, 5, -25]} intensity={0.3} color="#ffaa00" distance={15} />
+          <pointLight
+            position={[10, 5, 10]}
+            intensity={0.3}
+            color="#ffaa00"
+            distance={15}
+          />
+          <pointLight
+            position={[-15, 5, 20]}
+            intensity={0.3}
+            color="#ffaa00"
+            distance={15}
+          />
+          <pointLight
+            position={[25, 5, -10]}
+            intensity={0.3}
+            color="#ffaa00"
+            distance={15}
+          />
+          <pointLight
+            position={[-5, 5, -25]}
+            intensity={0.3}
+            color="#ffaa00"
+            distance={15}
+          />
         </>
       )}
     </>

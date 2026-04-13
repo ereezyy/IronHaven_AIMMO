@@ -56,10 +56,10 @@ class PersistenceService {
           combat: 10,
           stealth: 10,
           driving: 10,
-          intimidation: 10
+          intimidation: 10,
         },
         inventory: [],
-        current_weapon_id: 'fists'
+        current_weapon_id: 'fists',
       };
 
       const { data, error } = await supabase
@@ -69,7 +69,10 @@ class PersistenceService {
         .maybeSingle();
 
       if (error) {
-        console.warn('Failed to save player to database, using offline mode:', error);
+        console.warn(
+          'Failed to save player to database, using offline mode:',
+          error
+        );
         this.offlineMode = true;
         this.currentPlayerId = playerId;
         this.saveToLocalStorage('player_data', playerData);
@@ -92,21 +95,27 @@ class PersistenceService {
     if (this.offlineMode) {
       const sessionId = this.generateSessionId();
       this.currentSessionId = sessionId;
-      this.saveToLocalStorage('current_session', { id: sessionId, playerId, startTime: new Date().toISOString() });
+      this.saveToLocalStorage('current_session', {
+        id: sessionId,
+        playerId,
+        startTime: new Date().toISOString(),
+      });
       return sessionId;
     }
 
     try {
       const { data, error } = await supabase
         .from('game_sessions')
-        .insert([{
-          id: this.generateSessionId(),
-          player_id: playerId,
-          start_time: new Date().toISOString(),
-          total_kills: 0,
-          total_money_earned: 0,
-          max_wanted_level: 0
-        }])
+        .insert([
+          {
+            id: this.generateSessionId(),
+            player_id: playerId,
+            start_time: new Date().toISOString(),
+            total_kills: 0,
+            total_money_earned: 0,
+            max_wanted_level: 0,
+          },
+        ])
         .select()
         .maybeSingle();
 
@@ -144,11 +153,11 @@ class PersistenceService {
         police_kill_count: playerData.policeKillCount,
         skills: playerData.skills,
         inventory: playerData.inventory,
-        current_weapon_id: playerData.currentWeaponId
+        current_weapon_id: playerData.currentWeaponId,
       };
 
-      Object.keys(updateData).forEach(key =>
-        updateData[key] === undefined && delete updateData[key]
+      Object.keys(updateData).forEach(
+        (key) => updateData[key] === undefined && delete updateData[key]
       );
 
       const { error } = await supabase
@@ -198,7 +207,7 @@ class PersistenceService {
         policeKillCount: data.police_kill_count,
         skills: data.skills,
         inventory: data.inventory,
-        currentWeaponId: data.current_weapon_id
+        currentWeaponId: data.current_weapon_id,
       };
     } catch (error) {
       console.error('Error loading player state:', error);
@@ -224,7 +233,11 @@ class PersistenceService {
     }
   }
 
-  async endSession(stats: { totalKills: number; totalMoneyEarned: number; maxWantedLevel: number }) {
+  async endSession(stats: {
+    totalKills: number;
+    totalMoneyEarned: number;
+    maxWantedLevel: number;
+  }) {
     if (!this.currentSessionId) return;
 
     if (this.offlineMode) {
@@ -239,7 +252,7 @@ class PersistenceService {
           end_time: new Date().toISOString(),
           total_kills: stats.totalKills,
           total_money_earned: stats.totalMoneyEarned,
-          max_wanted_level: stats.maxWantedLevel
+          max_wanted_level: stats.maxWantedLevel,
         })
         .eq('id', this.currentSessionId);
     } catch (error) {
@@ -263,24 +276,22 @@ class PersistenceService {
     if (this.offlineMode) return false;
 
     try {
-      const { error } = await supabase
-        .from('multiplayer_players')
-        .upsert({
-          id: playerData.id,
-          username: playerData.username,
-          position_x: playerData.position[0],
-          position_y: playerData.position[1],
-          position_z: playerData.position[2],
-          rotation: playerData.rotation,
-          velocity_x: playerData.velocity[0],
-          velocity_y: playerData.velocity[1],
-          velocity_z: playerData.velocity[2],
-          health: playerData.health,
-          stamina: playerData.stamina,
-          level: playerData.level,
-          is_in_combat: playerData.isInCombat,
-          last_seen: new Date().toISOString()
-        });
+      const { error } = await supabase.from('multiplayer_players').upsert({
+        id: playerData.id,
+        username: playerData.username,
+        position_x: playerData.position[0],
+        position_y: playerData.position[1],
+        position_z: playerData.position[2],
+        rotation: playerData.rotation,
+        velocity_x: playerData.velocity[0],
+        velocity_y: playerData.velocity[1],
+        velocity_z: playerData.velocity[2],
+        health: playerData.health,
+        stamina: playerData.stamina,
+        level: playerData.level,
+        is_in_combat: playerData.isInCombat,
+        last_seen: new Date().toISOString(),
+      });
 
       if (error) {
         console.error('Failed to update multiplayer player:', error);
@@ -294,7 +305,10 @@ class PersistenceService {
     }
   }
 
-  async getNearbyPlayers(position: [number, number, number], radius: number = 50): Promise<any[]> {
+  async getNearbyPlayers(
+    position: [number, number, number],
+    radius: number = 50
+  ): Promise<any[]> {
     if (this.offlineMode) return [];
 
     try {
@@ -307,22 +321,24 @@ class PersistenceService {
         return [];
       }
 
-      return data.filter(player => {
-        const dx = player.position_x - position[0];
-        const dz = player.position_z - position[2];
-        const distance = Math.sqrt(dx * dx + dz * dz);
-        return distance <= radius;
-      }).map(player => ({
-        id: player.id,
-        username: player.username,
-        position: [player.position_x, player.position_y, player.position_z],
-        rotation: player.rotation,
-        velocity: [player.velocity_x, player.velocity_y, player.velocity_z],
-        health: player.health,
-        stamina: player.stamina,
-        level: player.level,
-        isInCombat: player.is_in_combat
-      }));
+      return data
+        .filter((player) => {
+          const dx = player.position_x - position[0];
+          const dz = player.position_z - position[2];
+          const distance = Math.sqrt(dx * dx + dz * dz);
+          return distance <= radius;
+        })
+        .map((player) => ({
+          id: player.id,
+          username: player.username,
+          position: [player.position_x, player.position_y, player.position_z],
+          rotation: player.rotation,
+          velocity: [player.velocity_x, player.velocity_y, player.velocity_z],
+          health: player.health,
+          stamina: player.stamina,
+          level: player.level,
+          isInCombat: player.is_in_combat,
+        }));
     } catch (error) {
       console.error('Error getting nearby players:', error);
       return [];
@@ -330,11 +346,15 @@ class PersistenceService {
   }
 
   private generatePlayerId(): string {
-    return 'player_' + Math.random().toString(36).substr(2, 16) + '_' + Date.now();
+    return (
+      'player_' + Math.random().toString(36).substr(2, 16) + '_' + Date.now()
+    );
   }
 
   private generateSessionId(): string {
-    return 'session_' + Math.random().toString(36).substr(2, 16) + '_' + Date.now();
+    return (
+      'session_' + Math.random().toString(36).substr(2, 16) + '_' + Date.now()
+    );
   }
 
   private saveToLocalStorage(key: string, data: any) {

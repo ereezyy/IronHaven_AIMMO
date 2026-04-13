@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameState';
-import { Target, Clock, DollarSign, AlertTriangle, CheckCircle } from 'lucide-react';
+import {
+  Target,
+  Clock,
+  DollarSign,
+  AlertTriangle,
+  CheckCircle,
+} from 'lucide-react';
 
 interface Mission {
   id: string;
@@ -24,7 +30,10 @@ interface MissionSystemProps {
   onMissionUpdate: (mission: Mission) => void;
 }
 
-const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMissionUpdate }) => {
+const MissionSystem: React.FC<MissionSystemProps> = ({
+  playerPosition,
+  onMissionUpdate,
+}) => {
   const gameStore = useGameStore();
   const [availableMissions, setAvailableMissions] = useState<Mission[]>([]);
   const [activeMission, setActiveMission] = useState<Mission | null>(null);
@@ -41,7 +50,8 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
       missions.push({
         id: 'intimidate_shopkeeper',
         title: 'Send a Message',
-        description: 'A local shopkeeper needs to learn about protection fees. Make him understand.',
+        description:
+          'A local shopkeeper needs to learn about protection fees. Make him understand.',
         type: 'intimidation',
         target: 'Local Shopkeeper',
         location: 'Downtown Market',
@@ -50,13 +60,14 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
         completed: false,
         failed: false,
         progress: 0,
-        maxProgress: 1
+        maxProgress: 1,
       });
 
       missions.push({
         id: 'steal_car',
         title: 'Grand Theft Auto',
-        description: 'The crew needs a clean ride. Steal a sedan from the parking lot.',
+        description:
+          'The crew needs a clean ride. Steal a sedan from the parking lot.',
         type: 'heist',
         target: 'Blue Sedan',
         location: 'Shopping Center',
@@ -65,7 +76,7 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
         completed: false,
         failed: false,
         progress: 0,
-        maxProgress: 1
+        maxProgress: 1,
       });
     }
 
@@ -74,7 +85,8 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
       missions.push({
         id: 'eliminate_rival',
         title: 'Hostile Takeover',
-        description: 'A rival dealer is moving in on our territory. Make sure he disappears permanently.',
+        description:
+          'A rival dealer is moving in on our territory. Make sure he disappears permanently.',
         type: 'assassination',
         target: 'Rico Martinez',
         location: 'Industrial District',
@@ -85,13 +97,14 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
         completed: false,
         failed: false,
         progress: 0,
-        maxProgress: 1
+        maxProgress: 1,
       });
 
       missions.push({
         id: 'bank_heist',
         title: 'Easy Money',
-        description: 'Hit the First National Bank. Get in, get the cash, get out. Simple.',
+        description:
+          'Hit the First National Bank. Get in, get the cash, get out. Simple.',
         type: 'heist',
         location: 'Downtown Financial District',
         reward: 15000,
@@ -101,7 +114,7 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
         completed: false,
         failed: false,
         progress: 0,
-        maxProgress: 3 // Multiple objectives
+        maxProgress: 3, // Multiple objectives
       });
     }
 
@@ -110,7 +123,8 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
       missions.push({
         id: 'eliminate_boss',
         title: 'Regime Change',
-        description: 'The Falcone family boss has outlived his usefulness. Take him out and claim the throne.',
+        description:
+          'The Falcone family boss has outlived his usefulness. Take him out and claim the throne.',
         type: 'assassination',
         target: 'Vincent Falcone',
         location: 'Harbor District Warehouse',
@@ -121,11 +135,13 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
         completed: false,
         failed: false,
         progress: 0,
-        maxProgress: 4 // Multiple stages
+        maxProgress: 4, // Multiple stages
       });
     }
 
-    return missions.filter(m => !gameStore.recentActions.includes(`completed_${m.id}`));
+    return missions.filter(
+      (m) => !gameStore.recentActions.includes(`completed_${m.id}`)
+    );
   };
 
   // Update available missions periodically
@@ -151,8 +167,12 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
       switch (activeMission.type) {
         case 'assassination':
           // Check if target was killed
-          const killActions = gameStore.recentActions.filter(action => 
-            action.includes('killed') && action.includes(activeMission.target?.toLowerCase().replace(' ', '_') || '')
+          const killActions = gameStore.recentActions.filter(
+            (action) =>
+              action.includes('killed') &&
+              action.includes(
+                activeMission.target?.toLowerCase().replace(' ', '_') || ''
+              )
           );
           if (killActions.length > 0) {
             newProgress = activeMission.maxProgress;
@@ -162,8 +182,9 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
 
         case 'intimidation':
           // Check if player approached target NPC
-          const intimidationActions = gameStore.recentActions.filter(action => 
-            action.includes('intimidated') || action.includes('threatened')
+          const intimidationActions = gameStore.recentActions.filter(
+            (action) =>
+              action.includes('intimidated') || action.includes('threatened')
           );
           if (intimidationActions.length > 0) {
             newProgress = activeMission.maxProgress;
@@ -173,10 +194,13 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
 
         case 'heist':
           // Check for theft actions
-          const theftActions = gameStore.recentActions.filter(action => 
-            action.includes('stole') || action.includes('robbed')
+          const theftActions = gameStore.recentActions.filter(
+            (action) => action.includes('stole') || action.includes('robbed')
           );
-          newProgress = Math.min(theftActions.length, activeMission.maxProgress);
+          newProgress = Math.min(
+            theftActions.length,
+            activeMission.maxProgress
+          );
           if (newProgress >= activeMission.maxProgress) {
             completed = true;
           }
@@ -184,7 +208,7 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
 
         case 'protection':
           // Check if no civilians were harmed
-          const harmActions = gameStore.recentActions.filter(action => 
+          const harmActions = gameStore.recentActions.filter((action) =>
             action.includes('killed_civilian')
           );
           if (harmActions.length > 0) {
@@ -205,18 +229,24 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
         ...activeMission,
         progress: newProgress,
         completed,
-        failed
+        failed,
       };
 
       if (completed || failed) {
         if (completed) {
-          gameStore.updateStats({ 
+          gameStore.updateStats({
             money: gameStore.playerStats.money + activeMission.reward,
-            reputation: gameStore.playerStats.reputation + (activeMission.difficulty === 'extreme' ? 20 : activeMission.difficulty === 'hard' ? 15 : 10)
+            reputation:
+              gameStore.playerStats.reputation +
+              (activeMission.difficulty === 'extreme'
+                ? 20
+                : activeMission.difficulty === 'hard'
+                  ? 15
+                  : 10),
           });
           gameStore.addAction(`completed_${activeMission.id}`);
         }
-        
+
         setActiveMission(null);
         onMissionUpdate(updatedMission);
       } else {
@@ -231,9 +261,9 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
   const acceptMission = (mission: Mission) => {
     const missionWithStartTime = {
       ...mission,
-      startTime: Date.now()
+      startTime: Date.now(),
     } as any;
-    
+
     setActiveMission(missionWithStartTime);
     setShowMissionBoard(false);
     gameStore.addAction(`accepted_${mission.id}`);
@@ -248,21 +278,31 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
 
   const getDifficultyColor = (difficulty: Mission['difficulty']) => {
     switch (difficulty) {
-      case 'easy': return 'text-green-400';
-      case 'medium': return 'text-yellow-400';
-      case 'hard': return 'text-orange-400';
-      case 'extreme': return 'text-red-400';
-      default: return 'text-gray-400';
+      case 'easy':
+        return 'text-green-400';
+      case 'medium':
+        return 'text-yellow-400';
+      case 'hard':
+        return 'text-orange-400';
+      case 'extreme':
+        return 'text-red-400';
+      default:
+        return 'text-gray-400';
     }
   };
 
   const getMissionIcon = (type: Mission['type']) => {
     switch (type) {
-      case 'assassination': return <Target className="h-5 w-5" />;
-      case 'heist': return <DollarSign className="h-5 w-5" />;
-      case 'protection': return <CheckCircle className="h-5 w-5" />;
-      case 'intimidation': return <AlertTriangle className="h-5 w-5" />;
-      default: return <Target className="h-5 w-5" />;
+      case 'assassination':
+        return <Target className="h-5 w-5" />;
+      case 'heist':
+        return <DollarSign className="h-5 w-5" />;
+      case 'protection':
+        return <CheckCircle className="h-5 w-5" />;
+      case 'intimidation':
+        return <AlertTriangle className="h-5 w-5" />;
+      default:
+        return <Target className="h-5 w-5" />;
     }
   };
 
@@ -291,9 +331,11 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
               ABANDON
             </button>
           </div>
-          
-          <p className="text-gray-300 text-sm mb-3">{activeMission.description}</p>
-          
+
+          <p className="text-gray-300 text-sm mb-3">
+            {activeMission.description}
+          </p>
+
           <div className="space-y-2 text-xs">
             <div className="flex justify-between">
               <span>Progress:</span>
@@ -301,30 +343,40 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
                 {activeMission.progress}/{activeMission.maxProgress}
               </span>
             </div>
-            
+
             {activeMission.target && (
               <div className="flex justify-between">
                 <span>Target:</span>
                 <span className="text-red-400">{activeMission.target}</span>
               </div>
             )}
-            
+
             <div className="flex justify-between">
               <span>Location:</span>
               <span className="text-blue-400">{activeMission.location}</span>
             </div>
-            
+
             <div className="flex justify-between">
               <span>Reward:</span>
-              <span className="text-green-400">${activeMission.reward.toLocaleString()}</span>
+              <span className="text-green-400">
+                ${activeMission.reward.toLocaleString()}
+              </span>
             </div>
-            
+
             {activeMission.timeLimit && (
               <div className="flex justify-between">
                 <span>Time Left:</span>
                 <span className="text-orange-400 flex items-center">
                   <Clock className="h-3 w-3 mr-1" />
-                  {Math.max(0, Math.floor((activeMission.timeLimit - (Date.now() - (activeMission as any).startTime)) / 1000))}s
+                  {Math.max(
+                    0,
+                    Math.floor(
+                      (activeMission.timeLimit -
+                        (Date.now() - (activeMission as any).startTime)) /
+                        1000
+                    )
+                  )}
+                  s
                 </span>
               </div>
             )}
@@ -332,9 +384,11 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
 
           {/* Progress Bar */}
           <div className="mt-3 bg-gray-700 rounded-full h-2">
-            <div 
+            <div
               className="bg-red-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(activeMission.progress / activeMission.maxProgress) * 100}%` }}
+              style={{
+                width: `${(activeMission.progress / activeMission.maxProgress) * 100}%`,
+              }}
             />
           </div>
         </div>
@@ -356,24 +410,33 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
 
             {availableMissions.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-400">No missions available. Check back later.</p>
+                <p className="text-gray-400">
+                  No missions available. Check back later.
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {availableMissions.map(mission => (
-                  <div key={mission.id} className="bg-zinc-800 p-4 rounded border border-zinc-700 hover:border-red-500/50 transition-colors">
+                {availableMissions.map((mission) => (
+                  <div
+                    key={mission.id}
+                    className="bg-zinc-800 p-4 rounded border border-zinc-700 hover:border-red-500/50 transition-colors"
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-bold text-white flex items-center">
                         {getMissionIcon(mission.type)}
                         <span className="ml-2">{mission.title}</span>
                       </h3>
-                      <span className={`text-xs px-2 py-1 rounded ${getDifficultyColor(mission.difficulty)} bg-black/50`}>
+                      <span
+                        className={`text-xs px-2 py-1 rounded ${getDifficultyColor(mission.difficulty)} bg-black/50`}
+                      >
                         {mission.difficulty.toUpperCase()}
                       </span>
                     </div>
-                    
-                    <p className="text-gray-300 text-sm mb-3">{mission.description}</p>
-                    
+
+                    <p className="text-gray-300 text-sm mb-3">
+                      {mission.description}
+                    </p>
+
                     <div className="space-y-1 text-xs mb-4">
                       {mission.target && (
                         <div className="flex justify-between">
@@ -381,28 +444,36 @@ const MissionSystem: React.FC<MissionSystemProps> = ({ playerPosition, onMission
                           <span className="text-red-400">{mission.target}</span>
                         </div>
                       )}
-                      
+
                       <div className="flex justify-between">
                         <span className="text-gray-400">Location:</span>
-                        <span className="text-blue-400">{mission.location}</span>
+                        <span className="text-blue-400">
+                          {mission.location}
+                        </span>
                       </div>
-                      
+
                       <div className="flex justify-between">
                         <span className="text-gray-400">Reward:</span>
-                        <span className="text-green-400">${mission.reward.toLocaleString()}</span>
+                        <span className="text-green-400">
+                          ${mission.reward.toLocaleString()}
+                        </span>
                       </div>
-                      
+
                       {mission.timeLimit && (
                         <div className="flex justify-between">
                           <span className="text-gray-400">Time Limit:</span>
-                          <span className="text-orange-400">{Math.floor(mission.timeLimit / 60000)} minutes</span>
+                          <span className="text-orange-400">
+                            {Math.floor(mission.timeLimit / 60000)} minutes
+                          </span>
                         </div>
                       )}
                     </div>
 
                     {mission.requirements && (
                       <div className="mb-4">
-                        <p className="text-xs text-gray-400 mb-1">Requirements:</p>
+                        <p className="text-xs text-gray-400 mb-1">
+                          Requirements:
+                        </p>
                         <ul className="text-xs text-yellow-400 space-y-1">
                           {mission.requirements.map((req, index) => (
                             <li key={index}>• {req}</li>

@@ -4,23 +4,26 @@
 
 **Total Duration:** 3 minutes (180 seconds)  
 **Target:** Bolt Hackathon 2025  
-**Approach:** Show actual working features, honest about current state, emphasize technical achievement and vision  
+**Approach:** Show actual working features, honest about current state, emphasize technical achievement and vision
 
 ---
 
 ## 🚀 **OPENING HOOK (0-20 seconds) - "WHAT WE ACTUALLY BUILT"**
 
-### **Visual:** 
+### **Visual:**
+
 - **Screen recording of working intro sequence** (https://nwldbobr.manus.space)
 - **Professional cyberpunk countdown** with real animations
 - **Transition to actual game interface**
 
 ### **Voiceover Script:**
-*[Confident but honest tone]*
+
+_[Confident but honest tone]_
 
 **"In 72 hours, we built IronHaven AIMMO - a cyberpunk MMORPG foundation that integrates AI technology with modern web gaming. Let me show you what's actually working and why this represents the future of game development."**
 
 ### **Key Elements:**
+
 - **Immediate honesty** - Built in 72 hours, here's what works
 - **Real demonstration** - Show actual working features
 - **Technical focus** - Emphasize the development achievement
@@ -30,6 +33,7 @@
 ## 📋 **PROJECT REQUIREMENTS & TOOLS (20-50 seconds) - "TECHNICAL FOUNDATION"**
 
 ### **Visual:**
+
 - **Code editor** showing React/TypeScript components
 - **GitHub repository** with commit history
 - **Package.json** showing dependencies (Three.js, React, Vite)
@@ -46,6 +50,7 @@
 **Our solution: A lightweight, scalable web-based MMORPG foundation that demonstrates modern game development techniques."**
 
 ### **Key Elements:**
+
 - **Specific technologies** - List actual tools used
 - **Real problem** - Web gaming limitations
 - **Concrete solution** - Browser-based 3D gaming
@@ -56,6 +61,7 @@
 ## 🎮 **ACTUAL GAME DEMONSTRATION (50-110 seconds) - "WHAT REALLY WORKS"**
 
 ### **Visual:**
+
 - **Live gameplay** of the MinimalGame component
 - **WASD movement** demonstration
 - **Collision detection** with enemies
@@ -79,6 +85,7 @@
 **The technical achievement here is building a complete game framework that's modular, scalable, and runs smoothly in any modern browser without downloads or plugins."**
 
 ### **Key Elements:**
+
 - **Real functionality** - Show actual working features
 - **Technical depth** - Explain the architecture
 - **Performance** - Emphasize browser-based efficiency
@@ -89,6 +96,7 @@
 ## 🤖 **AI INTEGRATION ATTEMPT (110-140 seconds) - "FUTURE-READY ARCHITECTURE"**
 
 ### **Visual:**
+
 - **Code showing Hugging Face integration**
 - **AI service files** and configuration
 - **Component structure** for AI NPCs
@@ -107,6 +115,7 @@
 **What we proved: You can architect complex AI gaming systems using modern web technologies and make them accessible to anyone with a browser."**
 
 ### **Key Elements:**
+
 - **Honest about limitations** - AI foundation built but not fully functional
 - **Show real code** - Demonstrate actual technical work
 - **Architecture focus** - Emphasize the planning and structure
@@ -117,6 +126,7 @@
 ## 🌐 **REAL-WORLD IMPACT (140-170 seconds) - "TECHNICAL ACHIEVEMENT"**
 
 ### **Visual:**
+
 - **Multiple deployment URLs** working
 - **GitHub repository** with professional documentation
 - **Build process** and optimization metrics
@@ -135,6 +145,7 @@
 **We've proven that small teams can build sophisticated gaming platforms using modern web technologies and AI integration patterns."**
 
 ### **Key Elements:**
+
 - **Concrete metrics** - Bundle size, performance, accessibility
 - **Production quality** - Multiple deployments, documentation
 - **Accessibility** - Works everywhere, no barriers
@@ -145,6 +156,7 @@
 ## 🎯 **HONEST CONCLUSION (170-180 seconds) - "REAL POTENTIAL"**
 
 ### **Visual:**
+
 - **Live deployment** prominently displayed
 - **GitHub repository** link
 - **Final gameplay** montage
@@ -158,6 +170,7 @@
 **IronHaven AIMMO - built in 72 hours, ready for the future."**
 
 ### **Key Elements:**
+
 - **Call to action** - Try it now
 - **Open source** - Transparent development
 - **Realistic timeline** - 72 hours of work
@@ -168,6 +181,7 @@
 ## 📋 **ACTUAL FEATURES TO DEMONSTRATE**
 
 ### **✅ What Actually Works:**
+
 1. **Professional intro sequence** with countdown and animations
 2. **MinimalGame** with WASD controls, collision detection, scoring
 3. **Cyberpunk styling** with particles and effects
@@ -178,12 +192,14 @@
 8. **Build optimization** with reasonable bundle size
 
 ### **✅ What to Show Briefly:**
+
 1. **AI architecture** - Code structure for future implementation
 2. **3D components** - Three.js integration (if working)
 3. **Multiplayer foundation** - WebSocket architecture
 4. **Professional development** - Git commits, documentation
 
 ### **❌ What NOT to Claim:**
+
 - Fully functional AI NPCs
 - Complete multiplayer gameplay
 - Advanced 3D graphics
@@ -194,6 +210,7 @@
 ## 🎵 **REALISTIC PRODUCTION NOTES**
 
 ### **Required Footage:**
+
 1. **Working intro sequence** - 10 seconds of actual countdown
 2. **MinimalGame gameplay** - 30 seconds of real interaction
 3. **Code snippets** - 10 seconds showing architecture
@@ -201,10 +218,10 @@
 5. **GitHub repository** - 5 seconds showing professional setup
 
 ### **Honest Approach:**
+
 - **Show what works** - Don't fake functionality
 - **Emphasize potential** - Architecture ready for expansion
 - **Technical focus** - Highlight development skills
 - **Professional presentation** - Quality matters more than features
 
 **This script is honest about what we built while still being impressive. It shows real technical achievement and demonstrates the foundation for something bigger.**
-

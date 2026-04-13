@@ -3,12 +3,18 @@ import { HfInference } from '@huggingface/inference';
 // Initialize Hugging Face client with better token handling
 const getHfToken = () => {
   // Try different environment variable approaches
-  const token = process.env.REACT_APP_HUGGING_FACE_TOKEN || 
-                import.meta.env.VITE_HUGGING_FACE_TOKEN ||
-                (window as any).HUGGING_FACE_TOKEN ||
-                'YOUR_HUGGING_FACE_TOKEN_HERE'; // Placeholder - replace with your token
-  
-  console.log('AI Token Status:', token && token !== 'YOUR_HUGGING_FACE_TOKEN_HERE' ? 'Token found' : 'No token');
+  const token =
+    process.env.REACT_APP_HUGGING_FACE_TOKEN ||
+    import.meta.env.VITE_HUGGING_FACE_TOKEN ||
+    (window as any).HUGGING_FACE_TOKEN ||
+    'YOUR_HUGGING_FACE_TOKEN_HERE'; // Placeholder - replace with your token
+
+  console.log(
+    'AI Token Status:',
+    token && token !== 'YOUR_HUGGING_FACE_TOKEN_HERE'
+      ? 'Token found'
+      : 'No token'
+  );
   return token;
 };
 
@@ -63,14 +69,14 @@ class AIService {
   ): Promise<AIResponse> {
     try {
       console.log(`Generating NPC dialogue for ${personality.type}...`);
-      
+
       if (!hf) {
         console.warn('Hugging Face client not available, using fallback');
         return this.getFallbackResponse(personality, playerMessage, context);
       }
 
       const prompt = this.buildNPCPrompt(personality, playerMessage, context);
-      
+
       const response = await hf.textGeneration({
         model: 'gpt2',
         inputs: prompt,
@@ -79,8 +85,8 @@ class AIService {
           temperature: 0.8,
           do_sample: true,
           return_full_text: false,
-          pad_token_id: 50256
-        }
+          pad_token_id: 50256,
+        },
       });
 
       console.log('Raw AI Response:', response);
@@ -88,7 +94,7 @@ class AIService {
       const generatedText = response.generated_text?.trim() || '';
       const cleanedText = this.cleanAIResponse(generatedText);
       const emotion = this.analyzeEmotion(cleanedText, personality);
-      
+
       // Store conversation history
       const npcId = `${personality.type}_${personality.background}`;
       if (!this.conversationHistory.has(npcId)) {
@@ -97,14 +103,14 @@ class AIService {
       this.conversationHistory.get(npcId)?.push(playerMessage, cleanedText);
 
       const finalText = cleanedText || this.getFallbackDialogue(personality);
-      
+
       console.log(`✅ Generated dialogue: "${finalText}"`);
 
       return {
         text: finalText,
         emotion,
         confidence: cleanedText ? 0.85 : 0.6,
-        context: `${personality.type} in ${context}`
+        context: `${personality.type} in ${context}`,
       };
     } catch (error) {
       console.warn('AI dialogue generation failed, using fallback:', error);
@@ -128,11 +134,14 @@ class AIService {
         parameters: {
           max_new_tokens: 200,
           temperature: 0.7,
-          do_sample: true
-        }
+          do_sample: true,
+        },
       });
 
-      return this.parseMissionResponse(response.generated_text || '', playerLevel);
+      return this.parseMissionResponse(
+        response.generated_text || '',
+        playerLevel
+      );
     } catch (error) {
       console.warn('Mission generation failed, using fallback:', error);
       return this.generateFallbackMission(playerLevel, location, type);
@@ -154,11 +163,13 @@ class AIService {
         inputs: prompt,
         parameters: {
           max_new_tokens: 150,
-          temperature: 0.8
-        }
+          temperature: 0.8,
+        },
       });
 
-      return response.generated_text?.trim() || this.getFallbackStory(recentActions);
+      return (
+        response.generated_text?.trim() || this.getFallbackStory(recentActions)
+      );
     } catch (error) {
       console.warn('Story generation failed, using fallback:', error);
       return this.getFallbackStory(recentActions);
@@ -176,8 +187,8 @@ class AIService {
         inputs: prompt,
         parameters: {
           max_new_tokens: 100,
-          temperature: 0.6
-        }
+          temperature: 0.6,
+        },
       });
 
       return this.parseBehaviorAnalysis(response.generated_text || '', actions);
@@ -189,14 +200,14 @@ class AIService {
 
   private cleanAIResponse(text: string): string {
     if (!text) return '';
-    
+
     // Remove common AI artifacts and clean up the response
     let cleaned = text
       .replace(/^(Human:|AI:|Assistant:|User:)/gi, '') // Remove role prefixes
       .replace(/\n+/g, ' ') // Replace newlines with spaces
       .replace(/\s+/g, ' ') // Normalize whitespace
       .trim();
-    
+
     // Take only the first sentence if multiple sentences
     const sentences = cleaned.split(/[.!?]+/);
     if (sentences.length > 1 && sentences[0].length > 10) {
@@ -205,19 +216,26 @@ class AIService {
         cleaned += '.';
       }
     }
-    
+
     // Ensure reasonable length
     if (cleaned.length > 100) {
       cleaned = cleaned.substring(0, 97) + '...';
     }
-    
+
     return cleaned;
   }
 
-  private buildNPCPrompt(personality: NPCPersonality, message: string, context: string): string {
-    const history = this.conversationHistory.get(`${personality.type}_${personality.background}`) || [];
+  private buildNPCPrompt(
+    personality: NPCPersonality,
+    message: string,
+    context: string
+  ): string {
+    const history =
+      this.conversationHistory.get(
+        `${personality.type}_${personality.background}`
+      ) || [];
     const recentHistory = history.slice(-4).join(' ');
-    
+
     return `You are a ${personality.type} in a cyberpunk city. Background: ${personality.background}. 
     Traits: ${personality.traits.join(', ')}. Current mood: ${personality.currentMood}.
     Context: ${context}. Recent conversation: ${recentHistory}
@@ -225,41 +243,80 @@ class AIService {
     Respond in character (max 20 words):`;
   }
 
-  private analyzeEmotion(text: string, personality: NPCPersonality): AIResponse['emotion'] {
+  private analyzeEmotion(
+    text: string,
+    personality: NPCPersonality
+  ): AIResponse['emotion'] {
     const lowerText = text.toLowerCase();
-    
-    if (lowerText.includes('angry') || lowerText.includes('hate') || lowerText.includes('kill')) {
+
+    if (
+      lowerText.includes('angry') ||
+      lowerText.includes('hate') ||
+      lowerText.includes('kill')
+    ) {
       return 'aggressive';
-    } else if (lowerText.includes('scared') || lowerText.includes('afraid') || lowerText.includes('help')) {
+    } else if (
+      lowerText.includes('scared') ||
+      lowerText.includes('afraid') ||
+      lowerText.includes('help')
+    ) {
       return 'fearful';
-    } else if (lowerText.includes('friend') || lowerText.includes('good') || lowerText.includes('thanks')) {
+    } else if (
+      lowerText.includes('friend') ||
+      lowerText.includes('good') ||
+      lowerText.includes('thanks')
+    ) {
       return 'friendly';
-    } else if (lowerText.includes('enemy') || lowerText.includes('watch') || lowerText.includes('trouble')) {
+    } else if (
+      lowerText.includes('enemy') ||
+      lowerText.includes('watch') ||
+      lowerText.includes('trouble')
+    ) {
       return 'hostile';
     }
-    
+
     return 'neutral';
   }
 
   private getFallbackDialogue(personality: NPCPersonality): string {
     const dialogues = {
-      gang_member: ["You better watch yourself around here.", "What do you want?", "This is our territory."],
-      civilian: ["Just trying to get by.", "Please don't hurt me.", "I don't want any trouble."],
-      police: ["Move along, citizen.", "Everything under control here.", "I'm watching you."],
-      dealer: ["You looking to buy?", "I got what you need.", "Keep it quiet."],
-      informant: ["I hear things.", "Information costs extra.", "Meet me later."]
+      gang_member: [
+        'You better watch yourself around here.',
+        'What do you want?',
+        'This is our territory.',
+      ],
+      civilian: [
+        'Just trying to get by.',
+        "Please don't hurt me.",
+        "I don't want any trouble.",
+      ],
+      police: [
+        'Move along, citizen.',
+        'Everything under control here.',
+        "I'm watching you.",
+      ],
+      dealer: ['You looking to buy?', 'I got what you need.', 'Keep it quiet.'],
+      informant: [
+        'I hear things.',
+        'Information costs extra.',
+        'Meet me later.',
+      ],
     };
-    
-    const options = dialogues[personality.type] || ["..."];
+
+    const options = dialogues[personality.type] || ['...'];
     return options[Math.floor(Math.random() * options.length)];
   }
 
-  private getFallbackResponse(personality: NPCPersonality, message: string, context: string): AIResponse {
+  private getFallbackResponse(
+    personality: NPCPersonality,
+    message: string,
+    context: string
+  ): AIResponse {
     return {
       text: this.getFallbackDialogue(personality),
       emotion: 'neutral',
       confidence: 0.6,
-      context: `Fallback response for ${personality.type}`
+      context: `Fallback response for ${personality.type}`,
     };
   }
 
@@ -267,75 +324,113 @@ class AIService {
     // Simple parsing logic for AI-generated missions
     const lines = text.split('|');
     const title = lines[0]?.replace('Title:', '').trim() || 'Generated Mission';
-    const description = lines[1]?.replace('Description:', '').trim() || 'AI-generated objective';
-    
+    const description =
+      lines[1]?.replace('Description:', '').trim() || 'AI-generated objective';
+
     return {
       id: `ai_mission_${Date.now()}`,
       title,
       description,
-      objectives: ['Complete primary objective', 'Avoid detection', 'Escape safely'],
-      difficulty: playerLevel < 5 ? 'easy' : playerLevel < 15 ? 'medium' : 'hard',
-      reward: Math.floor(1000 + (playerLevel * 500) + Math.random() * 2000),
-      location: 'Downtown District'
+      objectives: [
+        'Complete primary objective',
+        'Avoid detection',
+        'Escape safely',
+      ],
+      difficulty:
+        playerLevel < 5 ? 'easy' : playerLevel < 15 ? 'medium' : 'hard',
+      reward: Math.floor(1000 + playerLevel * 500 + Math.random() * 2000),
+      location: 'Downtown District',
     };
   }
 
-  private generateFallbackMission(playerLevel: number, location: string, type: string): MissionData {
+  private generateFallbackMission(
+    playerLevel: number,
+    location: string,
+    type: string
+  ): MissionData {
     const missions = [
       {
         title: 'Corporate Infiltration',
         description: 'Infiltrate the corporate tower and steal sensitive data.',
-        objectives: ['Access the building', 'Locate the server room', 'Extract data'],
+        objectives: [
+          'Access the building',
+          'Locate the server room',
+          'Extract data',
+        ],
       },
       {
         title: 'Territory War',
-        description: 'Defend your gang\'s territory from rival faction.',
+        description: "Defend your gang's territory from rival faction.",
         objectives: ['Eliminate threats', 'Secure the area', 'Report back'],
       },
       {
         title: 'Information Broker',
         description: 'Meet with an informant to gather intelligence.',
-        objectives: ['Find the contact', 'Exchange information', 'Avoid surveillance'],
-      }
+        objectives: [
+          'Find the contact',
+          'Exchange information',
+          'Avoid surveillance',
+        ],
+      },
     ];
 
     const mission = missions[Math.floor(Math.random() * missions.length)];
-    
+
     return {
       id: `fallback_mission_${Date.now()}`,
       ...mission,
-      difficulty: playerLevel < 5 ? 'easy' : playerLevel < 15 ? 'medium' : 'hard',
-      reward: Math.floor(1000 + (playerLevel * 300)),
-      location
+      difficulty:
+        playerLevel < 5 ? 'easy' : playerLevel < 15 ? 'medium' : 'hard',
+      reward: Math.floor(1000 + playerLevel * 300),
+      location,
     };
   }
 
   private getFallbackStory(actions: string[]): string {
-    const hasViolence = actions.some(a => a.includes('attack') || a.includes('shoot'));
-    const hasHelp = actions.some(a => a.includes('help') || a.includes('protect'));
-    
+    const hasViolence = actions.some(
+      (a) => a.includes('attack') || a.includes('shoot')
+    );
+    const hasHelp = actions.some(
+      (a) => a.includes('help') || a.includes('protect')
+    );
+
     if (hasViolence) {
-      return "Your violent actions have sent ripples through the underworld. Rival gangs are taking notice, and the streets whisper your name with a mixture of fear and respect.";
+      return 'Your violent actions have sent ripples through the underworld. Rival gangs are taking notice, and the streets whisper your name with a mixture of fear and respect.';
     } else if (hasHelp) {
-      return "Word of your helpful nature spreads through the community. Some see you as a protector, while others question your motives in this unforgiving city.";
+      return 'Word of your helpful nature spreads through the community. Some see you as a protector, while others question your motives in this unforgiving city.';
     } else {
-      return "The neon-lit streets of IronHaven pulse with activity. In the distance, sirens wail as another deal goes wrong, reminding you that survival requires constant vigilance.";
+      return 'The neon-lit streets of IronHaven pulse with activity. In the distance, sirens wail as another deal goes wrong, reminding you that survival requires constant vigilance.';
     }
   }
 
-  private parseBehaviorAnalysis(text: string, actions: string[]): BehaviorAnalysis {
+  private parseBehaviorAnalysis(
+    text: string,
+    actions: string[]
+  ): BehaviorAnalysis {
     // Simple parsing with fallback logic
-    const hasViolence = actions.filter(a => a.includes('attack') || a.includes('shoot')).length;
-    const hasHelp = actions.filter(a => a.includes('help') || a.includes('protect')).length;
-    
+    const hasViolence = actions.filter(
+      (a) => a.includes('attack') || a.includes('shoot')
+    ).length;
+    const hasHelp = actions.filter(
+      (a) => a.includes('help') || a.includes('protect')
+    ).length;
+
     const aggressionLevel = Math.min(hasViolence * 0.3, 1);
-    const trustworthiness = Math.max(0.5 - (hasViolence * 0.2) + (hasHelp * 0.3), 0);
-    
+    const trustworthiness = Math.max(
+      0.5 - hasViolence * 0.2 + hasHelp * 0.3,
+      0
+    );
+
     return {
       aggressionLevel,
       trustworthiness,
       predictedActions: ['explore_area', 'interact_npc', 'complete_mission'],
-      riskAssessment: aggressionLevel > 0.7 ? 'high' : aggressionLevel > 0.4 ? 'medium' : 'low'
+      riskAssessment:
+        aggressionLevel > 0.7
+          ? 'high'
+          : aggressionLevel > 0.4
+            ? 'medium'
+            : 'low',
     };
   }
 
@@ -344,7 +439,7 @@ class AIService {
       aggressionLevel: 0.5,
       trustworthiness: 0.6,
       predictedActions: ['explore', 'interact', 'progress'],
-      riskAssessment: 'medium'
+      riskAssessment: 'medium',
     };
   }
 
@@ -352,7 +447,7 @@ class AIService {
   async testConnection(): Promise<boolean> {
     try {
       console.log('Testing Hugging Face connection...');
-      
+
       if (!hf) {
         console.error('Hugging Face client not initialized');
         this.isOnline = false;
@@ -363,16 +458,19 @@ class AIService {
       const response = await hf.textGeneration({
         model: 'gpt2',
         inputs: 'Hello',
-        parameters: { 
+        parameters: {
           max_new_tokens: 5,
           temperature: 0.7,
-          do_sample: false
-        }
+          do_sample: false,
+        },
       });
 
       console.log('AI Test Response:', response);
-      
-      if (response && (response.generated_text || response.generated_text === '')) {
+
+      if (
+        response &&
+        (response.generated_text || response.generated_text === '')
+      ) {
         this.isOnline = true;
         console.log('✅ Hugging Face AI connection successful');
         return true;
@@ -389,7 +487,7 @@ class AIService {
   getStatus(): { online: boolean; model: string } {
     return {
       online: this.isOnline,
-      model: 'Hugging Face GPT-2/DialoGPT'
+      model: 'Hugging Face GPT-2/DialoGPT',
     };
   }
 }
@@ -407,9 +505,9 @@ export async function generateNPCResponse(
     type: 'civilian',
     traits: ['cautious', 'observant'],
     background: 'local resident',
-    currentMood: playerReputation > 50 ? 'friendly' : 'neutral'
+    currentMood: playerReputation > 50 ? 'friendly' : 'neutral',
   };
-  
+
   return aiService.generateNPCDialogue(personality, 'Hello', context);
 }
 
@@ -417,12 +515,12 @@ export async function analyzeThreatLevel(
   playerPosition: [number, number, number],
   nearbyNPCs: any[]
 ): Promise<any> {
-  const actions = nearbyNPCs.map(npc => npc.type || 'unknown');
+  const actions = nearbyNPCs.map((npc) => npc.type || 'unknown');
   const analysis = await aiService.analyzePlayerBehavior(actions);
-  
+
   return {
     level: analysis.aggressionLevel,
     description: `Threat level: ${analysis.riskAssessment}`,
-    recommendations: analysis.predictedActions
+    recommendations: analysis.predictedActions,
   };
 }

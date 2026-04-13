@@ -4,13 +4,13 @@ import SimpleIntro from './components/SimpleIntro';
 import InstantAction from './components/InstantAction';
 
 function App() {
-  const [currentView, setCurrentView] = useState<'intro' | 'instant-action' | 'landing' | 'game'>('intro');
+  const [currentView, setCurrentView] = useState<
+    'intro' | 'instant-action' | 'landing' | 'game'
+  >('intro');
 
   // Epic intro sequence (first 20 seconds)
   if (currentView === 'intro') {
-    return (
-      <SimpleIntro onComplete={() => setCurrentView('instant-action')} />
-    );
+    return <SimpleIntro onComplete={() => setCurrentView('instant-action')} />;
   }
 
   // Instant action demo (judges can interact immediately)
@@ -32,7 +32,7 @@ function App() {
     <div className="min-h-screen bg-black">
       <div className="text-white p-8">
         <h1>Landing page temporarily disabled for testing</h1>
-        <button 
+        <button
           onClick={() => setCurrentView('intro')}
           className="bg-cyan-500 px-4 py-2 rounded mt-4"
         >

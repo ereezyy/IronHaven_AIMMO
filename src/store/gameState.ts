@@ -33,7 +33,9 @@ interface GameState {
   incrementPoliceKillCount: () => void;
   addInventoryItem: (item: string) => void;
   setActiveMission: (mission: any) => void;
-  updateSkills: (skillUpdates: Partial<GameState['playerStats']['skills']>) => void;
+  updateSkills: (
+    skillUpdates: Partial<GameState['playerStats']['skills']>
+  ) => void;
   setCurrentWeaponId: (weaponId: string) => void;
   setPlayerPosition: (position: [number, number, number]) => void;
   initializePlayer: (username?: string) => Promise<void>;
@@ -52,8 +54,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       combat: 10,
       stealth: 10,
       driving: 10,
-      intimidation: 10
-    }
+      intimidation: 10,
+    },
   },
   inventory: [],
   recentActions: [],
@@ -64,22 +66,25 @@ export const useGameStore = create<GameState>((set, get) => ({
   sessionStats: {
     totalKills: 0,
     totalMoneyEarned: 0,
-    maxWantedLevel: 0
+    maxWantedLevel: 0,
   },
   getCurrentWeapon: () => {
     const state = get();
-    return weapons.find(w => w.id === state.currentWeaponId) || weapons[0];
+    return weapons.find((w) => w.id === state.currentWeaponId) || weapons[0];
   },
   addAction: (action) =>
     set((state) => ({
-      recentActions: [...state.recentActions.slice(-4), action]
+      recentActions: [...state.recentActions.slice(-4), action],
     })),
   updateStats: (stats) => {
     set((state) => {
       const newStats = { ...state.playerStats, ...stats };
       const newSessionStats = { ...state.sessionStats };
 
-      if (stats.wanted !== undefined && stats.wanted > newSessionStats.maxWantedLevel) {
+      if (
+        stats.wanted !== undefined &&
+        stats.wanted > newSessionStats.maxWantedLevel
+      ) {
         newSessionStats.maxWantedLevel = stats.wanted;
       }
 
@@ -92,7 +97,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       return {
         playerStats: newStats,
-        sessionStats: newSessionStats
+        sessionStats: newSessionStats,
       };
     });
 
@@ -102,51 +107,53 @@ export const useGameStore = create<GameState>((set, get) => ({
     set((state) => ({
       playerStats: {
         ...state.playerStats,
-        policeKillCount: state.playerStats.policeKillCount + 1
+        policeKillCount: state.playerStats.policeKillCount + 1,
       },
       sessionStats: {
         ...state.sessionStats,
-        totalKills: state.sessionStats.totalKills + 1
-      }
+        totalKills: state.sessionStats.totalKills + 1,
+      },
     }));
 
     get().saveGameState();
   },
   addInventoryItem: (item) => {
     set((state) => ({
-      inventory: [...state.inventory, item]
+      inventory: [...state.inventory, item],
     }));
 
     get().saveGameState();
   },
   setActiveMission: (mission) =>
     set(() => ({
-      activeMission: mission
+      activeMission: mission,
     })),
   updateSkills: (skillUpdates) => {
     set((state) => ({
       playerStats: {
         ...state.playerStats,
-        skills: { ...state.playerStats.skills, ...skillUpdates }
-      }
+        skills: { ...state.playerStats.skills, ...skillUpdates },
+      },
     }));
 
     get().saveGameState();
   },
   setCurrentWeaponId: (weaponId) => {
     set(() => ({
-      currentWeaponId: weaponId
+      currentWeaponId: weaponId,
     }));
 
     get().saveGameState();
   },
   setPlayerPosition: (position) =>
     set(() => ({
-      playerPosition: position
+      playerPosition: position,
     })),
   initializePlayer: async (username?: string) => {
     try {
-      const playerId = await persistenceService.initializePlayer(username || `Player_${Math.floor(Math.random() * 10000)}`);
+      const playerId = await persistenceService.initializePlayer(
+        username || `Player_${Math.floor(Math.random() * 10000)}`
+      );
       await persistenceService.startSession(playerId);
 
       persistenceService.startAutoSave(() => {
@@ -163,7 +170,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           policeKillCount: state.playerStats.policeKillCount,
           skills: state.playerStats.skills,
           inventory: state.inventory,
-          currentWeaponId: state.currentWeaponId
+          currentWeaponId: state.currentWeaponId,
         };
       }, 30000);
 
@@ -188,7 +195,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       policeKillCount: state.playerStats.policeKillCount,
       skills: state.playerStats.skills,
       inventory: state.inventory,
-      currentWeaponId: state.currentWeaponId
+      currentWeaponId: state.currentWeaponId,
     });
   },
   loadGameState: async (playerId: string) => {
@@ -203,11 +210,11 @@ export const useGameStore = create<GameState>((set, get) => ({
           wanted: playerData.wanted,
           money: playerData.money,
           policeKillCount: playerData.policeKillCount,
-          skills: playerData.skills
+          skills: playerData.skills,
         },
         inventory: playerData.inventory,
-        currentWeaponId: playerData.currentWeaponId
+        currentWeaponId: playerData.currentWeaponId,
       });
     }
-  }
+  },
 }));

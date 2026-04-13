@@ -6,7 +6,7 @@ import * as THREE from 'three';
 // Simple rotating cube to test Three.js
 const RotatingCube = () => {
   const meshRef = useRef<THREE.Mesh>(null);
-  
+
   useFrame((state, delta) => {
     if (meshRef.current) {
       meshRef.current.rotation.x += delta;
@@ -17,18 +17,27 @@ const RotatingCube = () => {
   return (
     <mesh ref={meshRef}>
       <boxGeometry args={[2, 2, 2]} />
-      <meshStandardMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={0.2} />
+      <meshStandardMaterial
+        color="#00ffff"
+        emissive="#00ffff"
+        emissiveIntensity={0.2}
+      />
     </mesh>
   );
 };
 
 // Simple character sprite
-const TestCharacter = ({ position }: { position: [number, number, number] }) => {
+const TestCharacter = ({
+  position,
+}: {
+  position: [number, number, number];
+}) => {
   const meshRef = useRef<THREE.Mesh>(null);
-  
+
   useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.2;
+      meshRef.current.position.y =
+        position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.2;
     }
   });
 
@@ -41,17 +50,19 @@ const TestCharacter = ({ position }: { position: [number, number, number] }) => 
 };
 
 const TestGame = () => {
-  const [playerPos, setPlayerPos] = useState<[number, number, number]>([0, 0, 0]);
+  const [playerPos, setPlayerPos] = useState<[number, number, number]>([
+    0, 0, 0,
+  ]);
   const [keys, setKeys] = useState<Set<string>>(new Set());
 
   // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      setKeys(prev => new Set(prev).add(e.code));
+      setKeys((prev) => new Set(prev).add(e.code));
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      setKeys(prev => {
+      setKeys((prev) => {
         const newKeys = new Set(prev);
         newKeys.delete(e.code);
         return newKeys;
@@ -70,7 +81,7 @@ const TestGame = () => {
   // Movement logic
   useEffect(() => {
     const moveLoop = setInterval(() => {
-      setPlayerPos(prev => {
+      setPlayerPos((prev) => {
         const newPos: [number, number, number] = [...prev];
         const speed = 0.1;
 
@@ -92,7 +103,10 @@ const TestGame = () => {
       <div className="absolute top-4 left-4 text-white z-10">
         <h1 className="text-2xl font-bold text-cyan-400">TEST GAME</h1>
         <p className="text-sm">WASD to move | Mouse to look around</p>
-        <p className="text-xs">Player: [{playerPos[0].toFixed(1)}, {playerPos[1].toFixed(1)}, {playerPos[2].toFixed(1)}]</p>
+        <p className="text-xs">
+          Player: [{playerPos[0].toFixed(1)}, {playerPos[1].toFixed(1)},{' '}
+          {playerPos[2].toFixed(1)}]
+        </p>
       </div>
 
       {/* 3D Scene */}
@@ -110,7 +124,7 @@ const TestGame = () => {
 
         {/* Test objects */}
         <RotatingCube />
-        
+
         {/* Player character */}
         <TestCharacter position={playerPos} />
 
@@ -141,4 +155,3 @@ const TestGame = () => {
 };
 
 export default TestGame;
-

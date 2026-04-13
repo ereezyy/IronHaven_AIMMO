@@ -33,4 +33,3 @@ Timeline: We aim to resolve confirmed vulnerabilities within 90 days.
 Confidentiality: Please do not publicly disclose the vulnerability until we have had the opportunity to address it and coordinate disclosure.
 
 We appreciate your help in keeping IronHaven secure and value responsible disclosure to protect our community.
-

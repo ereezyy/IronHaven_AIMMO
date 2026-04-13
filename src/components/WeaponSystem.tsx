@@ -27,7 +27,7 @@ export const weapons: Weapon[] = [
     maxAmmo: 12,
     reloadTime: 1.5,
     weaponType: 'pistol',
-    rarity: 'common'
+    rarity: 'common',
   },
   {
     id: 'plasma_rifle',
@@ -39,7 +39,7 @@ export const weapons: Weapon[] = [
     maxAmmo: 30,
     reloadTime: 2.5,
     weaponType: 'rifle',
-    rarity: 'rare'
+    rarity: 'rare',
   },
   {
     id: 'quantum_shotgun',
@@ -51,7 +51,7 @@ export const weapons: Weapon[] = [
     maxAmmo: 6,
     reloadTime: 3,
     weaponType: 'shotgun',
-    rarity: 'epic'
+    rarity: 'epic',
   },
   {
     id: 'neural_sniper',
@@ -63,7 +63,7 @@ export const weapons: Weapon[] = [
     maxAmmo: 5,
     reloadTime: 4,
     weaponType: 'sniper',
-    rarity: 'legendary'
+    rarity: 'legendary',
   },
   {
     id: 'energy_cannon',
@@ -75,8 +75,8 @@ export const weapons: Weapon[] = [
     maxAmmo: 20,
     reloadTime: 3.5,
     weaponType: 'energy',
-    rarity: 'epic'
-  }
+    rarity: 'epic',
+  },
 ];
 
 interface WeaponSystemProps {
@@ -93,9 +93,13 @@ interface MuzzleFlashProps {
   weaponType: string;
 }
 
-const MuzzleFlash: React.FC<MuzzleFlashProps> = ({ position, visible, weaponType }) => {
+const MuzzleFlash: React.FC<MuzzleFlashProps> = ({
+  position,
+  visible,
+  weaponType,
+}) => {
   const meshRef = useRef<THREE.Mesh>(null);
-  
+
   useFrame(() => {
     if (meshRef.current && visible) {
       meshRef.current.rotation.z += 0.5;
@@ -107,10 +111,14 @@ const MuzzleFlash: React.FC<MuzzleFlashProps> = ({ position, visible, weaponType
 
   const getFlashColor = () => {
     switch (weaponType) {
-      case 'energy': return '#00ffff';
-      case 'plasma': return '#ff00ff';
-      case 'quantum': return '#ffff00';
-      default: return '#ff6600';
+      case 'energy':
+        return '#00ffff';
+      case 'plasma':
+        return '#ff00ff';
+      case 'quantum':
+        return '#ffff00';
+      default:
+        return '#ff6600';
     }
   };
 
@@ -132,7 +140,7 @@ const WeaponSystem: React.FC<WeaponSystemProps> = ({
   currentWeapon,
   onFire,
   isReloading,
-  aimDirection
+  aimDirection,
 }) => {
   const weaponRef = useRef<THREE.Group>(null);
   const [muzzleFlash, setMuzzleFlash] = useState(false);
@@ -140,7 +148,10 @@ const WeaponSystem: React.FC<WeaponSystemProps> = ({
   const [recoilOffset, setRecoilOffset] = useState(0);
 
   // Load weapon texture
-  const weaponTexture = useLoader(TextureLoader, '/assets/cyberpunk_weapons.jpg');
+  const weaponTexture = useLoader(
+    TextureLoader,
+    '/assets/cyberpunk_weapons.jpg'
+  );
 
   useEffect(() => {
     weaponTexture.magFilter = THREE.NearestFilter;
@@ -155,7 +166,7 @@ const WeaponSystem: React.FC<WeaponSystemProps> = ({
     // Weapon sway animation
     const swayX = Math.sin(time * 2) * 0.02;
     const swayY = Math.cos(time * 1.5) * 0.01;
-    
+
     // Apply recoil
     const recoilDecay = Math.max(0, recoilOffset - state.clock.getDelta() * 5);
     setRecoilOffset(recoilDecay);
@@ -193,22 +204,33 @@ const WeaponSystem: React.FC<WeaponSystemProps> = ({
 
   const getWeaponColor = () => {
     switch (currentWeapon.rarity) {
-      case 'common': return '#888888';
-      case 'rare': return '#0066ff';
-      case 'epic': return '#9900ff';
-      case 'legendary': return '#ff6600';
-      default: return '#ffffff';
+      case 'common':
+        return '#888888';
+      case 'rare':
+        return '#0066ff';
+      case 'epic':
+        return '#9900ff';
+      case 'legendary':
+        return '#ff6600';
+      default:
+        return '#ffffff';
     }
   };
 
   const getWeaponScale = () => {
     switch (currentWeapon.weaponType) {
-      case 'pistol': return [0.8, 0.3, 0.1];
-      case 'rifle': return [1.5, 0.4, 0.1];
-      case 'shotgun': return [1.2, 0.5, 0.15];
-      case 'sniper': return [2, 0.3, 0.1];
-      case 'energy': return [1.3, 0.6, 0.2];
-      default: return [1, 0.4, 0.1];
+      case 'pistol':
+        return [0.8, 0.3, 0.1];
+      case 'rifle':
+        return [1.5, 0.4, 0.1];
+      case 'shotgun':
+        return [1.2, 0.5, 0.15];
+      case 'sniper':
+        return [2, 0.3, 0.1];
+      case 'energy':
+        return [1.3, 0.6, 0.2];
+      default:
+        return [1, 0.4, 0.1];
     }
   };
 
@@ -229,15 +251,12 @@ const WeaponSystem: React.FC<WeaponSystemProps> = ({
       {/* Weapon barrel */}
       <mesh position={[getWeaponScale()[0] / 2 + 0.2, 0, 0]}>
         <cylinderGeometry args={[0.05, 0.05, 0.4]} />
-        <meshStandardMaterial
-          color="#333333"
-          metalness={0.9}
-          roughness={0.1}
-        />
+        <meshStandardMaterial color="#333333" metalness={0.9} roughness={0.1} />
       </mesh>
 
       {/* Weapon scope (for rifles and snipers) */}
-      {(currentWeapon.weaponType === 'rifle' || currentWeapon.weaponType === 'sniper') && (
+      {(currentWeapon.weaponType === 'rifle' ||
+        currentWeapon.weaponType === 'sniper') && (
         <mesh position={[0, 0.3, 0]}>
           <cylinderGeometry args={[0.08, 0.08, 0.6]} />
           <meshStandardMaterial
@@ -271,11 +290,13 @@ const WeaponSystem: React.FC<WeaponSystemProps> = ({
 
       {/* Weapon glow effect */}
       <mesh>
-        <boxGeometry args={[
-          getWeaponScale()[0] * 1.2,
-          getWeaponScale()[1] * 1.2,
-          getWeaponScale()[2] * 1.2
-        ]} />
+        <boxGeometry
+          args={[
+            getWeaponScale()[0] * 1.2,
+            getWeaponScale()[1] * 1.2,
+            getWeaponScale()[2] * 1.2,
+          ]}
+        />
         <meshBasicMaterial
           color={getWeaponColor()}
           transparent
@@ -295,15 +316,10 @@ const WeaponSystem: React.FC<WeaponSystemProps> = ({
       {/* Ammo counter */}
       <mesh position={[0, -0.6, 0]}>
         <planeGeometry args={[0.8, 0.3]} />
-        <meshBasicMaterial
-          color="#000000"
-          transparent
-          opacity={0.7}
-        />
+        <meshBasicMaterial color="#000000" transparent opacity={0.7} />
       </mesh>
     </group>
   );
 };
 
 export default WeaponSystem;
-

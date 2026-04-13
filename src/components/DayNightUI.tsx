@@ -26,7 +26,9 @@ const DayNightUI: React.FC<DayNightUIProps> = ({ currentTime, isNight }) => {
   return (
     <div className="absolute top-44 left-4 p-3 bg-black/90 text-white rounded-lg border border-red-500/70 backdrop-blur-sm">
       <div className="text-center">
-        <div className="text-lg font-bold text-yellow-400">{formatTime(currentTime)}</div>
+        <div className="text-lg font-bold text-yellow-400">
+          {formatTime(currentTime)}
+        </div>
         <div className="text-sm text-gray-400">{getTimeOfDay()}</div>
         <div className="text-xs text-gray-500 mt-1">
           {isNight ? '🌙 Night' : '☀️ Day'}

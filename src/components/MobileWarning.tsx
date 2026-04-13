@@ -11,27 +11,42 @@ const MobileWarning: React.FC<MobileWarningProps> = ({ onDismiss }) => {
   useEffect(() => {
     const checkMobileDevice = () => {
       const userAgent = navigator.userAgent.toLowerCase();
-      const mobileKeywords = ['mobile', 'android', 'iphone', 'ipad', 'ipod', 'blackberry', 'windows phone'];
-      const isMobileUA = mobileKeywords.some(keyword => userAgent.includes(keyword));
-      
+      const mobileKeywords = [
+        'mobile',
+        'android',
+        'iphone',
+        'ipad',
+        'ipod',
+        'blackberry',
+        'windows phone',
+      ];
+      const isMobileUA = mobileKeywords.some((keyword) =>
+        userAgent.includes(keyword)
+      );
+
       // Also check screen size
-      const isSmallScreen = window.innerWidth <= 768 || window.innerHeight <= 600;
-      
+      const isSmallScreen =
+        window.innerWidth <= 768 || window.innerHeight <= 600;
+
       // Check for touch capability
-      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      
+      const isTouchDevice =
+        'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
       const mobileDetected = isMobileUA || (isSmallScreen && isTouchDevice);
-      
+
       setIsMobile(mobileDetected);
-      
+
       // Show warning if mobile and not previously dismissed
-      if (mobileDetected && !localStorage.getItem('ironhaven-mobile-warning-dismissed')) {
+      if (
+        mobileDetected &&
+        !localStorage.getItem('ironhaven-mobile-warning-dismissed')
+      ) {
         setIsVisible(true);
       }
     };
 
     checkMobileDevice();
-    
+
     // Re-check on window resize
     window.addEventListener('resize', checkMobileDevice);
     return () => window.removeEventListener('resize', checkMobileDevice);
@@ -57,8 +72,18 @@ const MobileWarning: React.FC<MobileWarningProps> = ({ onDismiss }) => {
         {/* Warning Icon */}
         <div className="mb-4">
           <div className="mx-auto w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            <svg
+              className="w-8 h-8 text-red-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+              />
             </svg>
           </div>
         </div>
@@ -71,13 +96,22 @@ const MobileWarning: React.FC<MobileWarningProps> = ({ onDismiss }) => {
         {/* Message */}
         <div className="text-gray-300 mb-6 space-y-2">
           <p className="text-sm">
-            <strong className="text-white">IronHaven AIMMO</strong> is optimized for desktop/PC gaming with:
+            <strong className="text-white">IronHaven AIMMO</strong> is optimized
+            for desktop/PC gaming with:
           </p>
           <ul className="text-xs text-left space-y-1 mt-3">
-            <li>• <strong>Keyboard & Mouse Controls</strong></li>
-            <li>• <strong>High-Resolution Graphics</strong></li>
-            <li>• <strong>Complex 3D Interactions</strong></li>
-            <li>• <strong>AI-Powered Features</strong></li>
+            <li>
+              • <strong>Keyboard & Mouse Controls</strong>
+            </li>
+            <li>
+              • <strong>High-Resolution Graphics</strong>
+            </li>
+            <li>
+              • <strong>Complex 3D Interactions</strong>
+            </li>
+            <li>
+              • <strong>AI-Powered Features</strong>
+            </li>
           </ul>
           <p className="text-xs text-yellow-400 mt-3">
             For the best experience, please visit on a desktop computer.
@@ -100,7 +134,7 @@ const MobileWarning: React.FC<MobileWarningProps> = ({ onDismiss }) => {
           >
             Continue Anyway
           </button>
-          
+
           <div className="text-xs text-gray-400">
             This warning won't show again on this device
           </div>
@@ -121,4 +155,3 @@ const MobileWarning: React.FC<MobileWarningProps> = ({ onDismiss }) => {
 };
 
 export default MobileWarning;
-

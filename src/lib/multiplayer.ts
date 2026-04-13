@@ -91,7 +91,7 @@ class MultiplayerManager {
     npcs: new Map(),
     events: [],
     territories: [],
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
   private callbacks: Map<string, Function[]> = new Map();
   private reconnectAttempts = 0;
@@ -102,17 +102,19 @@ class MultiplayerManager {
   }
 
   // Connect to multiplayer server
-  connect(serverUrl: string = 'wss://ironhaven-server.manus.space'): Promise<boolean> {
+  connect(
+    serverUrl: string = 'wss://ironhaven-server.manus.space'
+  ): Promise<boolean> {
     return new Promise((resolve, reject) => {
       try {
         this.ws = new WebSocket(serverUrl);
-        
+
         this.ws.onopen = () => {
           console.log('🌐 Connected to IronHaven AIMMO multiplayer server');
           this.reconnectAttempts = 0;
           this.sendMessage('player_join', {
             playerId: this.playerId,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           });
           resolve(true);
         };
@@ -130,7 +132,6 @@ class MultiplayerManager {
           console.error('❌ Multiplayer connection error:', error);
           reject(error);
         };
-
       } catch (error) {
         reject(error);
       }
@@ -180,12 +181,16 @@ class MultiplayerManager {
   }
 
   // Update player position (called frequently)
-  updatePlayerPosition(position: [number, number, number], rotation: number, velocity: [number, number, number]) {
+  updatePlayerPosition(
+    position: [number, number, number],
+    rotation: number,
+    velocity: [number, number, number]
+  ) {
     this.sendMessage('player_move', {
       position,
       rotation,
       velocity,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -194,16 +199,19 @@ class MultiplayerManager {
     this.sendMessage('combat_start', {
       targetId,
       targetType,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
   // Send chat message
-  sendChatMessage(message: string, channel: 'global' | 'guild' | 'local' = 'global') {
+  sendChatMessage(
+    message: string,
+    channel: 'global' | 'guild' | 'local' = 'global'
+  ) {
     this.sendMessage('chat_message', {
       message,
       channel,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -211,7 +219,7 @@ class MultiplayerManager {
   joinGuild(guildName: string) {
     this.sendMessage('guild_join', {
       guildName,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -219,7 +227,7 @@ class MultiplayerManager {
   captureTerritory(territoryId: string) {
     this.sendMessage('territory_capture', {
       territoryId,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -229,12 +237,15 @@ class MultiplayerManager {
   }
 
   // Get other players in range
-  getNearbyPlayers(position: [number, number, number], range: number = 50): PlayerData[] {
+  getNearbyPlayers(
+    position: [number, number, number],
+    range: number = 50
+  ): PlayerData[] {
     const nearby: PlayerData[] = [];
-    
+
     this.worldState.players.forEach((player) => {
       if (player.id === this.playerId) return;
-      
+
       const distance = this.calculateDistance(position, player.position);
       if (distance <= range) {
         nearby.push(player);
@@ -265,7 +276,9 @@ class MultiplayerManager {
 
   // Private helper methods
   private generatePlayerId(): string {
-    return 'player_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    return (
+      'player_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now()
+    );
   }
 
   private updateWorldState(data: Partial<WorldState>) {
@@ -322,7 +335,10 @@ class MultiplayerManager {
     console.log('🗺️ Territory update:', data);
   }
 
-  private calculateDistance(pos1: [number, number, number], pos2: [number, number, number]): number {
+  private calculateDistance(
+    pos1: [number, number, number],
+    pos2: [number, number, number]
+  ): number {
     const dx = pos1[0] - pos2[0];
     const dy = pos1[1] - pos2[1];
     const dz = pos1[2] - pos2[2];
@@ -332,20 +348,24 @@ class MultiplayerManager {
   private triggerCallbacks(eventType: string, data: any) {
     const callbacks = this.callbacks.get(eventType);
     if (callbacks) {
-      callbacks.forEach(callback => callback(data));
+      callbacks.forEach((callback) => callback(data));
     }
   }
 
   private attemptReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      console.log(`🔄 Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-      
+      console.log(
+        `🔄 Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+      );
+
       setTimeout(() => {
         this.connect();
       }, 2000 * this.reconnectAttempts); // Exponential backoff
     } else {
-      console.log('❌ Max reconnection attempts reached. Switching to offline mode.');
+      console.log(
+        '❌ Max reconnection attempts reached. Switching to offline mode.'
+      );
     }
   }
 
@@ -369,7 +389,7 @@ export const CHARACTER_CLASSES: CharacterClass[] = [
       stamina: 100,
       damage: 25,
       defense: 15,
-      speed: 12
+      speed: 12,
     },
     skills: [
       {
@@ -380,7 +400,7 @@ export const CHARACTER_CLASSES: CharacterClass[] = [
         maxLevel: 10,
         cooldown: 3000,
         manaCost: 20,
-        effect: { type: 'damage', value: 40, radius: 3 }
+        effect: { type: 'damage', value: 40, radius: 3 },
       },
       {
         id: 'reflex_boost',
@@ -390,10 +410,10 @@ export const CHARACTER_CLASSES: CharacterClass[] = [
         maxLevel: 5,
         cooldown: 15000,
         manaCost: 30,
-        effect: { type: 'buff', value: 50, duration: 8000 }
-      }
+        effect: { type: 'buff', value: 50, duration: 8000 },
+      },
     ],
-    unlockLevel: 1
+    unlockLevel: 1,
   },
   {
     id: 'netrunner',
@@ -404,7 +424,7 @@ export const CHARACTER_CLASSES: CharacterClass[] = [
       stamina: 120,
       damage: 15,
       defense: 8,
-      speed: 10
+      speed: 10,
     },
     skills: [
       {
@@ -415,7 +435,7 @@ export const CHARACTER_CLASSES: CharacterClass[] = [
         maxLevel: 10,
         cooldown: 2000,
         manaCost: 25,
-        effect: { type: 'damage', value: 30, radius: 1 }
+        effect: { type: 'damage', value: 30, radius: 1 },
       },
       {
         id: 'system_hack',
@@ -425,10 +445,10 @@ export const CHARACTER_CLASSES: CharacterClass[] = [
         maxLevel: 5,
         cooldown: 20000,
         manaCost: 40,
-        effect: { type: 'debuff', value: 0, duration: 6000 }
-      }
+        effect: { type: 'debuff', value: 0, duration: 6000 },
+      },
     ],
-    unlockLevel: 1
+    unlockLevel: 1,
   },
   {
     id: 'corpo_agent',
@@ -439,7 +459,7 @@ export const CHARACTER_CLASSES: CharacterClass[] = [
       stamina: 110,
       damage: 20,
       defense: 12,
-      speed: 11
+      speed: 11,
     },
     skills: [
       {
@@ -450,7 +470,7 @@ export const CHARACTER_CLASSES: CharacterClass[] = [
         maxLevel: 8,
         cooldown: 1000,
         manaCost: 15,
-        effect: { type: 'damage', value: 35, radius: 1 }
+        effect: { type: 'damage', value: 35, radius: 1 },
       },
       {
         id: 'corpo_shield',
@@ -460,11 +480,11 @@ export const CHARACTER_CLASSES: CharacterClass[] = [
         maxLevel: 5,
         cooldown: 25000,
         manaCost: 50,
-        effect: { type: 'shield', value: 100, duration: 10000 }
-      }
+        effect: { type: 'shield', value: 100, duration: 10000 },
+      },
     ],
-    unlockLevel: 5
-  }
+    unlockLevel: 5,
+  },
 ];
 
 // Export singleton instance
@@ -479,7 +499,6 @@ export const createOfflineMode = () => {
     updatePlayerPosition: () => {},
     getNearbyPlayers: () => [],
     on: () => {},
-    off: () => {}
+    off: () => {},
   };
 };
-

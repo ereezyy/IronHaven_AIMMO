@@ -1,6 +1,7 @@
 # IronHaven AIMMO - Full MMO Features Documentation
 
 ## Overview
+
 IronHaven AIMMO is now a proper **third-person MMORPG** with real-time multiplayer, persistent world, and full MMO features powered by Supabase.
 
 ---
@@ -8,6 +9,7 @@ IronHaven AIMMO is now a proper **third-person MMORPG** with real-time multiplay
 ## 🎮 Core MMO Features
 
 ### 1. **Third-Person 3D Camera System**
+
 - **Mouse-look controls** - Move mouse to rotate camera around player
 - **Scrollable zoom** - Mouse wheel to zoom in/out (2-15 units)
 - **Dynamic camera** - Smooth following with lerp interpolation
@@ -15,6 +17,7 @@ IronHaven AIMMO is now a proper **third-person MMORPG** with real-time multiplay
 - **Smart positioning** - Camera avoids clipping through world
 
 ### 2. **Full 3D Character Controller**
+
 - **WASD Movement** - Standard FPS-style movement
 - **Sprint System** - Hold Shift to sprint (drains stamina)
 - **Jump Mechanic** - Spacebar to jump with realistic physics
@@ -23,6 +26,7 @@ IronHaven AIMMO is now a proper **third-person MMORPG** with real-time multiplay
 - **Smooth Acceleration** - Realistic movement with momentum
 
 ### 3. **Real-Time Multiplayer**
+
 - **Supabase Realtime Integration** - See other players in real-time
 - **Player Synchronization** - Position updates broadcast every 50ms
 - **Presence System** - Shows players currently online
@@ -31,7 +35,9 @@ IronHaven AIMMO is now a proper **third-person MMORPG** with real-time multiplay
 - **Low latency** - Optimized broadcast system
 
 ### 4. **MMO HUD Interface**
+
 #### Left Panel
+
 - **Health bar** (red) - Current/max HP with gradient
 - **Stamina bar** (green) - Current/max stamina
 - **Mana bar** (blue) - For future skill system
@@ -41,11 +47,13 @@ IronHaven AIMMO is now a proper **third-person MMORPG** with real-time multiplay
 - **Online Counter** - Number of players online
 
 #### Right Panel
+
 - **Minimap** - Shows your position and nearby players
 - **Quest Tracker** - Active quests with progress
 - **Hotbar** - 8 slots for skills/items (bottom center)
 
 ### 5. **Global Chat System**
+
 - **Multiple Channels**:
   - **Global** - Server-wide chat (cyan)
   - **Local** - Nearby players (green)
@@ -58,6 +66,7 @@ IronHaven AIMMO is now a proper **third-person MMORPG** with real-time multiplay
 - **Enter to send** - Standard chat controls
 
 ### 6. **Immersive 3D World**
+
 - **Cyberpunk City** - 50+ procedurally placed buildings
 - **Dynamic Lighting** - Point lights and directional shadows
 - **Neon Signs** - Glowing building decorations
@@ -72,6 +81,7 @@ IronHaven AIMMO is now a proper **third-person MMORPG** with real-time multiplay
 ## 🗄️ Database Architecture
 
 ### Tables Created
+
 1. **players** - Full player profiles with position, stats, inventory
 2. **guilds** - Player organizations with levels and members
 3. **parties** - Temporary groups for questing
@@ -82,12 +92,14 @@ IronHaven AIMMO is now a proper **third-person MMORPG** with real-time multiplay
 8. **combat_logs** - Combat event logging
 
 ### Real-time Features
+
 - Players table syncs automatically for multiplayer
 - Chat messages broadcast instantly
 - Position updates stream in real-time
 - Presence tracking shows online players
 
 ### Starter Content
+
 - **3 Tutorial Quests** pre-loaded:
   - "Welcome to IronHaven" (Level 1)
   - "The Gang War" (Level 5)
@@ -97,24 +109,25 @@ IronHaven AIMMO is now a proper **third-person MMORPG** with real-time multiplay
 
 ## 🎯 Controls
 
-| Control | Action |
-|---------|--------|
-| **W/A/S/D** | Move forward/left/back/right |
-| **Mouse** | Look around / Rotate camera |
-| **Mouse Wheel** | Zoom camera in/out |
-| **Space** | Jump |
-| **Shift** | Sprint (uses stamina) |
-| **Click** | Lock cursor for gameplay |
-| **ESC** | Unlock cursor |
-| **1-8** | Hotbar slots (future combat) |
-| **E** | Interact (reserved) |
-| **Enter** | Send chat message |
+| Control         | Action                       |
+| --------------- | ---------------------------- |
+| **W/A/S/D**     | Move forward/left/back/right |
+| **Mouse**       | Look around / Rotate camera  |
+| **Mouse Wheel** | Zoom camera in/out           |
+| **Space**       | Jump                         |
+| **Shift**       | Sprint (uses stamina)        |
+| **Click**       | Lock cursor for gameplay     |
+| **ESC**         | Unlock cursor                |
+| **1-8**         | Hotbar slots (future combat) |
+| **E**           | Interact (reserved)          |
+| **Enter**       | Send chat message            |
 
 ---
 
 ## 🌟 Key Technical Features
 
 ### Performance Optimizations
+
 - **Level of Detail (LOD)** - Buildings render based on distance
 - **Frustum Culling** - Only render visible objects
 - **Efficient Broadcasting** - 50ms throttle on position updates
@@ -122,6 +135,7 @@ IronHaven AIMMO is now a proper **third-person MMORPG** with real-time multiplay
 - **Optimized Shadows** - 2048x2048 shadow maps with PCF
 
 ### Physics System
+
 - **Gravity**: -25 units/s²
 - **Jump Force**: 8 units
 - **Walk Speed**: 4 units/s
@@ -130,6 +144,7 @@ IronHaven AIMMO is now a proper **third-person MMORPG** with real-time multiplay
 - **Friction**: 10 coefficient
 
 ### Visual Polish
+
 - **Anti-aliasing** - Smooth edges
 - **High-performance mode** - GPU preference enabled
 - **Dynamic shadows** - Real-time shadow casting
@@ -142,6 +157,7 @@ IronHaven AIMMO is now a proper **third-person MMORPG** with real-time multiplay
 ## 🔮 Future Enhancements Ready
 
 The architecture supports:
+
 - ✅ Combat system (hotbar ready)
 - ✅ Quest system (database tables ready)
 - ✅ Guild system (fully structured)
@@ -158,6 +174,7 @@ The architecture supports:
 ## 🚀 Multiplayer Architecture
 
 ### How It Works
+
 1. **Player joins** - Generates unique ID and creates presence
 2. **Position sync** - Every 50ms, position broadcasts to channel
 3. **Other players receive** - Updates processed and rendered
@@ -165,6 +182,7 @@ The architecture supports:
 5. **Cleanup** - Stale players removed after 5 seconds offline
 
 ### Supabase Realtime Channels
+
 - **game-world** - Player position and presence
 - **chat-global** - Global chat messages
 - **chat-local** - Proximity-based chat (future)
@@ -176,6 +194,7 @@ The architecture supports:
 ## 📊 Statistics & Progression
 
 ### Player Stats
+
 - **Health** - Combat survivability
 - **Stamina** - Sprint duration
 - **Mana** - Skill casting resource
@@ -185,6 +204,7 @@ The architecture supports:
 - **Reputation** - Faction standing
 
 ### Equipment Slots (Ready)
+
 - Head
 - Chest
 - Legs
@@ -199,6 +219,7 @@ The architecture supports:
 ## 🎨 Visual Theme
 
 **Cyberpunk Neon Aesthetic**
+
 - Dark base colors (#1a1a1a, #0a0a0a)
 - Cyan/teal accents (#00ffff, #00ff88)
 - Red health indicators
@@ -238,6 +259,7 @@ The architecture supports:
 ## 📝 Development Notes
 
 This is a **fully functional third-person MMORPG foundation** with:
+
 - Complete multiplayer infrastructure
 - Full database schema for persistence
 - Real-time player synchronization
