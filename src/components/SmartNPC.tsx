@@ -49,17 +49,15 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
 
   // Advanced AI Decision Making
   const makeDecision = () => {
-    const distanceToPlayer = Math.sqrt(
-      (position[0] - playerPosition[0]) * (position[0] - playerPosition[0]) +
-      (position[2] - playerPosition[2]) * (position[2] - playerPosition[2])
-    );
+    const distanceToPlayerSq = (position[0] - playerPosition[0]) * (position[0] - playerPosition[0]) +
+      (position[2] - playerPosition[2]) * (position[2] - playerPosition[2]);
 
     const playerWanted = gameStore.playerStats.wanted;
     const playerRep = gameStore.playerStats.reputation;
     const playerKills = gameStore.playerStats.policeKillCount;
 
     // Line of sight check
-    const hasLineOfSight = distanceToPlayer < 30 && Math.random() > 0.2;
+    const hasLineOfSight = distanceToPlayerSq < 900 && Math.random() > 0.2;
     
     if (hasLineOfSight) {
       setState(prev => ({ 
@@ -93,7 +91,7 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
         if (playerWanted > 2 && Math.random() > 0.7) {
           gameStore.addAction('civilian_called_police');
         }
-      } else if (distanceToPlayer < 8 && Math.random() > 0.9) {
+      } else if (distanceToPlayerSq < 64 && Math.random() > 0.9) {
         // Random civilian interaction
         onInteraction({
           id,
@@ -120,7 +118,7 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
       }
     } else if (type === 'gangster' || type === 'hitman' || type === 'boss') {
       // Gangsters react differently based on player reputation
-      if (playerRep < 20 && distanceToPlayer < 20) {
+      if (playerRep < 20 && distanceToPlayerSq < 400) {
         setState(prev => ({ 
           ...prev, 
           mood: 'hostile', 
@@ -135,14 +133,14 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
           currentAction: 'attack',
           target: [...playerPosition]
         }));
-      } else if (playerRep >= 20 && playerRep <= 80 && distanceToPlayer < 15) {
+      } else if (playerRep >= 20 && playerRep <= 80 && distanceToPlayerSq < 225) {
         setState(prev => ({ 
           ...prev, 
           mood: 'hostile', 
           currentAction: 'attack',
           target: [...playerPosition]
         }));
-      } else if (playerRep > 50 && distanceToPlayer < 10) {
+      } else if (playerRep > 50 && distanceToPlayerSq < 100) {
         // Show respect to high-rep player
         onInteraction({
           id,
@@ -152,7 +150,7 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
         });
       }
     } else if (type === 'dealer') {
-      if (distanceToPlayer < 12 && Math.random() > 0.8) {
+      if (distanceToPlayerSq < 144 && Math.random() > 0.8) {
         onInteraction({
           id,
           type,
@@ -213,11 +211,9 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
         if (state.target) {
           moveToTarget(state.target, delta, 8);
           // Attack logic
-          const distanceToTarget = Math.sqrt(
-            (position[0] - state.target[0]) * (position[0] - state.target[0]) +
-            (position[2] - state.target[2]) * (position[2] - state.target[2])
-          );
-          if (distanceToTarget < 5 && Math.random() > 0.93) {
+          const distanceToTargetSq = (position[0] - state.target[0]) * (position[0] - state.target[0]) +
+            (position[2] - state.target[2]) * (position[2] - state.target[2]);
+          if (distanceToTargetSq < 25 && Math.random() > 0.93) {
             // NPC attacks player
             const damage = type === 'boss' ? 35 : type === 'hitman' ? 25 : type === 'police' ? 20 : 15;
             gameStore.updateStats({ health: Math.max(0, gameStore.playerStats.health - damage) });
@@ -260,9 +256,10 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
   const moveToTarget = (target: [number, number, number], delta: number, speed: number) => {
     const dx = target[0] - position[0];
     const dz = target[2] - position[2];
-    const distance = Math.sqrt(dx * dx + dz * dz);
+    const distance = dx * dx + dz * dz;
     
-    if (distance > 1) {
+    if (distanceSq > 1) {
+
       const moveX = (dx / distance) * speed * delta;
       const moveZ = (dz / distance) * speed * delta;
       

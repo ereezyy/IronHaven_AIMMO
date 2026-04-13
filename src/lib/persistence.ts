@@ -42,7 +42,7 @@ class PersistenceService {
 
       const playerData = {
         id: playerId,
-        username: username || `Player_${Math.floor(Math.random() * 10000)}`,
+        username: username || `Player_${crypto.randomUUID().substring(0, 8)}`,
         position_x: 0,
         position_y: 1.5,
         position_z: 0,
@@ -310,8 +310,8 @@ class PersistenceService {
       return data.filter(player => {
         const dx = player.position_x - position[0];
         const dz = player.position_z - position[2];
-        const distance = Math.sqrt(dx * dx + dz * dz);
-        return distance <= radius;
+        const distanceSq = dx * dx + dz * dz;
+        return distanceSq <= radius * radius;
       }).map(player => ({
         id: player.id,
         username: player.username,
@@ -330,11 +330,11 @@ class PersistenceService {
   }
 
   private generatePlayerId(): string {
-    return 'player_' + Math.random().toString(36).substr(2, 16) + '_' + Date.now();
+    return 'player_' + crypto.randomUUID();
   }
 
   private generateSessionId(): string {
-    return 'session_' + Math.random().toString(36).substr(2, 16) + '_' + Date.now();
+    return 'session_' + crypto.randomUUID();
   }
 
   private saveToLocalStorage(key: string, data: any) {

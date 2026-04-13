@@ -1,15 +1,13 @@
-# 🚀 IronHaven AIMMO
+# 🚀 IronHaven AIMMO: The Next Evolution
 
-🏙️ Dive into the neon-lit, adrenaline-fueled streets of IronHaven! 🚀
+🏙️ Return to the neon-drenched streets of IronHaven! The ultimate AI-driven Cyberpunk MMORPG just got a massive upgrade! 🚀
 
-Get ready for the world's FIRST fully AI-driven Cyberpunk MMORPG, playable straight from your browser! 🎮✨
-
-🤖 Face off against Dynamic AI NPCs that actually REMEMBER you
-⚔️ Engage in brutal, high-stakes combat & heart-pounding chases
-🌃 Explore a stunning, ever-evolving 3D procedural world
+🎮 Experience seamless cross-session progression with our new persistent data system!
+⚔️ Engage in high-octane combat with overhauled graphics, improved camera controls, and smarter AI!
+🌃 Explore an optimized, ever-expanding procedural 3D world with real-time dynamic weather and events!
 
 Zero downloads. Zero installs. 100% Instant Action.
 
-👉 Play NOW: ironhaven-aimmo.com
+👉 Jump in NOW and forge your legacy: ironhaven-aimmo.com
 
-#IndieGame #GameDev #Cyberpunk #MMORPG #AI #BrowserGame #ThreeJS #ReactJS
+#IndieGame #GameDev #Cyberpunk #MMORPG #AI #BrowserGame #ThreeJS #ReactJS #Web3D

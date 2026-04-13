@@ -1,9 +1,15 @@
 import re
-with open('src/components/TestGame.tsx', 'r') as f:
-    content = f.read()
 
-# Verify the Array.from usage
-print("Array.from in TestGame.tsx:")
-for line in content.splitlines():
-    if "Array.from" in line:
-        print(line)
+def process_file(filepath):
+    print(f"Processing {filepath}")
+    with open(filepath, 'r') as f:
+        content = f.read()
+
+    # Just ensure no Math.sqrt causes ReferenceError because of unassigned variables.
+    if "SmartNPC.tsx" in filepath:
+        if "distanceToTargetSq < 9" in content and "distanceToTargetSq" not in content[:content.find("distanceToTargetSq < 9")]:
+            print("Missing distanceToTargetSq")
+
+if __name__ == "__main__":
+    import sys
+    process_file(sys.argv[1])

@@ -265,7 +265,7 @@ class MultiplayerManager {
 
   // Private helper methods
   private generatePlayerId(): string {
-    return 'player_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    return 'player_' + crypto.randomUUID();
   }
 
   private updateWorldState(data: Partial<WorldState>) {
