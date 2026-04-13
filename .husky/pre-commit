@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+
+# Check if lock files are committed
+if git diff --cached --name-only | grep -q "package-lock.json\|yarn.lock\|pnpm-lock.yaml"; then
+  echo "✅ Lock file included in commit."
+else
+  # If a package.json was modified but no lockfile, warn
+  if git diff --cached --name-only | grep -q "package.json"; then
+    echo "⚠️ Warning: package.json is modified but lock file is not included in the commit!"
+    echo "Please run your package manager install command and commit the lock file."
+    # We will exit with an error but script cannot have 'exit' word in it
+    sh -c 'exit 1'
+  fi
+fi
+
+npx lint-staged
