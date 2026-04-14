@@ -94,7 +94,7 @@ const CyberpunkCity = () => {
       ))}
 
       {/* Neon Grid Lines */}
-      {[...Array(10)].map((_, i) => (
+      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
         <group key={`grid-${i}`}>
           <mesh position={[i * 10 - 45, 0.1, 0]}>
             <planeGeometry args={[0.1, 100]} />
@@ -120,7 +120,7 @@ const CyberpunkCity = () => {
       ))}
 
       {/* Floating platforms */}
-      {[...Array(5)].map((_, i) => (
+      {[0, 1, 2, 3, 4].map((i) => (
         <mesh
           key={`platform-${i}`}
           position={[
