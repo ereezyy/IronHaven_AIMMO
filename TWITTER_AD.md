@@ -1,11 +1,11 @@
-# 🚀 IronHaven AIMMO: The Next Evolution
+# 🚀 IronHaven AIMMO: Forged in the Shadows. Secured by Code.
 
-🏙️ Return to the neon-drenched streets of IronHaven! The ultimate AI-driven Cyberpunk MMORPG just got a massive upgrade! 🚀
+🌃 The neon streets of IronHaven just got a massive upgrade! The ultimate AI-driven Cyberpunk MMORPG is smoother, safer, and ready for you to leave your mark. 🚀
 
-🎮 Experience smoother, high-octane gameplay with enhanced performance optimizations!
-🔒 Play with peace of mind knowing our cutting-edge cryptographic security updates keep your data safer than ever!
-🤖 Engage with smarter, fully adaptive AI NPCs and dynamic events that react to your every move!
-🌃 Explore an ever-expanding procedural 3D world with real-time dynamic weather, day/night cycles, and advanced vehicle mechanics!
+🎮 High-Octane Action: Experience buttery-smooth gameplay with major performance and memory optimizations!
+🔒 Cryptographic Security: Play with confidence. Our latest backend updates leverage `crypto.randomUUID()` and hardened database logic so your legacy is safe from tampering.
+🤖 Unpredictable AI: Engage with smarter, fully adaptive NPCs, procedural missions, and dynamic world events that react to your every move!
+🏙️ A Living City: Explore a procedurally generated 3D world with real-time dynamic weather, day/night cycles, and advanced vehicle mechanics!
 
 Zero downloads. Zero installs. 100% Instant Action.
 

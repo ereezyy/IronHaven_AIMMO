@@ -98,7 +98,7 @@ const WeatherSystem: React.FC<WeatherSystemProps> = ({ currentWeather = 'clear',
   );
 };
 
-const FOG_PARTICLES = [...new Array(20)].map((_, i) => ({
+const FOG_PARTICLES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((_, i) => ({
   id: i,
   position: [
     (Math.random() - 0.5) * 100,

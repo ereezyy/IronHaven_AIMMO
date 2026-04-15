@@ -270,7 +270,7 @@ class AIService {
     const description = lines[1]?.replace('Description:', '').trim() || 'AI-generated objective';
     
     return {
-      id: `ai_mission_${Date.now()}`,
+      id: crypto.randomUUID(),
       title,
       description,
       objectives: ['Complete primary objective', 'Avoid detection', 'Escape safely'],
@@ -302,7 +302,7 @@ class AIService {
     const mission = missions[Math.floor(Math.random() * missions.length)];
     
     return {
-      id: `fallback_mission_${Date.now()}`,
+      id: crypto.randomUUID(),
       ...mission,
       difficulty: playerLevel < 5 ? 'easy' : playerLevel < 15 ? 'medium' : 'hard',
       reward: Math.floor(1000 + (playerLevel * 300)),

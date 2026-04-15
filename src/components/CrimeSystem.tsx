@@ -78,7 +78,7 @@ const CrimeSystem: React.FC<CrimeSystemProps> = ({ playerPosition, nearbyNPCs, o
       }).length;
 
       const crime: CrimeEvent = {
-        id: `crime_${Date.now()}`,
+        id: crypto.randomUUID(),
         type: crimeType,
         severity,
         witnessCount,
