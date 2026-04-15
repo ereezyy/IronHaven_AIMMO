@@ -86,7 +86,7 @@ const EnhancedUI: React.FC = () => {
 
     if (notification) {
       const newNotification = {
-        id: `notif_${Date.now()}`,
+        id: crypto.randomUUID(),
         ...notification,
         timestamp: Date.now()
       };
