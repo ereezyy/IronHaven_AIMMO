@@ -13,14 +13,14 @@ interface ChatMessage {
 const MMOChat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: '1',
+      id: crypto.randomUUID(),
       username: 'System',
       message: 'Welcome to IronHaven AIMMO!',
       channel: 'global',
       timestamp: Date.now()
     },
     {
-      id: '2',
+      id: crypto.randomUUID(),
       username: 'System',
       message: 'Use WASD to move, mouse to look around',
       channel: 'global',
@@ -56,7 +56,7 @@ const MMOChat: React.FC = () => {
   const handleSendMessage = () => {
     if (inputMessage.trim() && channelRef.current) {
       const newMessage: ChatMessage = {
-        id: `msg_${Date.now()}`,
+        id: crypto.randomUUID(),
         username: 'You',
         message: inputMessage.trim(),
         channel: activeChannel,

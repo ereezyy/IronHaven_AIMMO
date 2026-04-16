@@ -151,7 +151,7 @@ const ImprovedSpriteCharacter: React.FC<ImprovedSpriteCharacterProps> = ({
       {isMoving && (
         <>
           {/* Movement particles */}
-          {[...Array(3)].map((_, i) => (
+          {[0, 1, 2].map((i) => (
             <mesh
               key={i}
               position={[
