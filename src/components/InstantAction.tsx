@@ -84,7 +84,7 @@ const AutoActionSequence = () => {
       </group>
 
       {/* AI-controlled enemies */}
-      {[...Array(8)].map((_, i) => {
+      {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
         const angle = (i / 8) * Math.PI * 2;
         const radius = 20 + Math.sin(Date.now() * 0.001 + i) * 5;
         
@@ -164,7 +164,7 @@ const AutoActionSequence = () => {
       ))}
 
       {/* Epic environment */}
-      {[...Array(20)].map((_, i) => (
+      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((i) => (
         <group
           key={i}
           position={[
