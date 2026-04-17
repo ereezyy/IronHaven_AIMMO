@@ -50,7 +50,7 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ effects, onEffectComple
         // Fire particles
         for (let i = 0; i < 20 * effect.intensity; i++) {
           particles.push({
-            id: `fire_${Date.now()}_${i}`,
+            id: `fire_${crypto.randomUUID()}`,
             position: basePosition.clone().add(new THREE.Vector3(
               (Math.random() - 0.5) * 2,
               Math.random() * 2,
@@ -72,7 +72,7 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ effects, onEffectComple
         // Smoke particles
         for (let i = 0; i < 15 * effect.intensity; i++) {
           particles.push({
-            id: `smoke_${Date.now()}_${i}`,
+            id: `smoke_${crypto.randomUUID()}`,
             position: basePosition.clone().add(new THREE.Vector3(
               (Math.random() - 0.5) * 3,
               Math.random() * 3,
@@ -96,7 +96,7 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ effects, onEffectComple
         // Muzzle flash sparks
         for (let i = 0; i < 10 * effect.intensity; i++) {
           particles.push({
-            id: `spark_${Date.now()}_${i}`,
+            id: `spark_${crypto.randomUUID()}`,
             position: basePosition.clone().add(new THREE.Vector3(
               (Math.random() - 0.5) * 0.5,
               (Math.random() - 0.5) * 0.5,
@@ -118,7 +118,7 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ effects, onEffectComple
         // Gun smoke
         for (let i = 0; i < 5 * effect.intensity; i++) {
           particles.push({
-            id: `gunsmoke_${Date.now()}_${i}`,
+            id: `gunsmoke_${crypto.randomUUID()}`,
             position: basePosition.clone().add(new THREE.Vector3(
               (Math.random() - 0.5) * 1,
               Math.random() * 1,
@@ -142,7 +142,7 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ effects, onEffectComple
         // Blood droplets
         for (let i = 0; i < 15 * effect.intensity; i++) {
           particles.push({
-            id: `blood_${Date.now()}_${i}`,
+            id: `blood_${crypto.randomUUID()}`,
             position: basePosition.clone().add(new THREE.Vector3(
               (Math.random() - 0.5) * 2,
               Math.random() * 2,
@@ -166,7 +166,7 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ effects, onEffectComple
         // Exhaust smoke
         for (let i = 0; i < 8 * effect.intensity; i++) {
           particles.push({
-            id: `exhaust_${Date.now()}_${i}`,
+            id: `exhaust_${crypto.randomUUID()}`,
             position: basePosition.clone().add(new THREE.Vector3(
               (Math.random() - 0.5) * 0.5,
               Math.random() * 0.5,
@@ -190,7 +190,7 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ effects, onEffectComple
         // Debris particles
         for (let i = 0; i < 12 * effect.intensity; i++) {
           particles.push({
-            id: `debris_${Date.now()}_${i}`,
+            id: `debris_${crypto.randomUUID()}`,
             position: basePosition.clone().add(new THREE.Vector3(
               (Math.random() - 0.5) * 1,
               Math.random() * 1,
