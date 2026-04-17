@@ -56,7 +56,7 @@ const MMOChat: React.FC = () => {
   const handleSendMessage = () => {
     if (inputMessage.trim() && channelRef.current) {
       const newMessage: ChatMessage = {
-        id: `msg_${Date.now()}`,
+        id: `msg_${crypto.randomUUID()}`,
         username: 'You',
         message: inputMessage.trim(),
         channel: activeChannel,
