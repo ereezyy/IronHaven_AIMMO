@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameState';
 
+const STATIC_PARTICLES = Array.from({ length: 20 }, (_, i) => i);
 const MinimalGame = () => {
   const initializePlayer = useGameStore(state => state.initializePlayer);
   const [playerPos, setPlayerPos] = useState({ x: 50, y: 50 });
@@ -134,7 +135,7 @@ const MinimalGame = () => {
         ))}
 
         {/* Particles */}
-        {[...Array(20)].map((_, i) => (
+        {STATIC_PARTICLES.map((_, i) => (
           <div
             key={i}
             className="absolute w-1 h-1 bg-white rounded-full opacity-60 animate-pulse"
