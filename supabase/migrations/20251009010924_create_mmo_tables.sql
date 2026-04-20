@@ -240,7 +240,7 @@ ALTER TABLE combat_logs ENABLE ROW LEVEL SECURITY;
 -- Players policies (public read for multiplayer, own data write)
 CREATE POLICY "Anyone can view players"
   ON players FOR SELECT
-  TO anon, authenticated
+  TO authenticated
   USING (true);
 
 CREATE POLICY "Players can insert own data"
@@ -257,7 +257,7 @@ CREATE POLICY "Players can update own data"
 -- Guilds policies
 CREATE POLICY "Anyone can view guilds"
   ON guilds FOR SELECT
-  TO anon, authenticated
+  TO authenticated
   USING (true);
 
 CREATE POLICY "Anyone can create guilds"
@@ -274,7 +274,7 @@ CREATE POLICY "Guild leaders can update"
 -- Parties policies
 CREATE POLICY "Anyone can view parties"
   ON parties FOR SELECT
-  TO anon, authenticated
+  TO authenticated
   USING (true);
 
 CREATE POLICY "Anyone can create parties"
@@ -291,7 +291,7 @@ CREATE POLICY "Party leaders can update"
 -- Quests policies (public read)
 CREATE POLICY "Anyone can view quests"
   ON quests FOR SELECT
-  TO anon, authenticated
+  TO authenticated
   USING (true);
 
 -- Player quests policies
@@ -314,7 +314,7 @@ CREATE POLICY "Players can update own quests"
 -- Chat policies (public read/write for real-time chat)
 CREATE POLICY "Anyone can view chat"
   ON chat_messages FOR SELECT
-  TO anon, authenticated
+  TO authenticated
   USING (true);
 
 CREATE POLICY "Anyone can send chat"
@@ -325,13 +325,13 @@ CREATE POLICY "Anyone can send chat"
 -- NPCs policies (public read)
 CREATE POLICY "Anyone can view NPCs"
   ON world_npcs FOR SELECT
-  TO anon, authenticated
+  TO authenticated
   USING (true);
 
 -- Combat logs policies (public read for analytics)
 CREATE POLICY "Anyone can view combat logs"
   ON combat_logs FOR SELECT
-  TO anon, authenticated
+  TO authenticated
   USING (true);
 
 CREATE POLICY "Anyone can insert combat logs"
