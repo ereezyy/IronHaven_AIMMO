@@ -91,6 +91,7 @@ const EpicCity = () => {
 };
 
 // Action Sequence with AI NPCs
+const STATIC_NPCS = Array.from({ length: 5 }, (_, i) => i);
 const ActionSequence = ({ stage }: { stage: number }) => {
   const [combatEffects, setCombatEffects] = useState<any[]>([]);
   
@@ -128,7 +129,7 @@ const ActionSequence = ({ stage }: { stage: number }) => {
       </group>
 
       {/* AI NPCs in combat */}
-      {[...Array(5)].map((_, i) => (
+      {STATIC_NPCS.map((_, i) => (
         <group 
           key={i} 
           position={[
@@ -260,6 +261,7 @@ const EpicTextOverlay = ({ stage, timeLeft }: { stage: number; timeLeft: number 
   );
 };
 
+const STATIC_PARTICLES = Array.from({ length: 100 }, (_, i) => i);
 const EpicIntro: React.FC<EpicIntroProps> = ({ onComplete }) => {
   const [stage, setStage] = useState(0);
   const [timeLeft, setTimeLeft] = useState(20);
@@ -324,7 +326,7 @@ const EpicIntro: React.FC<EpicIntroProps> = ({ onComplete }) => {
         <ActionSequence stage={stage} />
 
         {/* Particle effects */}
-        {[...Array(100)].map((_, i) => (
+        {STATIC_PARTICLES.map((_, i) => (
           <group
             key={i}
             position={[
