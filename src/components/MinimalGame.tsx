@@ -72,9 +72,9 @@ const MinimalGame = () => {
   useEffect(() => {
     if (enemies.length === 0) {
       setEnemies([
-        { id: Date.now() + 1, x: Math.random() * 90 + 5, y: Math.random() * 90 + 5 },
-        { id: Date.now() + 2, x: Math.random() * 90 + 5, y: Math.random() * 90 + 5 },
-        { id: Date.now() + 3, x: Math.random() * 90 + 5, y: Math.random() * 90 + 5 }
+        { id: crypto.randomUUID(), x: Math.random() * 90 + 5, y: Math.random() * 90 + 5 },
+        { id: crypto.randomUUID(), x: Math.random() * 90 + 5, y: Math.random() * 90 + 5 },
+        { id: crypto.randomUUID(), x: Math.random() * 90 + 5, y: Math.random() * 90 + 5 }
       ]);
     }
   }, [enemies]);

@@ -392,7 +392,7 @@ const ImprovedGame = () => {
 
     // Create projectile
     const newProjectile = {
-      id: `projectile-${Date.now()}`,
+      id: `projectile-${crypto.randomUUID()}`,
       position: [...gameState.player.position] as [number, number, number],
       direction,
       damage: weapon.damage,
