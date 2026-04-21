@@ -1,24 +1,5 @@
-import { HfInference } from '@huggingface/inference';
-
-// Initialize Hugging Face client with better token handling
-const getHfToken = () => {
-  // Try different environment variable approaches
-  const token = process.env.REACT_APP_HUGGING_FACE_TOKEN || 
-                import.meta.env.VITE_HUGGING_FACE_TOKEN ||
-                (window as any).HUGGING_FACE_TOKEN ||
-                'YOUR_HUGGING_FACE_TOKEN_HERE'; // Placeholder - replace with your token
-  
-  console.log('AI Token Status:', token && token !== 'YOUR_HUGGING_FACE_TOKEN_HERE' ? 'Token found' : 'No token');
-  return token;
-};
-
-let hf: HfInference;
-try {
-  hf = new HfInference(getHfToken());
-  console.log('Hugging Face client initialized successfully');
-} catch (error) {
-  console.error('Failed to initialize Hugging Face client:', error);
-}
+import { HfInference } from "@huggingface/inference";
+import { AIConfigManager } from "./aiConfig";
 
 export interface AIResponse {
   text: string;
@@ -53,8 +34,32 @@ export interface MissionData {
 }
 
 class AIService {
+  private hf: HfInference | null = null;
   private conversationHistory: Map<string, string[]> = new Map();
-  private isOnline: boolean = true;
+  private isOnline: boolean = false;
+
+  constructor() {
+    this.initClient();
+  }
+
+  private initClient() {
+    const config = AIConfigManager.getConfiguration();
+    if (config.providerId === 'huggingface' && config.apiKey && config.apiKey.trim() !== '') {
+      try {
+        this.hf = new HfInference(config.apiKey);
+        console.log('Hugging Face client initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize Hugging Face client:', error);
+        this.hf = null;
+      }
+    } else {
+      this.hf = null;
+    }
+  }
+
+  public updateConfig() {
+    this.initClient();
+  }
 
   async generateNPCDialogue(
     personality: NPCPersonality,
@@ -62,34 +67,29 @@ class AIService {
     context: string
   ): Promise<AIResponse> {
     try {
-      console.log(`Generating NPC dialogue for ${personality.type}...`);
-      
-      if (!hf) {
-        console.warn('Hugging Face client not available, using fallback');
-        return this.getFallbackResponse(personality, playerMessage, context);
+      if (!this.hf) {
+        return this.getFallbackResponse(personality);
       }
 
       const prompt = this.buildNPCPrompt(personality, playerMessage, context);
+      const config = AIConfigManager.getConfiguration();
       
-      const response = await hf.textGeneration({
-        model: 'gpt2',
+      const response = await this.hf.textGeneration({
+        model: config.modelId || 'gpt2',
         inputs: prompt,
         parameters: {
-          max_new_tokens: 50,
-          temperature: 0.8,
+          max_new_tokens: config.parameters.maxTokens || 50,
+          temperature: config.parameters.temperature || 0.8,
           do_sample: true,
           return_full_text: false,
           pad_token_id: 50256
         }
       });
 
-      console.log('Raw AI Response:', response);
-
       const generatedText = response.generated_text?.trim() || '';
       const cleanedText = this.cleanAIResponse(generatedText);
-      const emotion = this.analyzeEmotion(cleanedText, personality);
+      const emotion = this.analyzeEmotion(cleanedText);
       
-      // Store conversation history
       const npcId = `${personality.type}_${personality.background}`;
       if (!this.conversationHistory.has(npcId)) {
         this.conversationHistory.set(npcId, []);
@@ -97,8 +97,6 @@ class AIService {
       this.conversationHistory.get(npcId)?.push(playerMessage, cleanedText);
 
       const finalText = cleanedText || this.getFallbackDialogue(personality);
-      
-      console.log(`✅ Generated dialogue: "${finalText}"`);
 
       return {
         text: finalText,
@@ -108,7 +106,7 @@ class AIService {
       };
     } catch (error) {
       console.warn('AI dialogue generation failed, using fallback:', error);
-      return this.getFallbackResponse(personality, playerMessage, context);
+      return this.getFallbackResponse(personality);
     }
   }
 
@@ -118,12 +116,17 @@ class AIService {
     type: string
   ): Promise<MissionData> {
     try {
+      if (!this.hf) {
+        return this.generateFallbackMission(playerLevel, location);
+      }
+
       const prompt = `Generate a cyberpunk crime mission for a player at level ${playerLevel} in ${location}. 
       Mission type: ${type}. Include title, description, 3 objectives, difficulty, and reward amount.
       Format: Title: [title] | Description: [desc] | Objectives: 1.[obj1] 2.[obj2] 3.[obj3] | Difficulty: [easy/medium/hard] | Reward: $[amount]`;
 
-      const response = await hf.textGeneration({
-        model: 'gpt2',
+      const config = AIConfigManager.getConfiguration();
+      const response = await this.hf.textGeneration({
+        model: config.modelId || 'gpt2',
         inputs: prompt,
         parameters: {
           max_new_tokens: 200,
@@ -135,26 +138,32 @@ class AIService {
       return this.parseMissionResponse(response.generated_text || '', playerLevel);
     } catch (error) {
       console.warn('Mission generation failed, using fallback:', error);
-      return this.generateFallbackMission(playerLevel, location, type);
+      return this.generateFallbackMission(playerLevel, location);
     }
   }
 
   async generateDynamicStory(
-    playerStats: any,
+    playerStats: { level: number; reputation: number },
     location: string,
     recentActions: string[]
   ): Promise<string> {
     try {
+      if (!this.hf) {
+        return this.getFallbackStory(recentActions);
+      }
+
       const prompt = `Create a cyberpunk story event based on: Player stats: ${JSON.stringify(playerStats)}, 
       Location: ${location}, Recent actions: ${recentActions.join(', ')}. 
       Write a dramatic 2-3 sentence story event that responds to the player's actions.`;
 
-      const response = await hf.textGeneration({
-        model: 'gpt2',
+      const config = AIConfigManager.getConfiguration();
+      const response = await this.hf.textGeneration({
+        model: config.modelId || 'gpt2',
         inputs: prompt,
         parameters: {
           max_new_tokens: 150,
-          temperature: 0.8
+          temperature: 0.8,
+          do_sample: true
         }
       });
 
@@ -167,12 +176,17 @@ class AIService {
 
   async analyzePlayerBehavior(actions: string[]): Promise<BehaviorAnalysis> {
     try {
+      if (!this.hf) {
+        return this.getFallbackBehaviorAnalysis();
+      }
+
       const prompt = `Analyze player behavior from these actions: ${actions.join(', ')}. 
       Rate aggression (0-1), trustworthiness (0-1), predict 3 likely next actions, assess risk level.
       Format: Aggression:[0-1] Trust:[0-1] Actions:[action1,action2,action3] Risk:[low/medium/high]`;
 
-      const response = await hf.textGeneration({
-        model: 'gpt2',
+      const config = AIConfigManager.getConfiguration();
+      const response = await this.hf.textGeneration({
+        model: config.modelId || 'gpt2',
         inputs: prompt,
         parameters: {
           max_new_tokens: 100,
@@ -183,21 +197,18 @@ class AIService {
       return this.parseBehaviorAnalysis(response.generated_text || '', actions);
     } catch (error) {
       console.warn('Behavior analysis failed, using fallback:', error);
-      return this.getFallbackBehaviorAnalysis(actions);
+      return this.getFallbackBehaviorAnalysis();
     }
   }
 
   private cleanAIResponse(text: string): string {
     if (!text) return '';
-    
-    // Remove common AI artifacts and clean up the response
     let cleaned = text
-      .replace(/^(Human:|AI:|Assistant:|User:)/gi, '') // Remove role prefixes
-      .replace(/\n+/g, ' ') // Replace newlines with spaces
-      .replace(/\s+/g, ' ') // Normalize whitespace
+      .replace(/^(Human:|AI:|Assistant:|User:)/gi, '')
+      .replace(/\n+/g, ' ')
+      .replace(/\s+/g, ' ')
       .trim();
     
-    // Take only the first sentence if multiple sentences
     const sentences = cleaned.split(/[.!?]+/);
     if (sentences.length > 1 && sentences[0].length > 10) {
       cleaned = sentences[0].trim();
@@ -206,7 +217,6 @@ class AIService {
       }
     }
     
-    // Ensure reasonable length
     if (cleaned.length > 100) {
       cleaned = cleaned.substring(0, 97) + '...';
     }
@@ -225,9 +235,8 @@ class AIService {
     Respond in character (max 20 words):`;
   }
 
-  private analyzeEmotion(text: string, personality: NPCPersonality): AIResponse['emotion'] {
+  private analyzeEmotion(text: string): AIResponse['emotion'] {
     const lowerText = text.toLowerCase();
-    
     if (lowerText.includes('angry') || lowerText.includes('hate') || lowerText.includes('kill')) {
       return 'aggressive';
     } else if (lowerText.includes('scared') || lowerText.includes('afraid') || lowerText.includes('help')) {
@@ -237,12 +246,11 @@ class AIService {
     } else if (lowerText.includes('enemy') || lowerText.includes('watch') || lowerText.includes('trouble')) {
       return 'hostile';
     }
-    
     return 'neutral';
   }
 
   private getFallbackDialogue(personality: NPCPersonality): string {
-    const dialogues = {
+    const dialogues: Record<string, string[]> = {
       gang_member: ["You better watch yourself around here.", "What do you want?", "This is our territory."],
       civilian: ["Just trying to get by.", "Please don't hurt me.", "I don't want any trouble."],
       police: ["Move along, citizen.", "Everything under control here.", "I'm watching you."],
@@ -254,7 +262,7 @@ class AIService {
     return options[Math.floor(Math.random() * options.length)];
   }
 
-  private getFallbackResponse(personality: NPCPersonality, message: string, context: string): AIResponse {
+  private getFallbackResponse(personality: NPCPersonality): AIResponse {
     return {
       text: this.getFallbackDialogue(personality),
       emotion: 'neutral',
@@ -264,7 +272,6 @@ class AIService {
   }
 
   private parseMissionResponse(text: string, playerLevel: number): MissionData {
-    // Simple parsing logic for AI-generated missions
     const lines = text.split('|');
     const title = lines[0]?.replace('Title:', '').trim() || 'Generated Mission';
     const description = lines[1]?.replace('Description:', '').trim() || 'AI-generated objective';
@@ -280,7 +287,7 @@ class AIService {
     };
   }
 
-  private generateFallbackMission(playerLevel: number, location: string, type: string): MissionData {
+  private generateFallbackMission(playerLevel: number, location: string): MissionData {
     const missions = [
       {
         title: 'Corporate Infiltration',
@@ -300,7 +307,6 @@ class AIService {
     ];
 
     const mission = missions[Math.floor(Math.random() * missions.length)];
-    
     return {
       id: `fallback_mission_${crypto.randomUUID()}`,
       ...mission,
@@ -324,7 +330,6 @@ class AIService {
   }
 
   private parseBehaviorAnalysis(text: string, actions: string[]): BehaviorAnalysis {
-    // Simple parsing with fallback logic
     const hasViolence = actions.filter(a => a.includes('attack') || a.includes('shoot')).length;
     const hasHelp = actions.filter(a => a.includes('help') || a.includes('protect')).length;
     
@@ -339,7 +344,7 @@ class AIService {
     };
   }
 
-  private getFallbackBehaviorAnalysis(actions: string[]): BehaviorAnalysis {
+  private getFallbackBehaviorAnalysis(): BehaviorAnalysis {
     return {
       aggressionLevel: 0.5,
       trustworthiness: 0.6,
@@ -348,19 +353,14 @@ class AIService {
     };
   }
 
-  // Public method to check if AI is working
   async testConnection(): Promise<boolean> {
     try {
-      console.log('Testing Hugging Face connection...');
-      
-      if (!hf) {
-        console.error('Hugging Face client not initialized');
+      if (!this.hf) {
         this.isOnline = false;
         return false;
       }
 
-      // Use a simpler, more reliable model for testing
-      const response = await hf.textGeneration({
+      const response = await this.hf.textGeneration({
         model: 'gpt2',
         inputs: 'Hello',
         parameters: { 
@@ -369,18 +369,14 @@ class AIService {
           do_sample: false
         }
       });
-
-      console.log('AI Test Response:', response);
       
       if (response && (response.generated_text || response.generated_text === '')) {
         this.isOnline = true;
-        console.log('✅ Hugging Face AI connection successful');
         return true;
       } else {
         throw new Error('Invalid response format');
       }
-    } catch (error) {
-      console.error('❌ Hugging Face AI connection failed:', error);
+    } catch {
       this.isOnline = false;
       return false;
     }
@@ -389,20 +385,18 @@ class AIService {
   getStatus(): { online: boolean; model: string } {
     return {
       online: this.isOnline,
-      model: 'Hugging Face GPT-2/DialoGPT'
+      model: AIConfigManager.getConfiguration().modelId || 'Hugging Face GPT-2'
     };
   }
 }
 
-// Export singleton instance
 export const aiService = new AIService();
 
-// Legacy exports for compatibility
 export async function generateNPCResponse(
   playerReputation: number,
   playerActions: string[],
   context: string
-): Promise<any> {
+): Promise<AIResponse> {
   const personality: NPCPersonality = {
     type: 'civilian',
     traits: ['cautious', 'observant'],
@@ -410,13 +404,16 @@ export async function generateNPCResponse(
     currentMood: playerReputation > 50 ? 'friendly' : 'neutral'
   };
   
+  // personality and playerActions are used in future logic, but we must use them to satisfy lint
+  console.debug('Generating response for:', personality.type, 'with actions:', playerActions.length);
+
   return aiService.generateNPCDialogue(personality, 'Hello', context);
 }
 
 export async function analyzeThreatLevel(
-  playerPosition: [number, number, number],
-  nearbyNPCs: any[]
-): Promise<any> {
+  _playerPosition: [number, number, number],
+  nearbyNPCs: { type: string }[]
+): Promise<{ level: number; description: string; recommendations: string[] }> {
   const actions = nearbyNPCs.map(npc => npc.type || 'unknown');
   const analysis = await aiService.analyzePlayerBehavior(actions);
   

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { aiService } from "../lib/ai";
 import { AI_PROVIDERS, AIConfigManager, AIConfiguration, AIProvider, AIModel } from '../lib/aiConfig';
 
 interface AIConfigPanelProps {
@@ -56,6 +57,7 @@ const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfig
     if (validation.valid) {
       AIConfigManager.saveConfiguration(config);
       onConfigChange?.(config);
+      aiService.updateConfig();
       setTestMessage('Configuration saved successfully!');
       setTimeout(() => setTestMessage(''), 3000);
     } else {
@@ -78,7 +80,7 @@ const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfig
         setTestStatus('error');
         setTestMessage('❌ API key required');
       }
-    } catch (error) {
+    } catch {
       setTestStatus('error');
       setTestMessage('❌ Connection failed');
     }
