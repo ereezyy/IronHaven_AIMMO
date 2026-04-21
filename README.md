@@ -55,7 +55,7 @@ cd IronHaven_AIMMO
 npm install
 
 # Start development server
-npm run dev
+# npm run dev
 
 # Build for production
 npm run build
@@ -160,7 +160,7 @@ Comprehensive transportation with realistic physics:
 npm install
 
 # Start development server with hot reload
-npm run dev
+# npm run dev
 
 # Run linting
 npm run lint
@@ -175,11 +175,11 @@ npx tsc --noEmit
 # Run unit tests
 npm test
 
-# Run integration tests
-npm run test:integration
+# Run integration tests (requires additional setup)
+# npm run test:integration
 
 # Performance testing
-npm run test:performance
+# npm run test:performance
 ```
 
 ### 📦 Building
@@ -315,4 +315,3 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 *Built with ❤️ by the IronHaven development team*
 
 </div>
-
