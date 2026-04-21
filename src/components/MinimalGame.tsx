@@ -61,7 +61,7 @@ const MinimalGame = () => {
         (playerPos.x - enemy.x) * (playerPos.x - enemy.x) + (playerPos.y - enemy.y) * (playerPos.y - enemy.y)
       );
       
-      if (distance < 5) {
+      if (distanceSq < 25) {
         setScore(prev => prev + 10);
         setEnemies(prev => prev.filter(e => e.id !== enemy.id));
       }

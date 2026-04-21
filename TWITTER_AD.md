@@ -1,13 +1,13 @@
-# 🚀 IronHaven AIMMO: Unleash the New Era of Cyberpunk MMO! 🚀
+# 🚀 IronHaven AIMMO: The Future is Now! 🚀
 
-🏙️ Welcome back to the neon-lit, adrenaline-fueled streets of IronHaven! We just pushed a MASSIVE update to redefine your browser-based MMORPG experience. No downloads. No wait. 100% Action.
+🏙️ Dive back into the neon-drenched streets of IronHaven! Our latest update brings monumental improvements to your browser-based MMORPG experience. No wait times. Pure action.
 
-🔥 WHAT'S NEW:
-🏎️ Insane Performance Boost: We've hyper-optimized rendering (say goodbye to array GC lag!) and turbocharged our proximity physics engine for buttery-smooth 60FPS gameplay even in the craziest shootouts!
-🛡️ Iron-Clad Security: Your legacy is safe. We’ve upgraded to cryptographic UUIDs and fortified our database with rigorous, authenticated-only Row Level Security policies. Your loot stays yours!
-🤖 Smarter AI, Deadlier Gangs: Adaptive dynamic events and NPCs that react to your every move!
+🔥 LATEST IMPROVEMENTS:
+🏎️ Peak Performance: We've eliminated render loops and GC stutter! Arrays are pre-allocated, delivering seamless 60FPS combat. Distance physics have been heavily optimized with squared coordinate checks so you get maximum framerates!
+🛡️ Unbreakable Security: We’ve fortified IronHaven with cryptographic UUIDs and tightened our database! With strict, authenticated-only Row Level Security and append-only logs, your gear and history are protected better than a Corpo vault!
+🤖 Relentless AI: Experience dynamic, reactive NPCs that learn from the chaos!
 
-Ready to rule the underworld?
+Ready to conquer the metropolis?
 
 👉 Play instantly: ironhaven-aimmo.com
 
