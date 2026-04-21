@@ -178,6 +178,7 @@ export const AI_PROVIDERS: AIProvider[] = [
 
 export class AIConfigManager {
   private static readonly STORAGE_KEY = 'ironhaven-ai-config';
+  private static sessionApiKey: string = '';
   private static readonly DEFAULT_CONFIG: AIConfiguration = {
     providerId: 'huggingface',
     modelId: 'gpt2',
@@ -194,18 +195,26 @@ export class AIConfigManager {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
         const config = JSON.parse(stored);
-        return { ...this.DEFAULT_CONFIG, ...config };
+        // Inject session API key back into config
+        return { ...this.DEFAULT_CONFIG, ...config, apiKey: this.sessionApiKey };
       }
     } catch (error) {
       console.warn('Failed to load AI configuration:', error);
     }
-    return { ...this.DEFAULT_CONFIG };
+    return { ...this.DEFAULT_CONFIG, apiKey: this.sessionApiKey };
   }
 
   static saveConfiguration(config: AIConfiguration): void {
     try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(config));
-      console.log('AI configuration saved successfully');
+      // Store API key in memory only for the current session
+      this.sessionApiKey = config.apiKey;
+
+      // Create a copy without the API key for persistent storage
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { apiKey, ...persistentConfig } = config;
+
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(persistentConfig));
+      console.log('AI configuration saved successfully (API key held in memory only)');
     } catch (error) {
       console.error('Failed to save AI configuration:', error);
     }
@@ -267,14 +276,14 @@ export class AIConfigManager {
 
       this.saveConfiguration(config);
       return { success: true };
-    } catch (error) {
+    } catch {
       return { success: false, error: 'Invalid configuration format' };
     }
   }
 
   static resetToDefaults(): void {
+    this.sessionApiKey = '';
     localStorage.removeItem(this.STORAGE_KEY);
     console.log('AI configuration reset to defaults');
   }
 }
-
