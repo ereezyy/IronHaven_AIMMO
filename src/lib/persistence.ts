@@ -35,6 +35,7 @@ class PersistenceService {
   private currentSessionId: string | null = null;
   private autoSaveInterval: NodeJS.Timeout | null = null;
   private offlineMode: boolean = false;
+  private lastSavedStateHash: string | null = null;
 
   async initializePlayer(username: string): Promise<string> {
     try {
@@ -62,7 +63,7 @@ class PersistenceService {
         current_weapon_id: 'fists',
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('players')
         .insert([playerData])
         .select()
@@ -220,9 +221,21 @@ class PersistenceService {
       clearInterval(this.autoSaveInterval);
     }
 
+    this.lastSavedStateHash = null;
+
     this.autoSaveInterval = setInterval(async () => {
       const playerData = saveCallback();
-      await this.savePlayerState(playerData);
+
+      // Optimization: Check if data has changed before saving
+      const currentStateHash = JSON.stringify(playerData);
+      if (this.lastSavedStateHash === currentStateHash) {
+        return;
+      }
+
+      const success = await this.savePlayerState(playerData);
+      if (success) {
+        this.lastSavedStateHash = currentStateHash;
+      }
     }, intervalMs);
   }
 
