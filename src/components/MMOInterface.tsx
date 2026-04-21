@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import {
   multiplayerManager,
   PlayerData,
@@ -22,13 +22,14 @@ export const MultiplayerStatus: React.FC = () => {
         setIsConnected(false);
       });
 
-    // Listen for player updates
-    multiplayerManager.on('world_state_update', (data: any) => {
+    const handleWorldUpdate = (data: any) => {
       setPlayerCount(data.players?.size || 0);
-    });
+    };
+
+    multiplayerManager.on("world_state_update", handleWorldUpdate);
 
     return () => {
-      multiplayerManager.off('world_state_update', () => {});
+      multiplayerManager.off("world_state_update", handleWorldUpdate);
     };
   }, []);
 
@@ -69,12 +70,14 @@ export const ChatSystem: React.FC = () => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    multiplayerManager.on('chat_message', (data: any) => {
+    const handleChatMessage = (data: any) => {
       setMessages((prev) => [...prev.slice(-49), data]); // Keep last 50 messages
-    });
+    };
+
+    multiplayerManager.on("chat_message", handleChatMessage);
 
     return () => {
-      multiplayerManager.off('chat_message', () => {});
+      multiplayerManager.off("chat_message", handleChatMessage);
     };
   }, []);
 
@@ -171,15 +174,45 @@ export const PlayerList: React.FC<{
   const [nearbyPlayers, setNearbyPlayers] = useState<PlayerData[]>([]);
   const [isVisible, setIsVisible] = useState(false);
 
+  const lastUpdateRef = useRef<number>(0);
+  const playerPositionRef = useRef<[number, number, number]>(playerPosition);
+
+  // Update ref when playerPosition prop changes
+  useEffect(() => {
+    playerPositionRef.current = playerPosition;
+    // Force an update when position changes significantly or periodically
+    // But the callback will use the latest ref anyway
+  }, [playerPosition]);
+
   useEffect(() => {
     const updateNearbyPlayers = () => {
-      const players = multiplayerManager.getNearbyPlayers(playerPosition, 50);
+      if (!isVisible) return;
+
+      const now = Date.now();
+      if (now - lastUpdateRef.current < 500) return;
+
+      lastUpdateRef.current = now;
+      const players = multiplayerManager.getNearbyPlayers(playerPositionRef.current, 50);
       setNearbyPlayers(players);
     };
+    // Initial update when becoming visible
+    if (isVisible) updateNearbyPlayers();
 
-    const interval = setInterval(updateNearbyPlayers, 1000);
-    return () => clearInterval(interval);
-  }, [playerPosition]);
+    // Listen for world state updates and player movements
+    multiplayerManager.on("world_state_update", updateNearbyPlayers);
+    multiplayerManager.on("player_joined", updateNearbyPlayers);
+    multiplayerManager.on("player_left", updateNearbyPlayers);
+    multiplayerManager.on("player_moved", updateNearbyPlayers);
+    const fallbackInterval = setInterval(updateNearbyPlayers, 5000);
+
+    return () => {
+      multiplayerManager.off("world_state_update", updateNearbyPlayers);
+      multiplayerManager.off("player_joined", updateNearbyPlayers);
+      multiplayerManager.off("player_left", updateNearbyPlayers);
+      multiplayerManager.off("player_moved", updateNearbyPlayers);
+      clearInterval(fallbackInterval);
+    };
+  }, [isVisible]);
 
   if (!isVisible) {
     return (
