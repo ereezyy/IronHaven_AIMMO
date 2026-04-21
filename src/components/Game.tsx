@@ -619,6 +619,56 @@ const Game: React.FC = () => {
     },
     [gameStore, playerPosition]
   );
+  const handlePoliceKilled = useCallback((policeId: string) => {
+    gameStore.incrementPoliceKillCount();
+    gameStore.addAction(`killed_police_${policeId}`);
+    
+    // Increase kill streak
+    setKillStreak(prev => prev + 1);
+    setLastKillTime(Date.now());
+    
+    // Massive reputation gain for police kills
+    gameStore.updateStats({ 
+      reputation: gameStore.playerStats.reputation + 15,
+      wanted: Math.min(gameStore.playerStats.wanted + 1, 5)
+    });
+    
+    // Add multiple effects for police kills
+    const bloodEffect: CombatEffect = {
+      id: `police_blood_${crypto.randomUUID()}`,
+      position: playerPosition,
+      type: 'death_burst',
+      intensity: 1,
+      duration: 3000,
+      startTime: Date.now()
+    };
+    
+    const explosionEffect = {
+      id: `police_explosion_${crypto.randomUUID()}`,
+      position: playerPosition,
+      intensity: 0.8
+    };
+    
+    setCombatEffects(prev => [...prev, bloodEffect]);
+    setExplosions(prev => [...prev, explosionEffect]);
+    setBloodPools(prev => [...prev, {
+      id: `blood_pool_${crypto.randomUUID()}`,
+      position: playerPosition,
+      size: 2 + Math.random()
+    }]);
+    
+    // Screen shake effect for dramatic impact
+    setScreenEffects(prev => ({ ...prev, shake: 1, flash: 0.8, redTint: 0.3 }));
+    setTimeout(() => {
+      setScreenEffects(prev => ({ ...prev, shake: 0, flash: 0, redTint: 0 }));
+    }, 800);
+    
+    // Slow motion for dramatic effect
+    setScreenEffects(prev => ({ ...prev, slowMotion: true }));
+    setTimeout(() => {
+      setScreenEffects(prev => ({ ...prev, slowMotion: false }));
+    }, 1000);
+  }, [gameStore, playerPosition]);
 
   const handleMissionUpdate = useCallback((mission: any) => {
     setMissionActive(!mission.completed && !mission.failed);
@@ -628,7 +678,7 @@ const Game: React.FC = () => {
     // Add particle effects for serious crimes
     if (crime.severity > 70) {
       const effect = {
-        id: `crime_particle_${Date.now()}`,
+        id: `crime_particle_${crypto.randomUUID()}`,
         type: crime.type === 'murder' ? 'blood_spatter' : 'impact',
         position: crime.location,
         intensity: crime.severity / 100,
@@ -639,7 +689,7 @@ const Game: React.FC = () => {
     // Add visual effects for serious crimes
     if (crime.severity > 70) {
       const effect: CombatEffect = {
-        id: `crime_${Date.now()}`,
+        id: `crime_${crypto.randomUUID()}`,
         position: crime.location,
         type: crime.type === 'murder' ? 'blood_splatter' : 'impact',
         duration: 8000,
@@ -666,6 +716,20 @@ const Game: React.FC = () => {
     },
     [gameStore]
   );
+  const handleEventTriggered = useCallback((event: any) => {
+    // Add particle effects for events
+    if (event.type === 'gang_war' || event.type === 'police_raid') {
+      const effect = {
+        id: `event_particle_${crypto.randomUUID()}`,
+        type: 'explosion',
+        position: event.location,
+        intensity: event.severity / 100
+      };
+      setParticleEffects(prev => [...prev, effect]);
+    }
+    
+    gameStore.addAction(`event_${event.type}_started`);
+  }, [gameStore]);
 
   const handleParticleEffectComplete = useCallback((id: string) => {
     setParticleEffects((prev) => prev.filter((effect) => effect.id !== id));

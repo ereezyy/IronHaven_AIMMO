@@ -132,7 +132,7 @@ const EffectRenderer: React.FC<{ effect: CombatEffect }> = ({ effect }) => {
   );
 };
 
-const BLOOD_DROPLETS = Array.from({ length: 8 }).map((_, i) => ({
+const BLOOD_DROPLETS = [...new Array(8)].map((_, i) => ({
   id: i,
   position: [(Math.random() - 0.5) * 3, 0.02, (Math.random() - 0.5) * 3] as [
     number,

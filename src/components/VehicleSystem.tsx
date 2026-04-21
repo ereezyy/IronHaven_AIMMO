@@ -116,6 +116,10 @@ const VehicleSystem: React.FC<VehicleSystemProps> = ({
                 (v.position[0] - playerPosition[0]) +
                 (v.position[2] - playerPosition[2]) *
                   (v.position[2] - playerPosition[2])
+          const nearbyVehicle = vehicles.find(v => {
+            const distance = (
+              (v.position[0] - playerPosition[0]) * (v.position[0] - playerPosition[0]) +
+              (v.position[2] - playerPosition[2]) * (v.position[2] - playerPosition[2])
             );
             return distance < 5 && !v.isPlayerDriving;
           });
@@ -339,6 +343,9 @@ const VehicleSystem: React.FC<VehicleSystemProps> = ({
                   (vehicle.position[0] - playerPosition[0]) +
                   (vehicle.position[2] - playerPosition[2]) *
                     (vehicle.position[2] - playerPosition[2])
+              const distance = (
+                (vehicle.position[0] - playerPosition[0]) * (vehicle.position[0] - playerPosition[0]) +
+                (vehicle.position[2] - playerPosition[2]) * (vehicle.position[2] - playerPosition[2])
               );
               return distance < 5 ? (
                 <Box position={[0, 2.5, 0]} scale={[0.3, 0.3, 0.3]}>

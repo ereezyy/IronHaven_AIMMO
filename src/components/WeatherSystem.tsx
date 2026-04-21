@@ -110,7 +110,7 @@ const WeatherSystem: React.FC<WeatherSystemProps> = ({
   );
 };
 
-const FOG_PARTICLES = Array.from({ length: 20 }).map((_, i) => ({
+const FOG_PARTICLES = [...new Array(20)].map((_, i) => ({
   id: i,
   position: [
     (Math.random() - 0.5) * 100,

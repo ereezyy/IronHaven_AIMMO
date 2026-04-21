@@ -77,7 +77,7 @@ const DynamicEvents: React.FC<DynamicEventsProps> = ({
     const z = playerPosition[2] + Math.sin(angle) * distance;
 
     const event: DynamicEvent = {
-      id: `event_${Date.now()}`,
+      id: crypto.randomUUID(),
       title: getEventTitle(type),
       description: getEventDescription(type),
       type,
@@ -274,6 +274,40 @@ const DynamicEvents: React.FC<DynamicEventsProps> = ({
               }
               break;
           }
+    setActiveEvents(prev => prev.map(event => {
+      const distanceSq = (
+        (event.location[0] - playerPosition[0]) * (event.location[0] - playerPosition[0]) +
+        (event.location[2] - playerPosition[2]) * (event.location[2] - playerPosition[2])
+      );
+      
+      const wasInvolved = event.playerInvolved;
+      const isInvolved = distance <= event.radius;
+      
+      if (isInvolved && !wasInvolved) {
+        gameStore.addAction(`entered_event_${event.type}`);
+        
+        // Apply event effects
+        switch (event.type) {
+          case 'gang_war':
+            gameStore.updateStats({ wanted: Math.min(gameStore.playerStats.wanted + 1, 5) });
+            break;
+          case 'police_raid':
+            gameStore.updateStats({ wanted: Math.min(gameStore.playerStats.wanted + 2, 5) });
+            break;
+          case 'street_race':
+            // Chance to win money
+            if (Math.random() > 0.5) {
+              gameStore.updateStats({ money: gameStore.playerStats.money + 1000 });
+              gameStore.addAction('won_street_race');
+            }
+            break;
+          case 'drug_bust':
+            // Chance to find money or drugs
+            if (Math.random() > 0.6) {
+              gameStore.updateStats({ money: gameStore.playerStats.money + 500 });
+              gameStore.addAction('found_drug_money');
+            }
+            break;
         }
 
         return { ...event, playerInvolved: isInvolved };
@@ -356,6 +390,11 @@ const DynamicEvents: React.FC<DynamicEventsProps> = ({
                   (event.location[0] - playerPosition[0]) +
                   (event.location[2] - playerPosition[2]) *
                     (event.location[2] - playerPosition[2])
+            {activeEvents.map(event => {
+              const timeLeft = Math.max(0, event.duration - (Date.now() - event.startTime));
+              const distanceSq = (
+                (event.location[0] - playerPosition[0]) * (event.location[0] - playerPosition[0]) +
+                (event.location[2] - playerPosition[2]) * (event.location[2] - playerPosition[2])
               );
 
               return (

@@ -59,6 +59,8 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
       (position[0] - playerPosition[0]) * (position[0] - playerPosition[0]) +
         (position[2] - playerPosition[2]) * (position[2] - playerPosition[2])
     );
+    const distanceToPlayerSq = (position[0] - playerPosition[0]) * (position[0] - playerPosition[0]) +
+      (position[2] - playerPosition[2]) * (position[2] - playerPosition[2]);
 
     const playerWanted = gameStore.playerStats.wanted;
     const playerRep = gameStore.playerStats.reputation;
@@ -67,6 +69,8 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
     // Line of sight check
     const hasLineOfSight = distanceToPlayer < 30 && Math.random() > 0.2;
 
+    const hasLineOfSight = distanceToPlayerSq < 900 && Math.random() > 0.2;
+    
     if (hasLineOfSight) {
       setState((prev) => ({
         ...prev,
@@ -100,7 +104,7 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
         if (playerWanted > 2 && Math.random() > 0.7) {
           gameStore.addAction('civilian_called_police');
         }
-      } else if (distanceToPlayer < 8 && Math.random() > 0.9) {
+      } else if (distanceToPlayerSq < 64 && Math.random() > 0.9) {
         // Random civilian interaction
         onInteraction({
           id,
@@ -131,6 +135,10 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
         setState((prev) => ({
           ...prev,
           mood: 'hostile',
+      if (playerRep < 20 && distanceToPlayerSq < 400) {
+        setState(prev => ({ 
+          ...prev, 
+          mood: 'hostile', 
           currentAction: 'attack',
           target: [...playerPosition],
         }));
@@ -146,10 +154,14 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
         setState((prev) => ({
           ...prev,
           mood: 'hostile',
+      } else if (playerRep >= 20 && playerRep <= 80 && distanceToPlayerSq < 225) {
+        setState(prev => ({ 
+          ...prev, 
+          mood: 'hostile', 
           currentAction: 'attack',
           target: [...playerPosition],
         }));
-      } else if (playerRep > 50 && distanceToPlayer < 10) {
+      } else if (playerRep > 50 && distanceToPlayerSq < 100) {
         // Show respect to high-rep player
         onInteraction({
           id,
@@ -159,7 +171,7 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
         });
       }
     } else if (type === 'dealer') {
-      if (distanceToPlayer < 12 && Math.random() > 0.8) {
+      if (distanceToPlayerSq < 144 && Math.random() > 0.8) {
         onInteraction({
           id,
           type,
@@ -232,6 +244,9 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
               (position[2] - state.target[2]) * (position[2] - state.target[2])
           );
           if (distanceToTarget < 5 && Math.random() > 0.93) {
+          const distanceToTargetSq = (position[0] - state.target[0]) * (position[0] - state.target[0]) +
+            (position[2] - state.target[2]) * (position[2] - state.target[2]);
+          if (distanceToTargetSq < 25 && Math.random() > 0.93) {
             // NPC attacks player
             const damage =
               type === 'boss'
@@ -290,6 +305,10 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
     const distance = Math.sqrt(dx * dx + dz * dz);
 
     if (distance > 1) {
+    const distance = dx * dx + dz * dz;
+    
+    if (distanceSq > 1) {
+
       const moveX = (dx / distance) * speed * delta;
       const moveZ = (dz / distance) * speed * delta;
 

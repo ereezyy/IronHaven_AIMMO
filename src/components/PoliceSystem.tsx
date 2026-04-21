@@ -68,7 +68,7 @@ const PoliceSystem: React.FC<PoliceSystemProps> = ({
         }
 
         newUnits.push({
-          id: `police_${i}_${Date.now()}`,
+          id: `police_${i}_${crypto.randomUUID()}`,
           position: [x, 1, z],
           target: [...playerPosition],
           type,
@@ -119,6 +119,30 @@ const PoliceSystem: React.FC<PoliceSystemProps> = ({
           return unit;
         })
       );
+      setPoliceUnits(prev => prev.map(unit => {
+        // Move towards player
+        const dx = playerPosition[0] - unit.position[0];
+        const dz = playerPosition[2] - unit.position[2];
+        const distanceSq = dx * dx + dz * dz;
+        
+        if (distanceSq > 4) {
+          const distance = Math.sqrt(distanceSq);
+          const moveX = (dx / distance) * unit.speed * 0.1;
+          const moveZ = (dz / distance) * unit.speed * 0.1;
+          
+          return {
+            ...unit,
+            position: [
+              unit.position[0] + moveX,
+              unit.position[1],
+              unit.position[2] + moveZ
+            ] as [number, number, number],
+            target: [...playerPosition] as [number, number, number]
+          };
+        }
+        
+        return unit;
+      }));
     }, 100);
 
     return () => clearInterval(updateInterval);
@@ -135,6 +159,13 @@ const PoliceSystem: React.FC<PoliceSystemProps> = ({
       );
 
       if (distance < 15 && Math.random() > 0.95) {
+    policeUnits.forEach(unit => {
+      const distanceSq = (
+        (unit.position[0] - playerPosition[0]) * (unit.position[0] - playerPosition[0]) +
+        (unit.position[2] - playerPosition[2]) * (unit.position[2] - playerPosition[2])
+      );
+      
+      if (distanceSq < 225 && Math.random() > 0.95) {
         // Police shoots at player
         const damage =
           unit.type === 'swat' ? 25 : unit.type === 'helicopter' ? 35 : 15;
