@@ -406,10 +406,31 @@ const Game: React.FC = () => {
     return worldChunks.flatMap(chunk => chunk.buildings);
   }, [worldChunks]);
 
+  // Memoize visible buildings to optimize render loop
+  const visibleBuildings = useMemo(() => {
+    const renderDistanceSq = 100 * 100;
+    return allBuildings.filter(building => {
+      const dx = building.position[0] - playerPosition[0];
+      const dz = building.position[2] - playerPosition[2];
+      return (dx * dx + dz * dz) <= renderDistanceSq;
+    });
+  }, [allBuildings, playerPosition]);
+
   // Get all NPCs for smart AI system
   const allNPCs = useMemo(() => {
     return worldChunks.flatMap(chunk => chunk.npcs);
   }, [worldChunks]);
+
+  // Memoize visible NPCs to optimize render loop
+  const visibleNPCs = useMemo(() => {
+    const renderDistanceSq = 60 * 60;
+    return allNPCs.slice(0, 25).filter(npc => {
+      if (npc.isDead) return false;
+      const dx = npc.position[0] - playerPosition[0];
+      const dz = npc.position[2] - playerPosition[2];
+      return (dx * dx + dz * dz) <= renderDistanceSq;
+    });
+  }, [allNPCs, playerPosition]);
 
   // Update world chunks periodically, not every frame
   useEffect(() => {
@@ -648,15 +669,9 @@ const Game: React.FC = () => {
         </mesh>
         
         {/* Render Buildings with LOD */}
-        {allBuildings.map((building, index) => {
-          const distanceSq = (building.position[0] - playerPosition[0]) * (building.position[0] - playerPosition[0]) +
-            (building.position[2] - playerPosition[2]) * (building.position[2] - playerPosition[2]);
-          
-          // Only render buildings within a certain distance
-          if (distanceSq > 100 * 100) return null;
-          
-          return <OptimizedBuilding key={building.id} building={building} />;
-        })}
+        {visibleBuildings.map((building) => (
+          <OptimizedBuilding key={building.id} building={building} />
+        ))}
 
         {/* Player */}
         <Player
@@ -668,23 +683,16 @@ const Game: React.FC = () => {
         />
 
         {/* Enhanced Smart NPCs with better AI */}
-        {allNPCs.slice(0, 25).map(npc => {
-          const distanceSq = (npc.position[0] - playerPosition[0]) * (npc.position[0] - playerPosition[0]) +
-            (npc.position[2] - playerPosition[2]) * (npc.position[2] - playerPosition[2]);
-
-          if (distanceSq > 60 * 60 || npc.isDead) return null;
-
-          return (
-            <SmartNPC
-              key={npc.id}
-              id={npc.id}
-              position={npc.position}
-              type={npc.type}
-              playerPosition={playerPosition}
-              onInteraction={handleNPCClick}
-            />
-          );
-        })}
+        {visibleNPCs.map(npc => (
+          <SmartNPC
+            key={npc.id}
+            id={npc.id}
+            position={npc.position}
+            type={npc.type}
+            playerPosition={playerPosition}
+            onInteraction={handleNPCClick}
+          />
+        ))}
 
         {/* Persistent Blood Pools */}
         {bloodPools.map(pool => (
