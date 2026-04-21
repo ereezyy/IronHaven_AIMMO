@@ -281,7 +281,7 @@ const DynamicEvents: React.FC<DynamicEventsProps> = ({
       );
       
       const wasInvolved = event.playerInvolved;
-      const isInvolved = distance <= event.radius;
+      const isInvolved = distanceSq <= event.radius * event.radius;
       
       if (isInvolved && !wasInvolved) {
         gameStore.addAction(`entered_event_${event.type}`);
@@ -409,7 +409,7 @@ const DynamicEvents: React.FC<DynamicEventsProps> = ({
                     )}
                   </div>
                   <div className="flex justify-between text-gray-400 mt-1">
-                    <span>Distance: {Math.round(distance)}m</span>
+                    <span>Distance: {Math.round(Math.sqrt(distanceSq))}m</span>
                     <span className="flex items-center">
                       <Clock className="h-3 w-3 mr-1" />
                       {Math.round(timeLeft / 1000)}s
