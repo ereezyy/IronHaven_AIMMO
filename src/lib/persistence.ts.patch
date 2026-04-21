@@ -1,0 +1,21 @@
+<<<<<<< SEARCH
+    this.autoSaveInterval = setInterval(async () => {
+      const playerData = saveCallback();
+      await this.savePlayerState(playerData);
+    }, intervalMs);
+=======
+    this.autoSaveInterval = setInterval(async () => {
+      const playerData = saveCallback();
+
+      // Optimization: Check if data has changed before saving
+      const currentStateHash = JSON.stringify(playerData);
+      if (this.lastSavedStateHash === currentStateHash) {
+        return;
+      }
+
+      const success = await this.savePlayerState(playerData);
+      if (success) {
+        this.lastSavedStateHash = currentStateHash;
+      }
+    }, intervalMs);
+>>>>>>> REPLACE
