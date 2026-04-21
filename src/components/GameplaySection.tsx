@@ -7,8 +7,16 @@ const GameplaySection: React.FC = () => {
   const tabs = [
     { id: 'combat', icon: <Gun className="h-5 w-5 mr-2" />, label: 'COMBAT' },
     { id: 'driving', icon: <Car className="h-5 w-5 mr-2" />, label: 'DRIVING' },
-    { id: 'wanted', icon: <ShieldAlert className="h-5 w-5 mr-2" />, label: 'WANTED SYSTEM' },
-    { id: 'progression', icon: <UserCircle className="h-5 w-5 mr-2" />, label: 'PROGRESSION' },
+    {
+      id: 'wanted',
+      icon: <ShieldAlert className="h-5 w-5 mr-2" />,
+      label: 'WANTED SYSTEM',
+    },
+    {
+      id: 'progression',
+      icon: <UserCircle className="h-5 w-5 mr-2" />,
+      label: 'PROGRESSION',
+    },
   ];
 
   const getTabContent = (tabId: string) => {
@@ -16,57 +24,65 @@ const GameplaySection: React.FC = () => {
       case 'combat':
         return {
           title: 'BRUTAL & VISCERAL COMBAT',
-          description: 'Engage in realistic gunfights and brutal hand-to-hand combat. From improvised weapons to firearms, every confrontation feels raw and consequential.',
+          description:
+            'Engage in realistic gunfights and brutal hand-to-hand combat. From improvised weapons to firearms, every confrontation feels raw and consequential.',
           features: [
             'Realistic weapon handling and damage',
             'Brutal melee combat with knives, bats, and improvised weapons',
             'Environmental kills and context-sensitive executions',
             'Dynamic NPC fear reactions based on your actions',
           ],
-          image: 'https://images.pexels.com/photos/3737094/pexels-photo-3737094.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
+          image:
+            'https://images.pexels.com/photos/3737094/pexels-photo-3737094.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
         };
       case 'driving':
         return {
           title: 'REALISTIC VEHICLE SYSTEM',
-          description: 'Experience Ironhaven from behind the wheel of over 30 stealable vehicles, each with unique handling and performance characteristics.',
+          description:
+            'Experience Ironhaven from behind the wheel of over 30 stealable vehicles, each with unique handling and performance characteristics.',
           features: [
             'Realistic vehicle physics and damage modeling',
             'Wide variety of cars, motorcycles, and trucks to steal',
             'High-speed police chases with roadblocks and spike strips',
             'Vehicle customization and safe houses for storing your collection',
           ],
-          image: 'https://images.pexels.com/photos/3422964/pexels-photo-3422964.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
+          image:
+            'https://images.pexels.com/photos/3422964/pexels-photo-3422964.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
         };
       case 'wanted':
         return {
           title: '5-STAR WANTED SYSTEM',
-          description: 'Your crimes don\'t go unnoticed in Ironhaven. The more chaos you cause, the more heat you attract, from beat cops to SWAT teams.',
+          description:
+            "Your crimes don't go unnoticed in Ironhaven. The more chaos you cause, the more heat you attract, from beat cops to SWAT teams.",
           features: [
             '5-star wanted level system with escalating police response',
             'Dynamic police AI that coordinates to trap and apprehend you',
             'Bribes, safe houses, and paint shops to lower your wanted level',
             'Reputation system affecting how gangs and civilians react to you',
           ],
-          image: 'https://images.pexels.com/photos/1693095/pexels-photo-1693095.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
+          image:
+            'https://images.pexels.com/photos/1693095/pexels-photo-1693095.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
         };
       case 'progression':
         return {
           title: 'CHARACTER DEVELOPMENT',
-          description: 'As Danny rises through the ranks, his skills and reputation evolve. Improve your abilities through practice and unlock new opportunities.',
+          description:
+            'As Danny rises through the ranks, his skills and reputation evolve. Improve your abilities through practice and unlock new opportunities.',
           features: [
             'Skill progression in shooting, driving, stamina, and intimidation',
             'Reputation system affecting how different factions respond to you',
             'Unlock new weapons, vehicles, and safehouses as your influence grows',
             'Character customization with clothing and accessories that impact gameplay',
           ],
-          image: 'https://images.pexels.com/photos/2531242/pexels-photo-2531242.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
+          image:
+            'https://images.pexels.com/photos/2531242/pexels-photo-2531242.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
         };
       default:
         return {
           title: '',
           description: '',
           features: [],
-          image: ''
+          image: '',
         };
     }
   };

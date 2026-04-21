@@ -26,7 +26,7 @@ const MMOWorld: React.FC = () => {
         size: [width, height, depth] as [number, number, number],
         color,
         hasWindows: Math.random() > 0.3,
-        hasNeon: Math.random() > 0.5
+        hasNeon: Math.random() > 0.5,
       });
     }
 
@@ -43,7 +43,7 @@ const MMOWorld: React.FC = () => {
 
       treeArray.push({
         id: `tree_${i}`,
-        position: [x, 0, z] as [number, number, number]
+        position: [x, 0, z] as [number, number, number],
       });
     }
     return treeArray;
@@ -61,7 +61,7 @@ const MMOWorld: React.FC = () => {
 
       lights.push({
         id: `light_${i}`,
-        position: [x, 0, z] as [number, number, number]
+        position: [x, 0, z] as [number, number, number],
       });
     }
     return lights;
@@ -71,14 +71,14 @@ const MMOWorld: React.FC = () => {
     <group>
       <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
         <circleGeometry args={[100, 64]} />
-        <meshStandardMaterial
-          color="#1a1a1a"
-          roughness={0.8}
-          metalness={0.2}
-        />
+        <meshStandardMaterial color="#1a1a1a" roughness={0.8} metalness={0.2} />
       </mesh>
 
-      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
+      <mesh
+        receiveShadow
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, 0.01, 0]}
+      >
         <ringGeometry args={[0, 100, 64]} />
         <meshStandardMaterial
           color="#2a2a2a"
@@ -89,7 +89,7 @@ const MMOWorld: React.FC = () => {
         />
       </mesh>
 
-      {buildings.map(building => (
+      {buildings.map((building) => (
         <group key={building.id} position={building.position}>
           <mesh castShadow receiveShadow>
             <boxGeometry args={building.size} />
@@ -103,27 +103,29 @@ const MMOWorld: React.FC = () => {
           {building.hasWindows && (
             <>
               <mesh position={[0, 0, building.size[2] / 2 + 0.01]}>
-                <boxGeometry args={[building.size[0] * 0.8, building.size[1] * 0.8, 0.1]} />
-                <meshBasicMaterial
-                  color="#001122"
-                  transparent
-                  opacity={0.6}
+                <boxGeometry
+                  args={[building.size[0] * 0.8, building.size[1] * 0.8, 0.1]}
                 />
+                <meshBasicMaterial color="#001122" transparent opacity={0.6} />
               </mesh>
 
               <mesh position={[0, 0, -building.size[2] / 2 - 0.01]}>
-                <boxGeometry args={[building.size[0] * 0.8, building.size[1] * 0.8, 0.1]} />
-                <meshBasicMaterial
-                  color="#001122"
-                  transparent
-                  opacity={0.6}
+                <boxGeometry
+                  args={[building.size[0] * 0.8, building.size[1] * 0.8, 0.1]}
                 />
+                <meshBasicMaterial color="#001122" transparent opacity={0.6} />
               </mesh>
             </>
           )}
 
           {building.hasNeon && (
-            <mesh position={[0, building.size[1] / 2 + 0.5, building.size[2] / 2 + 0.1]}>
+            <mesh
+              position={[
+                0,
+                building.size[1] / 2 + 0.5,
+                building.size[2] / 2 + 0.1,
+              ]}
+            >
               <boxGeometry args={[building.size[0] * 0.6, 0.8, 0.1]} />
               <meshBasicMaterial
                 color="#00ffff"
@@ -141,7 +143,7 @@ const MMOWorld: React.FC = () => {
         </group>
       ))}
 
-      {trees.map(tree => (
+      {trees.map((tree) => (
         <group key={tree.id} position={tree.position}>
           <mesh castShadow position={[0, 2, 0]}>
             <cylinderGeometry args={[0.3, 0.4, 4, 8]} />
@@ -155,7 +157,7 @@ const MMOWorld: React.FC = () => {
         </group>
       ))}
 
-      {streetLights.map(light => (
+      {streetLights.map((light) => (
         <group key={light.id} position={light.position}>
           <mesh castShadow>
             <cylinderGeometry args={[0.1, 0.1, 6, 8]} />
@@ -181,7 +183,10 @@ const MMOWorld: React.FC = () => {
         </group>
       ))}
 
-      <gridHelper args={[200, 40, '#00ff88', '#003322']} position={[0, 0.02, 0]} />
+      <gridHelper
+        args={[200, 40, '#00ff88', '#003322']}
+        position={[0, 0.02, 0]}
+      />
     </group>
   );
 };

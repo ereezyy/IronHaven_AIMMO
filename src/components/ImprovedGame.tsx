@@ -49,14 +49,14 @@ const CyberpunkCity = () => {
         position: [
           (Math.random() - 0.5) * 100,
           Math.random() * 20 + 5,
-          (Math.random() - 0.5) * 100
+          (Math.random() - 0.5) * 100,
         ] as [number, number, number],
         scale: [
           2 + Math.random() * 4,
           10 + Math.random() * 20,
-          2 + Math.random() * 4
+          2 + Math.random() * 4,
         ] as [number, number, number],
-        color: Math.random() > 0.5 ? '#0066ff' : '#ff0066'
+        color: Math.random() > 0.5 ? '#0066ff' : '#ff0066',
       });
     }
     return buildingArray;
@@ -67,11 +67,7 @@ const CyberpunkCity = () => {
       {/* Ground */}
       <mesh position={[0, -1, 0]} receiveShadow>
         <planeGeometry args={[200, 200]} />
-        <meshStandardMaterial 
-          color="#111111" 
-          roughness={0.8}
-          metalness={0.2}
-        />
+        <meshStandardMaterial color="#111111" roughness={0.8} metalness={0.2} />
       </mesh>
 
       {/* Buildings */}
@@ -126,7 +122,7 @@ const CyberpunkCity = () => {
           position={[
             (Math.random() - 0.5) * 60,
             5 + Math.random() * 10,
-            (Math.random() - 0.5) * 60
+            (Math.random() - 0.5) * 60,
           ]}
           castShadow
         >
@@ -173,11 +169,7 @@ const ParticleSystem = ({ count = 100 }) => {
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, count]}>
       <sphereGeometry args={[0.05]} />
-      <meshBasicMaterial
-        color="#00ffff"
-        transparent
-        opacity={0.6}
-      />
+      <meshBasicMaterial color="#00ffff" transparent opacity={0.6} />
     </instancedMesh>
   );
 };
@@ -192,7 +184,9 @@ const GameUI = ({ gameState }: { gameState: GameState }) => {
         <div className="w-48 h-4 bg-gray-800 rounded">
           <div
             className="h-full bg-gradient-to-r from-red-500 to-green-500 rounded transition-all"
-            style={{ width: `${(gameState.player.health / gameState.player.maxHealth) * 100}%` }}
+            style={{
+              width: `${(gameState.player.health / gameState.player.maxHealth) * 100}%`,
+            }}
           />
         </div>
         <div className="text-white text-xs mt-1">
@@ -202,7 +196,9 @@ const GameUI = ({ gameState }: { gameState: GameState }) => {
 
       {/* Weapon Info */}
       <div className="absolute top-4 right-4 bg-black bg-opacity-70 p-4 rounded-lg">
-        <div className="text-cyan-400 text-sm mb-2">{gameState.player.currentWeapon.name}</div>
+        <div className="text-cyan-400 text-sm mb-2">
+          {gameState.player.currentWeapon.name}
+        </div>
         <div className="text-white text-xs">
           Ammo: {gameState.player.ammo}/{gameState.player.currentWeapon.maxAmmo}
         </div>
@@ -214,8 +210,12 @@ const GameUI = ({ gameState }: { gameState: GameState }) => {
       {/* Score and Level */}
       <div className="absolute bottom-4 left-4 bg-black bg-opacity-70 p-4 rounded-lg">
         <div className="text-cyan-400 text-sm">SCORE: {gameState.score}</div>
-        <div className="text-purple-400 text-sm">LEVEL: {gameState.player.level}</div>
-        <div className="text-yellow-400 text-sm">EXP: {gameState.player.experience}</div>
+        <div className="text-purple-400 text-sm">
+          LEVEL: {gameState.player.level}
+        </div>
+        <div className="text-yellow-400 text-sm">
+          EXP: {gameState.player.experience}
+        </div>
       </div>
 
       {/* Minimap */}
@@ -223,11 +223,14 @@ const GameUI = ({ gameState }: { gameState: GameState }) => {
         <div className="text-cyan-400 text-xs text-center p-1">MINIMAP</div>
         <div className="relative w-full h-full">
           {/* Player dot */}
-          <div className="absolute w-2 h-2 bg-cyan-400 rounded-full" style={{
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -50%)'
-          }} />
+          <div
+            className="absolute w-2 h-2 bg-cyan-400 rounded-full"
+            style={{
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+            }}
+          />
           {/* Enemy dots */}
           {gameState.enemies.map((enemy, i) => (
             <div
@@ -235,7 +238,7 @@ const GameUI = ({ gameState }: { gameState: GameState }) => {
               className="absolute w-1 h-1 bg-red-500 rounded-full"
               style={{
                 left: `${50 + (enemy.position[0] / 100) * 50}%`,
-                top: `${50 + (enemy.position[2] / 100) * 50}%`
+                top: `${50 + (enemy.position[2] / 100) * 50}%`,
               }}
             />
           ))}
@@ -261,7 +264,7 @@ const ImprovedGame = () => {
       ammo: weapons[0].maxAmmo,
       isMoving: false,
       experience: 0,
-      level: 1
+      level: 1,
     },
     enemies: [
       {
@@ -269,27 +272,27 @@ const ImprovedGame = () => {
         position: [10, 0, 10],
         health: 50,
         maxHealth: 50,
-        isMoving: true
+        isMoving: true,
       },
       {
         id: 'enemy2',
         position: [-15, 0, 5],
         health: 75,
         maxHealth: 75,
-        isMoving: true
-      }
+        isMoving: true,
+      },
     ],
     npcs: [
       {
         id: 'npc1',
         position: [-5, 0, -5],
         name: 'Cyber Merchant',
-        dialogue: 'Welcome to the underground market!'
-      }
+        dialogue: 'Welcome to the underground market!',
+      },
     ],
     projectiles: [],
     score: 0,
-    gameTime: 0
+    gameTime: 0,
   });
 
   const [keys, setKeys] = useState<Set<string>>(new Set());
@@ -297,11 +300,11 @@ const ImprovedGame = () => {
   // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      setKeys(prev => new Set(prev).add(e.code));
+      setKeys((prev) => new Set(prev).add(e.code));
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      setKeys(prev => {
+      setKeys((prev) => {
         const newKeys = new Set(prev);
         newKeys.delete(e.code);
         return newKeys;
@@ -320,16 +323,16 @@ const ImprovedGame = () => {
   // Game loop
   useEffect(() => {
     const gameLoop = setInterval(() => {
-      setGameState(prev => {
+      setGameState((prev) => {
         const newState = { ...prev };
-        
+
         // Update game time
         newState.gameTime += 0.016; // ~60fps
 
         // Player movement
         let isMoving = false;
         const moveSpeed = 0.3;
-        
+
         if (keys.has('KeyW') || keys.has('ArrowUp')) {
           newState.player.position[2] -= moveSpeed;
           isMoving = true;
@@ -346,29 +349,30 @@ const ImprovedGame = () => {
           newState.player.position[0] += moveSpeed;
           isMoving = true;
         }
-        
+
         newState.player.isMoving = isMoving;
 
         // Update projectiles
-        newState.projectiles = newState.projectiles.filter(projectile => {
+        newState.projectiles = newState.projectiles.filter((projectile) => {
           projectile.position[0] += projectile.direction[0] * projectile.speed;
           projectile.position[1] += projectile.direction[1] * projectile.speed;
           projectile.position[2] += projectile.direction[2] * projectile.speed;
-          
+
           // Remove projectiles that are too far
-          const distanceSq = projectile.position[0] ** 2 +
-            projectile.position[1] ** 2 + 
+          const distanceSq =
+            projectile.position[0] ** 2 +
+            projectile.position[1] ** 2 +
             projectile.position[2] ** 2;
           return distanceSq < 100 * 100;
         });
 
         // Enemy AI
-        newState.enemies.forEach(enemy => {
+        newState.enemies.forEach((enemy) => {
           // Simple AI: move towards player
           const dx = newState.player.position[0] - enemy.position[0];
           const dz = newState.player.position[2] - enemy.position[2];
           const distanceSq = dx * dx + dz * dz;
-          
+
           if (distanceSq > 2 * 2) {
             const moveSpeed = 0.05;
             const distance = Math.sqrt(distanceSq);
@@ -387,7 +391,10 @@ const ImprovedGame = () => {
     return () => clearInterval(gameLoop);
   }, [keys]);
 
-  const handleWeaponFire = (weapon: Weapon, direction: [number, number, number]) => {
+  const handleWeaponFire = (
+    weapon: Weapon,
+    direction: [number, number, number]
+  ) => {
     if (gameState.player.ammo <= 0) return;
 
     // Create projectile
@@ -396,23 +403,23 @@ const ImprovedGame = () => {
       position: [...gameState.player.position] as [number, number, number],
       direction,
       damage: weapon.damage,
-      speed: 2
+      speed: 2,
     };
 
-    setGameState(prev => ({
+    setGameState((prev) => ({
       ...prev,
       projectiles: [...prev.projectiles, newProjectile],
       player: {
         ...prev.player,
-        ammo: prev.player.ammo - 1
-      }
+        ammo: prev.player.ammo - 1,
+      },
     }));
   };
 
   return (
     <div className="w-full h-screen bg-black relative">
       <GameUI gameState={gameState} />
-      
+
       <Canvas
         shadows
         camera={{ position: [0, 10, 10], fov: 75 }}
@@ -449,7 +456,7 @@ const ImprovedGame = () => {
           position={[
             gameState.player.position[0] + 0.5,
             gameState.player.position[1],
-            gameState.player.position[2]
+            gameState.player.position[2],
           ]}
           currentWeapon={gameState.player.currentWeapon}
           onFire={handleWeaponFire}
@@ -458,7 +465,7 @@ const ImprovedGame = () => {
         />
 
         {/* Enemies */}
-        {gameState.enemies.map(enemy => (
+        {gameState.enemies.map((enemy) => (
           <ImprovedSpriteCharacter
             key={enemy.id}
             position={enemy.position}
@@ -471,7 +478,7 @@ const ImprovedGame = () => {
         ))}
 
         {/* NPCs */}
-        {gameState.npcs.map(npc => (
+        {gameState.npcs.map((npc) => (
           <ImprovedSpriteCharacter
             key={npc.id}
             position={npc.position}
@@ -482,7 +489,7 @@ const ImprovedGame = () => {
         ))}
 
         {/* Projectiles */}
-        {gameState.projectiles.map(projectile => (
+        {gameState.projectiles.map((projectile) => (
           <mesh key={projectile.id} position={projectile.position}>
             <sphereGeometry args={[0.1]} />
             <meshBasicMaterial
@@ -518,4 +525,3 @@ const ImprovedGame = () => {
 };
 
 export default ImprovedGame;
-

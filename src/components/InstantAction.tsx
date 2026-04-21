@@ -14,7 +14,7 @@ const AutoActionSequence = () => {
   const [actionPhase, setActionPhase] = useState(0);
   const [explosions, setExplosions] = useState<any[]>([]);
   const [aiMessages, setAiMessages] = useState<string[]>([]);
-  
+
   useEffect(() => {
     const phaseTimer = setInterval(() => {
       setActionPhase((prev) => (prev + 1) % 4);
@@ -31,13 +31,13 @@ const AutoActionSequence = () => {
         position: [
           (Math.random() - 0.5) * 40,
           Math.random() * 10 + 2,
-          (Math.random() - 0.5) * 40
+          (Math.random() - 0.5) * 40,
         ],
         scale: Math.random() * 3 + 1,
-        color: Math.random() > 0.5 ? '#ff4400' : '#00ffff'
+        color: Math.random() > 0.5 ? '#ff4400' : '#00ffff',
       };
-      
-      setExplosions(prev => [...prev.slice(-10), newExplosion]);
+
+      setExplosions((prev) => [...prev.slice(-10), newExplosion]);
     }, 500);
 
     return () => clearInterval(effectTimer);
@@ -50,12 +50,13 @@ const AutoActionSequence = () => {
       "🧠 Smart AI: 'Analyzing combat patterns...'",
       "⚡ AI System: 'Optimizing weapon targeting'",
       "🎯 AI Mission: 'New objective generated'",
-      "🌐 Multiplayer: '5 players joined the battle'"
+      "🌐 Multiplayer: '5 players joined the battle'",
     ];
 
     const messageTimer = setInterval(() => {
-      const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-      setAiMessages(prev => [...prev.slice(-3), randomMessage]);
+      const randomMessage =
+        messages[Math.floor(Math.random() * messages.length)];
+      setAiMessages((prev) => [...prev.slice(-3), randomMessage]);
     }, 2000);
 
     return () => clearInterval(messageTimer);
@@ -66,18 +67,18 @@ const AutoActionSequence = () => {
       {/* Player character with epic effects */}
       <group position={[0, 2, 0]}>
         <Sphere scale={[1, 2, 1]}>
-          <meshStandardMaterial 
-            color="#00ffff" 
-            emissive="#00ffff" 
+          <meshStandardMaterial
+            color="#00ffff"
+            emissive="#00ffff"
             emissiveIntensity={0.5 + Math.sin(Date.now() * 0.01) * 0.3}
           />
         </Sphere>
-        
+
         {/* Power aura */}
         <Sphere scale={[2, 3, 2]}>
-          <meshBasicMaterial 
-            color="#00ffff" 
-            transparent 
+          <meshBasicMaterial
+            color="#00ffff"
+            transparent
             opacity={0.1 + Math.sin(Date.now() * 0.005) * 0.1}
           />
         </Sphere>
@@ -87,24 +88,20 @@ const AutoActionSequence = () => {
       {[0, 1, 2, 3, 4, 5, 6, 7].map((_, i) => {
         const angle = (i / 8) * Math.PI * 2;
         const radius = 20 + Math.sin(Date.now() * 0.001 + i) * 5;
-        
+
         return (
-          <group 
+          <group
             key={i}
-            position={[
-              Math.sin(angle) * radius,
-              2,
-              Math.cos(angle) * radius
-            ]}
+            position={[Math.sin(angle) * radius, 2, Math.cos(angle) * radius]}
           >
             <Sphere scale={[0.8, 1.6, 0.8]}>
-              <meshStandardMaterial 
-                color="#ff0066" 
+              <meshStandardMaterial
+                color="#ff0066"
                 emissive="#ff0066"
                 emissiveIntensity={0.4}
               />
             </Sphere>
-            
+
             {/* AI indicator */}
             <Text
               position={[0, 3, 0]}
@@ -115,15 +112,15 @@ const AutoActionSequence = () => {
             >
               AI
             </Text>
-            
+
             {/* Laser beams */}
-            <Box 
+            <Box
               position={[0, 0, -radius * 0.8]}
               scale={[0.1, 0.1, radius * 0.6]}
               rotation={[0, angle, 0]}
             >
-              <meshBasicMaterial 
-                color="#ff0066" 
+              <meshBasicMaterial
+                color="#ff0066"
                 emissive="#ff0066"
                 emissiveIntensity={1}
                 transparent
@@ -138,7 +135,7 @@ const AutoActionSequence = () => {
       {explosions.map((explosion) => (
         <group key={explosion.id} position={explosion.position}>
           <Sphere scale={[explosion.scale, explosion.scale, explosion.scale]}>
-            <meshBasicMaterial 
+            <meshBasicMaterial
               color={explosion.color}
               emissive={explosion.color}
               emissiveIntensity={1}
@@ -170,17 +167,19 @@ const AutoActionSequence = () => {
           position={[
             (Math.random() - 0.5) * 100,
             Math.random() * 20 + 5,
-            (Math.random() - 0.5) * 100
+            (Math.random() - 0.5) * 100,
           ]}
         >
-          <Box scale={[
-            Math.random() * 5 + 2,
-            Math.random() * 15 + 10,
-            Math.random() * 5 + 2
-          ]}>
-            <meshStandardMaterial 
-              color={Math.random() > 0.7 ? "#ff0066" : "#0066ff"}
-              emissive={Math.random() > 0.7 ? "#ff0066" : "#0066ff"}
+          <Box
+            scale={[
+              Math.random() * 5 + 2,
+              Math.random() * 15 + 10,
+              Math.random() * 5 + 2,
+            ]}
+          >
+            <meshStandardMaterial
+              color={Math.random() > 0.7 ? '#ff0066' : '#0066ff'}
+              emissive={Math.random() > 0.7 ? '#ff0066' : '#0066ff'}
               emissiveIntensity={0.2}
             />
           </Box>
@@ -194,24 +193,24 @@ const AutoActionSequence = () => {
 const ActionCamera = () => {
   useFrame((state) => {
     const time = state.clock.elapsedTime;
-    
+
     // Epic camera movement
     state.camera.position.set(
       Math.sin(time * 0.3) * 30,
       15 + Math.sin(time * 0.2) * 5,
       Math.cos(time * 0.3) * 30
     );
-    
+
     state.camera.lookAt(0, 5, 0);
   });
-  
+
   return null;
 };
 
-const InstantAction: React.FC<InstantActionProps> = ({ 
-  onAIDemo, 
-  onMultiplayerDemo, 
-  onCombatDemo 
+const InstantAction: React.FC<InstantActionProps> = ({
+  onAIDemo,
+  onMultiplayerDemo,
+  onCombatDemo,
 }) => {
   const [showControls, setShowControls] = useState(false);
 
@@ -232,8 +231,16 @@ const InstantAction: React.FC<InstantActionProps> = ({
       >
         {/* Dramatic lighting */}
         <ambientLight intensity={0.3} />
-        <directionalLight position={[20, 20, 10]} intensity={0.8} color="#00ffff" />
-        <directionalLight position={[-20, 20, -10]} intensity={0.8} color="#ff0066" />
+        <directionalLight
+          position={[20, 20, 10]}
+          intensity={0.8}
+          color="#00ffff"
+        />
+        <directionalLight
+          position={[-20, 20, -10]}
+          intensity={0.8}
+          color="#ff0066"
+        />
         <pointLight position={[0, 30, 0]} intensity={2} color="#ffffff" />
 
         {/* Dynamic camera */}
@@ -245,8 +252,8 @@ const InstantAction: React.FC<InstantActionProps> = ({
         {/* Ground with cyberpunk grid */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
           <planeGeometry args={[200, 200]} />
-          <meshStandardMaterial 
-            color="#001122" 
+          <meshStandardMaterial
+            color="#001122"
             metalness={0.8}
             roughness={0.2}
             wireframe={true}
@@ -277,7 +284,7 @@ const InstantAction: React.FC<InstantActionProps> = ({
           <p className="text-xl text-cyan-300 mb-8">
             AI-Powered Cyberpunk MMORPG
           </p>
-          
+
           {showControls && (
             <div className="space-y-4 pointer-events-auto">
               <button
@@ -286,14 +293,14 @@ const InstantAction: React.FC<InstantActionProps> = ({
               >
                 🤖 DEMO AI FEATURES
               </button>
-              
+
               <button
                 onClick={onMultiplayerDemo}
                 className="block mx-auto bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white px-8 py-3 rounded-lg font-bold transition-all transform hover:scale-105"
               >
                 🌐 JOIN MULTIPLAYER
               </button>
-              
+
               <button
                 onClick={onCombatDemo}
                 className="block mx-auto bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white px-8 py-3 rounded-lg font-bold transition-all transform hover:scale-105"
@@ -308,19 +315,22 @@ const InstantAction: React.FC<InstantActionProps> = ({
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center">
           <div className="flex space-x-8 text-lg text-cyan-400 mb-4">
             <div className="animate-bounce">🧠 Smart AI NPCs</div>
-            <div className="animate-bounce delay-100">🎮 Real-time Multiplayer</div>
+            <div className="animate-bounce delay-100">
+              🎮 Real-time Multiplayer
+            </div>
             <div className="animate-bounce delay-200">⚡ Dynamic Combat</div>
             <div className="animate-bounce delay-300">🏰 Guild Warfare</div>
           </div>
-          
+
           <p className="text-gray-400">
-            Built with Hugging Face AI • React • Three.js • WebSocket Multiplayer
+            Built with Hugging Face AI • React • Three.js • WebSocket
+            Multiplayer
           </p>
         </div>
 
         {/* Cyberpunk scan lines */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent animate-pulse" />
-        
+
         {/* Corner decorations */}
         <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-cyan-400" />
         <div className="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 border-purple-600" />
@@ -332,4 +342,3 @@ const InstantAction: React.FC<InstantActionProps> = ({
 };
 
 export default InstantAction;
-

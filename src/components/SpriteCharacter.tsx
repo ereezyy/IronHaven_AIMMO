@@ -5,8 +5,22 @@ import * as THREE from 'three';
 
 interface SpriteCharacterProps {
   position: [number, number, number];
-  type: 'player' | 'gangster' | 'civilian' | 'police' | 'corpse' | 'dealer' | 'hitman' | 'boss';
-  mood?: 'hostile' | 'neutral' | 'friendly' | 'dead' | 'terrified' | 'aggressive';
+  type:
+    | 'player'
+    | 'gangster'
+    | 'civilian'
+    | 'police'
+    | 'corpse'
+    | 'dealer'
+    | 'hitman'
+    | 'boss';
+  mood?:
+    | 'hostile'
+    | 'neutral'
+    | 'friendly'
+    | 'dead'
+    | 'terrified'
+    | 'aggressive';
   scale?: number;
   onClick?: () => void;
   onHover?: () => void;
@@ -40,7 +54,7 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
   stamina = 100,
   health = 100,
   isInCombat = false,
-  lastHitTime = 0
+  lastHitTime = 0,
 }) => {
   const spriteRef = useRef<THREE.Sprite>(null);
   const [animationFrame, setAnimationFrame] = useState(0);
@@ -55,7 +69,7 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
 
     // Clear canvas with higher resolution
     ctx.clearRect(0, 0, 512, 512);
-    
+
     // Enable anti-aliasing for smoother graphics
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
@@ -66,7 +80,7 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
       ctx.fillRect(180, 350, 152, 60); // Body lying down
       ctx.fillStyle = '#1a0f08';
       ctx.fillRect(160, 330, 60, 60); // Head
-      
+
       // Massive blood pool with gradient
       const gradient = ctx.createRadialGradient(256, 380, 0, 256, 380, 120);
       gradient.addColorStop(0, '#8B0000');
@@ -76,7 +90,7 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
       ctx.beginPath();
       ctx.ellipse(256, 380, 120, 60, 0, 0, 2 * Math.PI);
       ctx.fill();
-      
+
       // Realistic blood spatter with varying opacity
       for (let i = 0; i < 25; i++) {
         ctx.fillStyle = `rgba(139, 0, 0, ${Math.random() * 0.8 + 0.2})`;
@@ -90,7 +104,7 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
           2 * Math.PI
         );
         ctx.fill();
-        
+
         // Blood drip trails
         if (Math.random() > 0.7) {
           ctx.fillRect(
@@ -101,7 +115,7 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
           );
         }
       }
-      
+
       // Multiple bullet holes with realistic detail
       for (let i = 0; i < 5; i++) {
         ctx.fillStyle = '#000000';
@@ -114,7 +128,7 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
           2 * Math.PI
         );
         ctx.fill();
-        
+
         // Powder burns around bullet holes
         ctx.fillStyle = 'rgba(50, 50, 50, 0.3)';
         ctx.beginPath();
@@ -127,7 +141,7 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
         );
         ctx.fill();
       }
-      
+
       return new THREE.CanvasTexture(canvas);
     }
 
@@ -196,7 +210,7 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
     // Draw body
     ctx.fillStyle = bodyColor;
     ctx.fillRect(192, 256, 128, 160);
-    
+
     // Add muscle/body definition with shading
     ctx.fillStyle = `rgba(0, 0, 0, 0.1)`;
     ctx.fillRect(192, 256, 20, 160); // Left shadow
@@ -206,7 +220,7 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
     // Draw head
     ctx.fillStyle = headColor;
     ctx.fillRect(208, 160, 96, 96);
-    
+
     // Add neck
     ctx.fillStyle = headColor;
     ctx.fillRect(232, 240, 48, 24);
@@ -216,16 +230,16 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
     // Eyes with pupils and iris
     ctx.fillRect(224, 192, 16, 16);
     ctx.fillRect(272, 192, 16, 16);
-    
+
     // Eye pupils
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(228, 196, 8, 8);
     ctx.fillRect(276, 196, 8, 8);
-    
+
     // Nose
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.fillRect(248, 208, 8, 12);
-    
+
     // Mouth with expression based on mood
     ctx.fillStyle = '#000000';
     if (mood === 'hostile' || mood === 'aggressive') {
@@ -244,7 +258,7 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
 
     // Draw clothing details
     ctx.fillStyle = accessoryColor;
-    clothingDetails.forEach(detail => {
+    clothingDetails.forEach((detail) => {
       switch (detail) {
         case 'leather_jacket':
           ctx.fillRect(96, 128, 8, 80); // Left side
@@ -346,7 +360,7 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
     // Add blood effects if bloodLevel > 0
     if (bloodLevel > 0) {
       ctx.fillStyle = `rgba(139, 0, 0, ${Math.min(bloodLevel * 1.2, 1)})`;
-      
+
       // More realistic blood splatter on clothes
       for (let i = 0; i < bloodLevel * 30; i++) {
         const opacity = Math.random() * bloodLevel;
@@ -358,27 +372,22 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
           Math.random() * 8 + 2
         );
       }
-      
+
       // Blood on hands with realistic coverage
       if (bloodLevel > 0.3) {
         ctx.fillStyle = 'rgba(139, 0, 0, 0.9)';
         ctx.fillRect(176, 320, 32, 32); // Left hand
         ctx.fillRect(304, 320, 32, 32); // Right hand
       }
-      
+
       // Facial blood for extreme violence
       if (bloodLevel > 0.7) {
         ctx.fillStyle = 'rgba(139, 0, 0, 0.8)';
         ctx.fillRect(208, 224, 96, 32); // Face blood
-        
+
         // Realistic blood drips down face
         for (let i = 0; i < 6; i++) {
-          ctx.fillRect(
-            224 + i * 16,
-            256,
-            4,
-            Math.random() * 20 + 10
-          );
+          ctx.fillRect(224 + i * 16, 256, 4, Math.random() * 20 + 10);
         }
       }
     }
@@ -397,7 +406,7 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
           2 * Math.PI
         );
         ctx.fill();
-        
+
         // Powder burns around holes
         ctx.fillStyle = 'rgba(50, 50, 50, 0.2)';
         ctx.beginPath();
@@ -422,33 +431,34 @@ const SpriteCharacter: React.FC<SpriteCharacterProps> = ({
     if (spriteRef.current) {
       // Billboard effect - always face camera
       spriteRef.current.lookAt(state.camera.position);
-      
+
       // Apply rotation for movement direction
       if (rotation !== 0) {
         spriteRef.current.material.rotation = rotation;
       }
-      
+
       // Floating animation for living characters
       if (type !== 'corpse') {
-        spriteRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 3) * 0.12;
-        
+        spriteRef.current.position.y =
+          position[1] + Math.sin(state.clock.elapsedTime * 3) * 0.12;
+
         // Breathing animation
         const breathe = 1 + Math.sin(state.clock.elapsedTime * 6) * 0.03;
         spriteRef.current.scale.y = scale * 4 * breathe;
       }
-      
+
       // Walking animation
       if (isWalking && type !== 'corpse') {
         const walkCycle = Math.sin(state.clock.elapsedTime * 12);
         spriteRef.current.scale.x = scale * 4 * (1 + walkCycle * 0.15);
       }
-      
+
       // Mood-based animations
       if (mood === 'terrified' && type !== 'corpse') {
         const shake = Math.sin(state.clock.elapsedTime * 25) * 0.15;
         spriteRef.current.position.x = position[0] + shake;
       }
-      
+
       if (mood === 'aggressive' && type !== 'corpse') {
         const aggressive = Math.sin(state.clock.elapsedTime * 8) * 0.2;
         spriteRef.current.scale.setScalar(scale * 4 * (1 + aggressive));

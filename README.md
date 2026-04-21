@@ -12,7 +12,7 @@
 [![Three.js](https://img.shields.io/badge/Three.js-000000?logo=three.js&logoColor=white)](https://threejs.org/)
 [![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
 
-*Enter a cyberpunk metropolis where AI shapes reality and every decision matters*
+_Enter a cyberpunk metropolis where AI shapes reality and every decision matters_
 
 [🎮 Play Now](#getting-started) • [📖 Documentation](#documentation) • [🤝 Contributing](#contributing) • [🎯 Roadmap](#roadmap)
 
@@ -40,7 +40,7 @@
 
 ### Prerequisites
 
-- **Node.js** 18+ 
+- **Node.js** 18+
 - **npm** or **yarn**
 - Modern browser with WebGL 2.0 support
 
@@ -63,16 +63,16 @@ npm run build
 
 ### 🎮 Controls
 
-| Action | Key | Description |
-|--------|-----|-------------|
-| **Movement** | `WASD` | Move character |
-| **Camera** | `Mouse` | Look around |
-| **Sprint** | `Shift` | Run faster |
-| **Jump** | `Space` | Jump/Parkour |
-| **Interact** | `E` | Interact with objects/NPCs |
-| **Combat** | `Left Click` | Attack/Shoot |
-| **Inventory** | `Tab` | Open inventory |
-| **Map** | `M` | Toggle minimap |
+| Action        | Key          | Description                |
+| ------------- | ------------ | -------------------------- |
+| **Movement**  | `WASD`       | Move character             |
+| **Camera**    | `Mouse`      | Look around                |
+| **Sprint**    | `Shift`      | Run faster                 |
+| **Jump**      | `Space`      | Jump/Parkour               |
+| **Interact**  | `E`          | Interact with objects/NPCs |
+| **Combat**    | `Left Click` | Attack/Shoot               |
+| **Inventory** | `Tab`        | Open inventory             |
+| **Map**       | `M`          | Toggle minimap             |
 
 ---
 
@@ -200,6 +200,7 @@ npm run analyze
 ## 🎯 Roadmap
 
 ### 🚀 Version 1.0 (Current)
+
 - [x] Core 3D engine implementation
 - [x] Basic combat and movement systems
 - [x] Procedural world generation
@@ -207,6 +208,7 @@ npm run analyze
 - [x] Vehicle physics system
 
 ### 🌟 Version 1.1 (Next Release)
+
 - [ ] Multiplayer networking infrastructure
 - [ ] Character progression system
 - [ ] Advanced crafting mechanics
@@ -214,6 +216,7 @@ npm run analyze
 - [ ] Mobile optimization
 
 ### 🔮 Version 2.0 (Future)
+
 - [ ] VR/AR support
 - [ ] Blockchain integration for NFT items
 - [ ] Advanced AI companions
@@ -227,16 +230,19 @@ npm run analyze
 We welcome contributions from the community! Here's how you can help:
 
 ### 🐛 Bug Reports
+
 - Use the [issue tracker](https://github.com/ereezyy/IronHaven_AIMMO/issues)
 - Include detailed reproduction steps
 - Provide browser and system information
 
 ### 💡 Feature Requests
+
 - Discuss ideas in [discussions](https://github.com/ereezyy/IronHaven_AIMMO/discussions)
 - Follow the feature request template
 - Consider implementation complexity
 
 ### 🔧 Development
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
@@ -244,6 +250,7 @@ We welcome contributions from the community! Here's how you can help:
 5. Open a Pull Request
 
 ### 📋 Development Guidelines
+
 - Follow TypeScript best practices
 - Maintain 80%+ test coverage
 - Use conventional commit messages
@@ -255,12 +262,12 @@ We welcome contributions from the community! Here's how you can help:
 
 ### 🎯 Optimization Targets
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| **FPS** | 60+ | 55-60 |
-| **Load Time** | <3s | 2.1s |
-| **Memory Usage** | <512MB | 380MB |
-| **Bundle Size** | <2MB | 1.8MB |
+| Metric           | Target | Current |
+| ---------------- | ------ | ------- |
+| **FPS**          | 60+    | 55-60   |
+| **Load Time**    | <3s    | 2.1s    |
+| **Memory Usage** | <512MB | 380MB   |
+| **Bundle Size**  | <2MB   | 1.8MB   |
 
 ### 🔧 Performance Features
 
@@ -275,17 +282,20 @@ We welcome contributions from the community! Here's how you can help:
 ## 🎨 Assets & Credits
 
 ### 🎵 Audio
+
 - **Music**: Original cyberpunk soundtrack
 - **SFX**: High-quality 3D spatial audio effects
 - **Voice**: Professional voice acting for key NPCs
 
 ### 🎨 Visual Assets
+
 - **3D Models**: Custom-designed cyberpunk assets
 - **Textures**: 4K PBR materials
 - **Animations**: Motion-captured character animations
 - **UI**: Custom cyberpunk-themed interface
 
 ### 🙏 Acknowledgments
+
 - **Three.js Community** for the amazing 3D engine
 - **React Three Fiber** for seamless React integration
 - **Cyberpunk Genre** for endless inspiration
@@ -312,7 +322,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 **🎮 Ready to enter IronHaven? The future is waiting...**
 
-*Built with ❤️ by the IronHaven development team*
+_Built with ❤️ by the IronHaven development team_
 
 </div>
-

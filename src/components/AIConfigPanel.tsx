@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { AI_PROVIDERS, AIConfigManager, AIConfiguration, AIProvider, AIModel } from '../lib/aiConfig';
+import {
+  AI_PROVIDERS,
+  AIConfigManager,
+  AIConfiguration,
+  AIProvider,
+  AIModel,
+} from '../lib/aiConfig';
 
 interface AIConfigPanelProps {
   isOpen: boolean;
@@ -7,30 +13,40 @@ interface AIConfigPanelProps {
   onConfigChange?: (config: AIConfiguration) => void;
 }
 
-const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfigChange }) => {
-  const [config, setConfig] = useState<AIConfiguration>(AIConfigManager.getConfiguration());
-  const [selectedProvider, setSelectedProvider] = useState<AIProvider | null>(null);
+const AIConfigPanel: React.FC<AIConfigPanelProps> = ({
+  isOpen,
+  onClose,
+  onConfigChange,
+}) => {
+  const [config, setConfig] = useState<AIConfiguration>(
+    AIConfigManager.getConfiguration()
+  );
+  const [selectedProvider, setSelectedProvider] = useState<AIProvider | null>(
+    null
+  );
   const [selectedModel, setSelectedModel] = useState<AIModel | null>(null);
-  const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
+  const [testStatus, setTestStatus] = useState<
+    'idle' | 'testing' | 'success' | 'error'
+  >('idle');
   const [testMessage, setTestMessage] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
 
   useEffect(() => {
-    const provider = AI_PROVIDERS.find(p => p.id === config.providerId);
-    const model = provider?.models.find(m => m.id === config.modelId);
+    const provider = AI_PROVIDERS.find((p) => p.id === config.providerId);
+    const model = provider?.models.find((m) => m.id === config.modelId);
     setSelectedProvider(provider || null);
     setSelectedModel(model || null);
   }, [config.providerId, config.modelId]);
 
   const handleProviderChange = (providerId: string) => {
-    const provider = AI_PROVIDERS.find(p => p.id === providerId);
+    const provider = AI_PROVIDERS.find((p) => p.id === providerId);
     if (provider) {
       const firstModel = provider.models[0];
       const newConfig = {
         ...config,
         providerId,
         modelId: firstModel.id,
-        apiKey: config.providerId === providerId ? config.apiKey : ''
+        apiKey: config.providerId === providerId ? config.apiKey : '',
       };
       setConfig(newConfig);
     }
@@ -44,10 +60,13 @@ const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfig
     setConfig({ ...config, apiKey });
   };
 
-  const handleParameterChange = (key: keyof AIConfiguration['parameters'], value: number) => {
+  const handleParameterChange = (
+    key: keyof AIConfiguration['parameters'],
+    value: number
+  ) => {
     setConfig({
       ...config,
-      parameters: { ...config.parameters, [key]: value }
+      parameters: { ...config.parameters, [key]: value },
     });
   };
 
@@ -66,11 +85,11 @@ const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfig
   const handleTest = async () => {
     setTestStatus('testing');
     setTestMessage('Testing AI connection...');
-    
+
     try {
       // Simulate API test - in real implementation, this would test the actual API
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       if (config.apiKey || !selectedProvider?.requiresApiKey) {
         setTestStatus('success');
         setTestMessage('✅ Connection successful!');
@@ -82,7 +101,7 @@ const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfig
       setTestStatus('error');
       setTestMessage('❌ Connection failed');
     }
-    
+
     setTimeout(() => {
       setTestStatus('idle');
       setTestMessage('');
@@ -98,11 +117,16 @@ const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfig
 
   const getCostColor = (level: string) => {
     switch (level) {
-      case 'free': return 'text-green-400';
-      case 'low': return 'text-yellow-400';
-      case 'medium': return 'text-orange-400';
-      case 'high': return 'text-red-400';
-      default: return 'text-gray-400';
+      case 'free':
+        return 'text-green-400';
+      case 'low':
+        return 'text-yellow-400';
+      case 'medium':
+        return 'text-orange-400';
+      case 'high':
+        return 'text-red-400';
+      default:
+        return 'text-gray-400';
     }
   };
 
@@ -114,8 +138,12 @@ const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfig
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-purple-500/30">
           <div>
-            <h2 className="text-2xl font-bold text-purple-400">🤖 AI Configuration</h2>
-            <p className="text-gray-400 text-sm">Configure your AI provider and model settings</p>
+            <h2 className="text-2xl font-bold text-purple-400">
+              🤖 AI Configuration
+            </h2>
+            <p className="text-gray-400 text-sm">
+              Configure your AI provider and model settings
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -128,9 +156,11 @@ const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfig
         <div className="p-6 space-y-6">
           {/* Provider Selection */}
           <div>
-            <label className="block text-white font-semibold mb-3">AI Provider</label>
+            <label className="block text-white font-semibold mb-3">
+              AI Provider
+            </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {AI_PROVIDERS.map(provider => (
+              {AI_PROVIDERS.map((provider) => (
                 <div
                   key={provider.id}
                   className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
@@ -140,8 +170,12 @@ const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfig
                   }`}
                   onClick={() => handleProviderChange(provider.id)}
                 >
-                  <div className="font-semibold text-white">{provider.name}</div>
-                  <div className="text-sm text-gray-400 mt-1">{provider.description}</div>
+                  <div className="font-semibold text-white">
+                    {provider.name}
+                  </div>
+                  <div className="text-sm text-gray-400 mt-1">
+                    {provider.description}
+                  </div>
                   <div className="text-xs text-purple-400 mt-2">
                     {provider.models.length} models available
                   </div>
@@ -153,9 +187,11 @@ const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfig
           {/* Model Selection */}
           {selectedProvider && (
             <div>
-              <label className="block text-white font-semibold mb-3">Model</label>
+              <label className="block text-white font-semibold mb-3">
+                Model
+              </label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {selectedProvider.models.map(model => (
+                {selectedProvider.models.map((model) => (
                   <div
                     key={model.id}
                     className={`p-3 rounded-lg border cursor-pointer transition-all ${
@@ -165,11 +201,19 @@ const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfig
                     }`}
                     onClick={() => handleModelChange(model.id)}
                   >
-                    <div className="font-semibold text-white text-sm">{model.name}</div>
-                    <div className="text-xs text-gray-400 mt-1">{model.description}</div>
+                    <div className="font-semibold text-white text-sm">
+                      {model.name}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {model.description}
+                    </div>
                     <div className="flex justify-between items-center mt-2">
-                      <span className="text-xs text-gray-500">{model.maxTokens} tokens</span>
-                      <span className={`text-xs font-semibold ${getCostColor(model.costLevel)}`}>
+                      <span className="text-xs text-gray-500">
+                        {model.maxTokens} tokens
+                      </span>
+                      <span
+                        className={`text-xs font-semibold ${getCostColor(model.costLevel)}`}
+                      >
                         {model.costLevel.toUpperCase()}
                       </span>
                     </div>
@@ -182,7 +226,9 @@ const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfig
           {/* API Key */}
           {selectedProvider?.requiresApiKey && (
             <div>
-              <label className="block text-white font-semibold mb-2">API Key</label>
+              <label className="block text-white font-semibold mb-2">
+                API Key
+              </label>
               <div className="space-y-2">
                 <div className="relative">
                   <input
@@ -220,17 +266,26 @@ const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfig
 
           {/* Parameters */}
           <div>
-            <label className="block text-white font-semibold mb-3">Model Parameters</label>
+            <label className="block text-white font-semibold mb-3">
+              Model Parameters
+            </label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Temperature</label>
+                <label className="block text-sm text-gray-400 mb-1">
+                  Temperature
+                </label>
                 <input
                   type="range"
                   min="0"
                   max="2"
                   step="0.1"
                   value={config.parameters.temperature}
-                  onChange={(e) => handleParameterChange('temperature', parseFloat(e.target.value))}
+                  onChange={(e) =>
+                    handleParameterChange(
+                      'temperature',
+                      parseFloat(e.target.value)
+                    )
+                  }
                   className="w-full"
                 />
                 <div className="text-xs text-gray-400 mt-1">
@@ -238,14 +293,18 @@ const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfig
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Max Tokens</label>
+                <label className="block text-sm text-gray-400 mb-1">
+                  Max Tokens
+                </label>
                 <input
                   type="range"
                   min="10"
                   max={selectedModel?.maxTokens || 1000}
                   step="10"
                   value={config.parameters.maxTokens}
-                  onChange={(e) => handleParameterChange('maxTokens', parseInt(e.target.value))}
+                  onChange={(e) =>
+                    handleParameterChange('maxTokens', parseInt(e.target.value))
+                  }
                   className="w-full"
                 />
                 <div className="text-xs text-gray-400 mt-1">
@@ -253,14 +312,18 @@ const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfig
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Top P</label>
+                <label className="block text-sm text-gray-400 mb-1">
+                  Top P
+                </label>
                 <input
                   type="range"
                   min="0"
                   max="1"
                   step="0.1"
                   value={config.parameters.topP}
-                  onChange={(e) => handleParameterChange('topP', parseFloat(e.target.value))}
+                  onChange={(e) =>
+                    handleParameterChange('topP', parseFloat(e.target.value))
+                  }
                   className="w-full"
                 />
                 <div className="text-xs text-gray-400 mt-1">
@@ -272,11 +335,15 @@ const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfig
 
           {/* Status Message */}
           {testMessage && (
-            <div className={`p-3 rounded text-center ${
-              testStatus === 'success' ? 'bg-green-500/20 text-green-400' :
-              testStatus === 'error' ? 'bg-red-500/20 text-red-400' :
-              'bg-blue-500/20 text-blue-400'
-            }`}>
+            <div
+              className={`p-3 rounded text-center ${
+                testStatus === 'success'
+                  ? 'bg-green-500/20 text-green-400'
+                  : testStatus === 'error'
+                    ? 'bg-red-500/20 text-red-400'
+                    : 'bg-blue-500/20 text-blue-400'
+              }`}
+            >
               {testMessage}
             </div>
           )}
@@ -288,7 +355,9 @@ const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfig
               disabled={testStatus === 'testing'}
               className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded font-semibold"
             >
-              {testStatus === 'testing' ? '🔄 Testing...' : '🧪 Test Connection'}
+              {testStatus === 'testing'
+                ? '🔄 Testing...'
+                : '🧪 Test Connection'}
             </button>
             <button
               onClick={handleSave}
@@ -316,4 +385,3 @@ const AIConfigPanel: React.FC<AIConfigPanelProps> = ({ isOpen, onClose, onConfig
 };
 
 export default AIConfigPanel;
-

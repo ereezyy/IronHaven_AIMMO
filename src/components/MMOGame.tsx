@@ -31,7 +31,9 @@ const ThirdPersonCamera: React.FC<{
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
-      setCameraDistance(prev => Math.max(2, Math.min(15, prev + e.deltaY * 0.01)));
+      setCameraDistance((prev) =>
+        Math.max(2, Math.min(15, prev + e.deltaY * 0.01))
+      );
     };
 
     window.addEventListener('wheel', handleWheel, { passive: false });
@@ -50,11 +52,7 @@ const ThirdPersonCamera: React.FC<{
 
     camera.position.lerp(idealPosition, lerpSpeed);
 
-    const lookAtPoint = new THREE.Vector3(
-      target.x,
-      target.y + 1.5,
-      target.z
-    );
+    const lookAtPoint = new THREE.Vector3(target.x, target.y + 1.5, target.z);
     camera.lookAt(lookAtPoint);
   });
 
@@ -64,6 +62,12 @@ const ThirdPersonCamera: React.FC<{
 const MMOGame: React.FC = () => {
   const gameStore = useGameStore();
   const [otherPlayers, setOtherPlayers] = useState<OtherPlayer[]>([]);
+  const [playerId] = useState(
+    () => `player_${Math.random().toString(36).substr(2, 9)}`
+  );
+  const [playerPosition, setPlayerPosition] = useState<THREE.Vector3>(
+    new THREE.Vector3(0, 0, 0)
+  );
   const [playerId] = useState(() => `player_${crypto.randomUUID().substring(0, 9)}`);
   const [playerPosition, setPlayerPosition] = useState<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
   const [playerRotation, setPlayerRotation] = useState(0);
@@ -76,22 +80,20 @@ const MMOGame: React.FC = () => {
     const channel = supabase.channel('game-world', {
       config: {
         broadcast: { self: false },
-        presence: { key: playerId }
-      }
+        presence: { key: playerId },
+      },
     });
 
     channel
       .on('broadcast', { event: 'player-move' }, ({ payload }) => {
         if (payload.id !== playerId) {
-          setOtherPlayers(prev => {
-            const existing = prev.find(p => p.id === payload.id);
+          setOtherPlayers((prev) => {
+            const existing = prev.find((p) => p.id === payload.id);
             const now = Date.now();
 
             if (existing) {
-              return prev.map(p =>
-                p.id === payload.id
-                  ? { ...p, ...payload, lastSeen: now }
-                  : p
+              return prev.map((p) =>
+                p.id === payload.id ? { ...p, ...payload, lastSeen: now } : p
               );
             } else {
               return [...prev, { ...payload, lastSeen: now }];
@@ -108,8 +110,8 @@ const MMOGame: React.FC = () => {
     channelRef.current = channel;
 
     const cleanupInterval = setInterval(() => {
-      setOtherPlayers(prev =>
-        prev.filter(p => Date.now() - p.lastSeen < 5000)
+      setOtherPlayers((prev) =>
+        prev.filter((p) => Date.now() - p.lastSeen < 5000)
       );
     }, 1000);
 
@@ -135,8 +137,8 @@ const MMOGame: React.FC = () => {
           position: [position.x, position.y, position.z],
           rotation: rotation,
           health: gameStore.playerStats.health,
-          level: 1
-        }
+          level: 1,
+        },
       });
     }
   };
@@ -168,7 +170,7 @@ const MMOGame: React.FC = () => {
           gl={{
             antialias: true,
             powerPreference: 'high-performance',
-            alpha: false
+            alpha: false,
           }}
         >
           <Sky
@@ -196,12 +198,9 @@ const MMOGame: React.FC = () => {
 
           <MMOWorld />
 
-          <MMOPlayer
-            playerId={playerId}
-            onUpdate={handlePlayerUpdate}
-          />
+          <MMOPlayer playerId={playerId} onUpdate={handlePlayerUpdate} />
 
-          {otherPlayers.map(player => (
+          {otherPlayers.map((player) => (
             <group key={player.id} position={player.position}>
               <mesh castShadow>
                 <capsuleGeometry args={[0.5, 1.5, 8, 16]} />
@@ -240,8 +239,12 @@ const MMOGame: React.FC = () => {
       <MMOChat />
 
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-center bg-black/70 px-6 py-3 rounded-lg">
-        <div className="text-sm mb-1">WASD - Move | Space - Jump | Shift - Sprint | Mouse - Look Around</div>
-        <div className="text-xs text-gray-400">Scroll to zoom camera | ESC to unlock cursor</div>
+        <div className="text-sm mb-1">
+          WASD - Move | Space - Jump | Shift - Sprint | Mouse - Look Around
+        </div>
+        <div className="text-xs text-gray-400">
+          Scroll to zoom camera | ESC to unlock cursor
+        </div>
       </div>
     </div>
   );

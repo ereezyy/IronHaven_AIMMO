@@ -7,21 +7,31 @@ interface WeatherUIProps {
 const WeatherUI: React.FC<WeatherUIProps> = ({ weather }) => {
   const getWeatherIcon = () => {
     switch (weather) {
-      case 'clear': return '☀️';
-      case 'rain': return '🌧️';
-      case 'fog': return '🌫️';
-      case 'storm': return '⛈️';
-      default: return '☀️';
+      case 'clear':
+        return '☀️';
+      case 'rain':
+        return '🌧️';
+      case 'fog':
+        return '🌫️';
+      case 'storm':
+        return '⛈️';
+      default:
+        return '☀️';
     }
   };
 
   const getWeatherDescription = () => {
     switch (weather) {
-      case 'clear': return 'Clear skies';
-      case 'rain': return 'Light rain';
-      case 'fog': return 'Heavy fog';
-      case 'storm': return 'Thunderstorm';
-      default: return 'Unknown';
+      case 'clear':
+        return 'Clear skies';
+      case 'rain':
+        return 'Light rain';
+      case 'fog':
+        return 'Heavy fog';
+      case 'storm':
+        return 'Thunderstorm';
+      default:
+        return 'Unknown';
     }
   };
 

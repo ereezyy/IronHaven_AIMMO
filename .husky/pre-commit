@@ -1,0 +1,13 @@
+echo "Running pre-commit checks..."
+
+# Check if package.json was modified but package-lock.json was not
+if git diff --cached --name-only | grep -q "package.json"; then
+  if ! git diff --cached --name-only | grep -q "package-lock.json"; then
+    echo "📦 package.json was modified. Updating package-lock.json..."
+    npm install --package-lock-only
+    git add package-lock.json
+  fi
+fi
+
+echo "Running lint-staged..."
+npx lint-staged

@@ -36,7 +36,10 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['players']['Row'], 'created_at' | 'updated_at'>;
+        Insert: Omit<
+          Database['public']['Tables']['players']['Row'],
+          'created_at' | 'updated_at'
+        >;
         Update: Partial<Database['public']['Tables']['players']['Insert']>;
       };
       game_sessions: {
@@ -50,8 +53,13 @@ export interface Database {
           max_wanted_level: number;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['game_sessions']['Row'], 'created_at'>;
-        Update: Partial<Database['public']['Tables']['game_sessions']['Insert']>;
+        Insert: Omit<
+          Database['public']['Tables']['game_sessions']['Row'],
+          'created_at'
+        >;
+        Update: Partial<
+          Database['public']['Tables']['game_sessions']['Insert']
+        >;
       };
       world_events: {
         Row: {
@@ -66,7 +74,10 @@ export interface Database {
           created_at: string;
           expires_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['world_events']['Row'], 'created_at'>;
+        Insert: Omit<
+          Database['public']['Tables']['world_events']['Row'],
+          'created_at'
+        >;
         Update: Partial<Database['public']['Tables']['world_events']['Insert']>;
       };
       multiplayer_players: {
@@ -86,8 +97,13 @@ export interface Database {
           is_in_combat: boolean;
           last_seen: string;
         };
-        Insert: Omit<Database['public']['Tables']['multiplayer_players']['Row'], 'last_seen'>;
-        Update: Partial<Database['public']['Tables']['multiplayer_players']['Insert']>;
+        Insert: Omit<
+          Database['public']['Tables']['multiplayer_players']['Row'],
+          'last_seen'
+        >;
+        Update: Partial<
+          Database['public']['Tables']['multiplayer_players']['Insert']
+        >;
       };
     };
   };

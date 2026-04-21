@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { multiplayerManager, PlayerData, CHARACTER_CLASSES } from '../lib/multiplayer';
+import {
+  multiplayerManager,
+  PlayerData,
+  CHARACTER_CLASSES,
+} from '../lib/multiplayer';
 
 // Multiplayer Status Widget
 export const MultiplayerStatus: React.FC = () => {
@@ -9,11 +13,14 @@ export const MultiplayerStatus: React.FC = () => {
 
   useEffect(() => {
     // Try to connect to multiplayer server
-    multiplayerManager.connect().then(() => {
-      setIsConnected(true);
-    }).catch(() => {
-      setIsConnected(false);
-    });
+    multiplayerManager
+      .connect()
+      .then(() => {
+        setIsConnected(true);
+      })
+      .catch(() => {
+        setIsConnected(false);
+      });
 
     // Listen for player updates
     multiplayerManager.on('world_state_update', (data: any) => {
@@ -27,17 +34,21 @@ export const MultiplayerStatus: React.FC = () => {
 
   return (
     <div className="fixed top-4 left-4 bg-black bg-opacity-80 text-white p-3 rounded-lg border border-cyan-500">
-      <div className="text-sm font-bold text-cyan-400 mb-2">🌐 MULTIPLAYER STATUS</div>
-      
+      <div className="text-sm font-bold text-cyan-400 mb-2">
+        🌐 MULTIPLAYER STATUS
+      </div>
+
       <div className="space-y-1 text-xs">
         <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+          <div
+            className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
+          ></div>
           <span>{isConnected ? 'ONLINE' : 'OFFLINE'}</span>
         </div>
-        
+
         <div>👥 Players: {playerCount}</div>
         <div>📡 Ping: {ping}ms</div>
-        
+
         {!isConnected && (
           <div className="text-yellow-400 text-xs mt-2">
             ⚠️ Playing in offline mode
@@ -52,12 +63,14 @@ export const MultiplayerStatus: React.FC = () => {
 export const ChatSystem: React.FC = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [inputMessage, setInputMessage] = useState('');
-  const [currentChannel, setCurrentChannel] = useState<'global' | 'guild' | 'local'>('global');
+  const [currentChannel, setCurrentChannel] = useState<
+    'global' | 'guild' | 'local'
+  >('global');
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     multiplayerManager.on('chat_message', (data: any) => {
-      setMessages(prev => [...prev.slice(-49), data]); // Keep last 50 messages
+      setMessages((prev) => [...prev.slice(-49), data]); // Keep last 50 messages
     });
 
     return () => {
@@ -94,13 +107,13 @@ export const ChatSystem: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between p-2 border-b border-cyan-500">
         <div className="flex gap-2">
-          {(['global', 'guild', 'local'] as const).map(channel => (
+          {(['global', 'guild', 'local'] as const).map((channel) => (
             <button
               key={channel}
               onClick={() => setCurrentChannel(channel)}
               className={`px-2 py-1 text-xs rounded ${
-                currentChannel === channel 
-                  ? 'bg-cyan-600 text-white' 
+                currentChannel === channel
+                  ? 'bg-cyan-600 text-white'
                   : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
               }`}
             >
@@ -152,7 +165,9 @@ export const ChatSystem: React.FC = () => {
 };
 
 // Player List (nearby players)
-export const PlayerList: React.FC<{ playerPosition: [number, number, number] }> = ({ playerPosition }) => {
+export const PlayerList: React.FC<{
+  playerPosition: [number, number, number];
+}> = ({ playerPosition }) => {
   const [nearbyPlayers, setNearbyPlayers] = useState<PlayerData[]>([]);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -180,7 +195,9 @@ export const PlayerList: React.FC<{ playerPosition: [number, number, number] }> 
   return (
     <div className="fixed top-20 left-4 w-64 bg-black bg-opacity-90 text-white rounded-lg border border-purple-500">
       <div className="flex items-center justify-between p-2 border-b border-purple-500">
-        <span className="text-sm font-bold text-purple-400">👥 NEARBY PLAYERS</span>
+        <span className="text-sm font-bold text-purple-400">
+          👥 NEARBY PLAYERS
+        </span>
         <button
           onClick={() => setIsVisible(false)}
           className="text-gray-400 hover:text-white"
@@ -196,8 +213,11 @@ export const PlayerList: React.FC<{ playerPosition: [number, number, number] }> 
           </div>
         ) : (
           <div className="space-y-2">
-            {nearbyPlayers.map(player => (
-              <div key={player.id} className="flex items-center justify-between p-2 bg-gray-800 rounded">
+            {nearbyPlayers.map((player) => (
+              <div
+                key={player.id}
+                className="flex items-center justify-between p-2 bg-gray-800 rounded"
+              >
                 <div>
                   <div className="text-sm font-medium">{player.username}</div>
                   <div className="text-xs text-gray-400">
@@ -209,7 +229,7 @@ export const PlayerList: React.FC<{ playerPosition: [number, number, number] }> 
                     </div>
                   )}
                 </div>
-                
+
                 <div className="flex flex-col items-end">
                   <div className="text-xs text-green-400">
                     ❤️ {player.health}%
@@ -234,7 +254,9 @@ export const CharacterClassSelector: React.FC<{
 }> = ({ onClassSelect, playerLevel }) => {
   const [selectedClass, setSelectedClass] = useState<string>('');
 
-  const availableClasses = CHARACTER_CLASSES.filter(cls => cls.unlockLevel <= playerLevel);
+  const availableClasses = CHARACTER_CLASSES.filter(
+    (cls) => cls.unlockLevel <= playerLevel
+  );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
@@ -244,7 +266,7 @@ export const CharacterClassSelector: React.FC<{
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          {availableClasses.map(cls => (
+          {availableClasses.map((cls) => (
             <div
               key={cls.id}
               onClick={() => setSelectedClass(cls.id)}
@@ -254,9 +276,11 @@ export const CharacterClassSelector: React.FC<{
                   : 'border-gray-600 hover:border-gray-500'
               }`}
             >
-              <h3 className="text-lg font-bold text-cyan-400 mb-2">{cls.name}</h3>
+              <h3 className="text-lg font-bold text-cyan-400 mb-2">
+                {cls.name}
+              </h3>
               <p className="text-sm text-gray-300 mb-3">{cls.description}</p>
-              
+
               <div className="space-y-1 text-xs">
                 <div className="flex justify-between">
                   <span>Health:</span>
@@ -277,8 +301,10 @@ export const CharacterClassSelector: React.FC<{
               </div>
 
               <div className="mt-3">
-                <div className="text-xs text-purple-400 mb-1">Starting Skills:</div>
-                {cls.skills.slice(0, 2).map(skill => (
+                <div className="text-xs text-purple-400 mb-1">
+                  Starting Skills:
+                </div>
+                {cls.skills.slice(0, 2).map((skill) => (
                   <div key={skill.id} className="text-xs text-gray-400">
                     • {skill.name}
                   </div>
@@ -333,7 +359,9 @@ export const GuildPanel: React.FC = () => {
   return (
     <div className="fixed top-16 right-4 w-80 bg-black bg-opacity-90 text-white rounded-lg border border-yellow-500">
       <div className="flex items-center justify-between p-3 border-b border-yellow-500">
-        <span className="text-sm font-bold text-yellow-400">🏰 GUILD SYSTEM</span>
+        <span className="text-sm font-bold text-yellow-400">
+          🏰 GUILD SYSTEM
+        </span>
         <button
           onClick={() => setIsVisible(false)}
           className="text-gray-400 hover:text-white"
@@ -347,7 +375,7 @@ export const GuildPanel: React.FC = () => {
           <div>
             <div className="text-sm mb-2">Current Guild:</div>
             <div className="text-yellow-400 font-bold">{currentGuild}</div>
-            
+
             <div className="mt-4 space-y-2">
               <button className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded text-xs">
                 Guild Chat
@@ -379,11 +407,10 @@ export const GuildPanel: React.FC = () => {
                 Join
               </button>
             </div>
-            
+
             <div className="mt-3 text-xs text-gray-400">
-              • Create new guild if name doesn't exist
-              • Join existing guild if it does
-              • Guild members can chat and fight together
+              • Create new guild if name doesn't exist • Join existing guild if
+              it does • Guild members can chat and fight together
             </div>
           </div>
         )}
@@ -391,4 +418,3 @@ export const GuildPanel: React.FC = () => {
     </div>
   );
 };
-

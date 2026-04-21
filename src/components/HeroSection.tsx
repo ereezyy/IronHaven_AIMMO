@@ -22,11 +22,12 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onPlayGame }) => {
   return (
     <section className="relative h-screen flex items-center justify-center overflow-hidden">
       {/* Background image with overlay */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ 
-          backgroundImage: 'url(https://images.pexels.com/photos/2310713/pexels-photo-2310713.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2)',
-          filter: 'brightness(0.4) contrast(1.2)'
+        style={{
+          backgroundImage:
+            'url(https://images.pexels.com/photos/2310713/pexels-photo-2310713.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2)',
+          filter: 'brightness(0.4) contrast(1.2)',
         }}
       />
 
@@ -34,7 +35,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onPlayGame }) => {
       <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black"></div>
 
       {/* Content */}
-      <div 
+      <div
         className={`relative z-10 text-center px-4 max-w-5xl mx-auto transition-opacity duration-1000 ease-in-out`}
         style={{ opacity }}
       >
@@ -43,7 +44,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onPlayGame }) => {
             RISE THROUGH THE UNDERWORLD
           </div>
         </div>
-        
+
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight leading-tight">
           <span className="block mb-2 text-red-500">IRONHAVEN</span>
           <span className="text-2xl md:text-3xl lg:text-4xl font-medium text-gray-300 block mt-2">
@@ -52,12 +53,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onPlayGame }) => {
         </h1>
 
         <p className="text-gray-300 mb-8 max-w-2xl mx-auto text-sm md:text-base">
-          Enter the brutal world of Ironhaven, where 19-year-old Danny fights to rise through the criminal hierarchy. 
-          Make your choices, face the consequences, and discover if you have what it takes to survive in a city built on corruption and fear.
+          Enter the brutal world of Ironhaven, where 19-year-old Danny fights to
+          rise through the criminal hierarchy. Make your choices, face the
+          consequences, and discover if you have what it takes to survive in a
+          city built on corruption and fear.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button 
+          <button
             onClick={onPlayGame}
             className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-sm transition duration-300 transform hover:scale-105 w-full sm:w-auto text-sm md:text-base font-medium tracking-wide"
           >
@@ -69,7 +72,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onPlayGame }) => {
         </div>
 
         <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 animate-bounce cursor-pointer">
-          <ChevronDown 
+          <ChevronDown
             onClick={scrollToContent}
             className="h-8 w-8 text-white opacity-70 hover:opacity-100 transition-opacity"
           />

@@ -32,7 +32,10 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({ playerId, onUpdate }) => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isPointerLocked.current) {
         mouseX.current -= e.movementX * 0.002;
-        mouseY.current = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, mouseY.current - e.movementY * 0.002));
+        mouseY.current = Math.max(
+          -Math.PI / 2,
+          Math.min(Math.PI / 2, mouseY.current - e.movementY * 0.002)
+        );
       }
     };
 
@@ -45,7 +48,10 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({ playerId, onUpdate }) => {
     gl.domElement.addEventListener('click', handleClick);
 
     return () => {
-      document.removeEventListener('pointerlockchange', handlePointerLockChange);
+      document.removeEventListener(
+        'pointerlockchange',
+        handlePointerLockChange
+      );
       gl.domElement.removeEventListener('mousemove', handleMouseMove);
       gl.domElement.removeEventListener('click', handleClick);
     };
@@ -89,9 +95,9 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({ playerId, onUpdate }) => {
     }
 
     if (sprint && (forward || backward || left || right) && stamina > 0) {
-      setStamina(prev => Math.max(0, prev - 30 * delta));
+      setStamina((prev) => Math.max(0, prev - 30 * delta));
     } else {
-      setStamina(prev => Math.min(100, prev + 20 * delta));
+      setStamina((prev) => Math.min(100, prev + 20 * delta));
     }
 
     if (jump && isGrounded) {
@@ -137,11 +143,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({ playerId, onUpdate }) => {
     <group ref={playerRef} position={position}>
       <mesh castShadow receiveShadow>
         <capsuleGeometry args={[0.5, 1.5, 8, 16]} />
-        <meshStandardMaterial
-          color="#ff3366"
-          metalness={0.3}
-          roughness={0.7}
-        />
+        <meshStandardMaterial color="#ff3366" metalness={0.3} roughness={0.7} />
       </mesh>
 
       <mesh position={[0, 1.2, 0]} castShadow>

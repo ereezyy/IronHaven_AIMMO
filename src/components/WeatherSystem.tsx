@@ -7,7 +7,10 @@ interface WeatherSystemProps {
   onWeatherUpdate?: (weather: 'clear' | 'rain' | 'fog' | 'storm') => void;
 }
 
-const WeatherSystem: React.FC<WeatherSystemProps> = ({ currentWeather = 'clear', onWeatherUpdate }) => {
+const WeatherSystem: React.FC<WeatherSystemProps> = ({
+  currentWeather = 'clear',
+  onWeatherUpdate,
+}) => {
   const [weather, setWeather] = useState(currentWeather);
   const [rainDrops, setRainDrops] = useState<THREE.Vector3[]>([]);
   const rainRef = useRef<THREE.Points>(null);
@@ -16,14 +19,19 @@ const WeatherSystem: React.FC<WeatherSystemProps> = ({ currentWeather = 'clear',
   useEffect(() => {
     const changeWeather = () => {
       const weatherTypes = ['clear', 'rain', 'fog', 'storm'];
-      const randomWeather = weatherTypes[Math.floor(Math.random() * weatherTypes.length)] as any;
+      const randomWeather = weatherTypes[
+        Math.floor(Math.random() * weatherTypes.length)
+      ] as any;
       setWeather(randomWeather);
       if (onWeatherUpdate) {
         onWeatherUpdate(randomWeather);
       }
     };
 
-    const interval = setInterval(changeWeather, 120000 + Math.random() * 180000); // 2-5 minutes
+    const interval = setInterval(
+      changeWeather,
+      120000 + Math.random() * 180000
+    ); // 2-5 minutes
     return () => clearInterval(interval);
   }, [onWeatherUpdate]);
 
@@ -32,13 +40,15 @@ const WeatherSystem: React.FC<WeatherSystemProps> = ({ currentWeather = 'clear',
     if (weather === 'rain' || weather === 'storm') {
       const drops: THREE.Vector3[] = [];
       const intensity = weather === 'storm' ? 1000 : 500;
-      
+
       for (let i = 0; i < intensity; i++) {
-        drops.push(new THREE.Vector3(
-          (Math.random() - 0.5) * 200,
-          Math.random() * 50 + 20,
-          (Math.random() - 0.5) * 200
-        ));
+        drops.push(
+          new THREE.Vector3(
+            (Math.random() - 0.5) * 200,
+            Math.random() * 50 + 20,
+            (Math.random() - 0.5) * 200
+          )
+        );
       }
       setRainDrops(drops);
     } else {
@@ -49,8 +59,8 @@ const WeatherSystem: React.FC<WeatherSystemProps> = ({ currentWeather = 'clear',
   // Animate rain
   useFrame((state, delta) => {
     if ((weather === 'rain' || weather === 'storm') && rainRef.current) {
-      setRainDrops(prev => 
-        prev.map(drop => {
+      setRainDrops((prev) =>
+        prev.map((drop) => {
           drop.y -= (weather === 'storm' ? 25 : 15) * delta;
           if (drop.y < 0) {
             drop.y = 50;
@@ -71,7 +81,11 @@ const WeatherSystem: React.FC<WeatherSystemProps> = ({ currentWeather = 'clear',
           <bufferGeometry>
             <bufferAttribute
               attach="attributes-position"
-              array={new Float32Array(rainDrops.flatMap(drop => [drop.x, drop.y, drop.z]))}
+              array={
+                new Float32Array(
+                  rainDrops.flatMap((drop) => [drop.x, drop.y, drop.z])
+                )
+              }
               count={rainDrops.length}
               itemSize={3}
             />
@@ -91,9 +105,7 @@ const WeatherSystem: React.FC<WeatherSystemProps> = ({ currentWeather = 'clear',
       )}
 
       {/* Fog effect */}
-      {weather === 'fog' && (
-        <FogEffect />
-      )}
+      {weather === 'fog' && <FogEffect />}
     </>
   );
 };
@@ -103,9 +115,9 @@ const FOG_PARTICLES = [...new Array(20)].map((_, i) => ({
   position: [
     (Math.random() - 0.5) * 100,
     Math.random() * 10 + 2,
-    (Math.random() - 0.5) * 100
+    (Math.random() - 0.5) * 100,
   ] as [number, number, number],
-  args: [5 + Math.random() * 10, 8, 8] as [number, number, number]
+  args: [5 + Math.random() * 10, 8, 8] as [number, number, number],
 }));
 
 const FogEffect: React.FC = () => {

@@ -34,30 +34,30 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
     switch (stage) {
       case 0:
         return {
-          title: "IRONHAVEN AIMMO",
-          subtitle: "AI-Powered Cyberpunk MMORPG",
-          description: "Experience the future of gaming with advanced AI"
+          title: 'IRONHAVEN AIMMO',
+          subtitle: 'AI-Powered Cyberpunk MMORPG',
+          description: 'Experience the future of gaming with advanced AI',
         };
       case 1:
         return {
-          title: "REAL-TIME MULTIPLAYER",
-          subtitle: "Connect with players worldwide",
-          description: "Guilds • PvP • Territory Wars • Live Combat"
+          title: 'REAL-TIME MULTIPLAYER',
+          subtitle: 'Connect with players worldwide',
+          description: 'Guilds • PvP • Territory Wars • Live Combat',
         };
       case 2:
         return {
-          title: "ADVANCED AI SYSTEMS",
-          subtitle: "Powered by Hugging Face",
-          description: "Smart NPCs • Dynamic Stories • Procedural Missions"
+          title: 'ADVANCED AI SYSTEMS',
+          subtitle: 'Powered by Hugging Face',
+          description: 'Smart NPCs • Dynamic Stories • Procedural Missions',
         };
       case 3:
         return {
-          title: "READY TO PLAY",
-          subtitle: "Built for Bolt Hackathon 2025",
-          description: "Click anywhere to start the experience"
+          title: 'READY TO PLAY',
+          subtitle: 'Built for Bolt Hackathon 2025',
+          description: 'Click anywhere to start the experience',
         };
       default:
-        return { title: "", subtitle: "", description: "" };
+        return { title: '', subtitle: '', description: '' };
     }
   };
 
@@ -70,14 +70,14 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-gradient-to-br from-black via-purple-900 to-black cursor-pointer overflow-hidden"
       onClick={handleClick}
     >
       {/* Animated background */}
       <div className="absolute inset-0">
         {/* Cyberpunk grid */}
-        <div 
+        <div
           className="absolute inset-0 opacity-20"
           style={{
             backgroundImage: `
@@ -85,10 +85,10 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
               linear-gradient(90deg, rgba(0, 255, 255, 0.3) 1px, transparent 1px)
             `,
             backgroundSize: '50px 50px',
-            animation: 'grid-move 20s linear infinite'
+            animation: 'grid-move 20s linear infinite',
           }}
         />
-        
+
         {/* Floating particles */}
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((_, i) => (
           <div
@@ -98,7 +98,7 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
               animation: `float ${3 + Math.random() * 4}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 2}s`
+              animationDelay: `${Math.random() * 2}s`,
             }}
           />
         ))}
@@ -110,12 +110,12 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
         <h1 className="text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 mb-6 animate-pulse">
           {content.title}
         </h1>
-        
+
         {/* Subtitle */}
         <h2 className="text-2xl md:text-4xl text-cyan-300 mb-4 animate-fade-in">
           {content.subtitle}
         </h2>
-        
+
         {/* Description */}
         <p className="text-lg md:text-xl text-gray-300 mb-12 max-w-2xl animate-fade-in-delay">
           {content.description}
@@ -132,14 +132,14 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
         {/* Progress bar */}
         <div className="w-80 max-w-full">
           <div className="w-full h-3 bg-gray-800 rounded-full overflow-hidden mb-4">
-            <div 
+            <div
               className="h-full bg-gradient-to-r from-cyan-400 to-purple-600 transition-all duration-1000 ease-out"
               style={{ width: `${((20 - timeLeft) / 20) * 100}%` }}
             />
           </div>
-          
+
           <p className="text-gray-400 text-lg">
-            {timeLeft > 0 ? `Starting in ${timeLeft}s` : "Click to enter game"}
+            {timeLeft > 0 ? `Starting in ${timeLeft}s` : 'Click to enter game'}
           </p>
         </div>
 
@@ -160,7 +160,7 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
         <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-600 to-transparent animate-pulse" />
         <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-transparent via-cyan-400 to-transparent animate-pulse" />
         <div className="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-transparent via-purple-600 to-transparent animate-pulse" />
-        
+
         {/* Corner decorations */}
         <div className="absolute top-4 left-4 w-16 h-16 border-t-2 border-l-2 border-cyan-400" />
         <div className="absolute top-4 right-4 w-16 h-16 border-t-2 border-r-2 border-purple-600" />
@@ -170,29 +170,50 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
 
       <style jsx>{`
         @keyframes grid-move {
-          0% { transform: translate(0, 0); }
-          100% { transform: translate(50px, 50px); }
+          0% {
+            transform: translate(0, 0);
+          }
+          100% {
+            transform: translate(50px, 50px);
+          }
         }
-        
+
         @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
+          0%,
+          100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-20px);
+          }
         }
-        
+
         @keyframes fade-in {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-        
+
         @keyframes fade-in-delay {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-        
+
         .animate-fade-in {
           animation: fade-in 1s ease-out;
         }
-        
+
         .animate-fade-in-delay {
           animation: fade-in-delay 1s ease-out 0.5s both;
         }
@@ -202,4 +223,3 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
 };
 
 export default SimpleIntro;
-
