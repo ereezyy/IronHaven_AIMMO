@@ -3,13 +3,14 @@ import { HfInference } from '@huggingface/inference';
 // Initialize Hugging Face client with better token handling
 const getHfToken = () => {
   // Try different environment variable approaches
-  const token = process.env.REACT_APP_HUGGING_FACE_TOKEN || 
-                import.meta.env.VITE_HUGGING_FACE_TOKEN ||
+  const token = import.meta.env.VITE_HUGGING_FACE_TOKEN ||
                 (window as any).HUGGING_FACE_TOKEN ||
-                'YOUR_HUGGING_FACE_TOKEN_HERE'; // Placeholder - replace with your token
+                '';
+
+  const isValid = typeof token === 'string' && token.trim().length > 0;
+  console.log('AI Token Status:', isValid ? 'Token found' : 'No token');
   
-  console.log('AI Token Status:', token && token !== 'YOUR_HUGGING_FACE_TOKEN_HERE' ? 'Token found' : 'No token');
-  return token;
+  return isValid ? token.trim() : '';
 };
 
 let hf: HfInference;
