@@ -352,22 +352,6 @@ class PersistenceService {
           level: player.level,
           isInCombat: player.is_in_combat,
         }));
-      return data.filter(player => {
-        const dx = player.position_x - position[0];
-        const dz = player.position_z - position[2];
-        const distanceSq = dx * dx + dz * dz;
-        return distanceSq <= radius * radius;
-      }).map(player => ({
-        id: player.id,
-        username: player.username,
-        position: [player.position_x, player.position_y, player.position_z],
-        rotation: player.rotation,
-        velocity: [player.velocity_x, player.velocity_y, player.velocity_z],
-        health: player.health,
-        stamina: player.stamina,
-        level: player.level,
-        isInCombat: player.is_in_combat
-      }));
     } catch (error) {
       console.error('Error getting nearby players:', error);
       return [];
@@ -375,15 +359,6 @@ class PersistenceService {
   }
 
   private generatePlayerId(): string {
-    return (
-      'player_' + Math.random().toString(36).substr(2, 16) + '_' + Date.now()
-    );
-  }
-
-  private generateSessionId(): string {
-    return (
-      'session_' + Math.random().toString(36).substr(2, 16) + '_' + Date.now()
-    );
     return 'player_' + crypto.randomUUID();
   }
 

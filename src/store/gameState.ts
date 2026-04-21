@@ -154,7 +154,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       const playerId = await persistenceService.initializePlayer(
         username || `Player_${Math.floor(Math.random() * 10000)}`
       );
-      const playerId = await persistenceService.initializePlayer(username || `Player_${crypto.randomUUID().substring(0, 8)}`);
+      const playerId = await persistenceService.initializePlayer(
+        username || `Player_${crypto.randomUUID().substring(0, 8)}`
+      );
       await persistenceService.startSession(playerId);
 
       persistenceService.startAutoSave(() => {

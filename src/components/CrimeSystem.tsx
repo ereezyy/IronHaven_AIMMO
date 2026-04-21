@@ -77,19 +77,13 @@ const CrimeSystem: React.FC<CrimeSystemProps> = ({
 
     if (crimeType) {
       const witnessCount = nearbyNPCs.filter((npc) => {
-        const distance = Math.sqrt(
+        const distanceSq =
           (npc.position[0] - playerPosition[0]) *
             (npc.position[0] - playerPosition[0]) +
-            (npc.position[2] - playerPosition[2]) *
-              (npc.position[2] - playerPosition[2])
-      const witnessCount = nearbyNPCs.filter(npc => {
-        const distanceSq = (
-          (npc.position[0] - playerPosition[0]) * (npc.position[0] - playerPosition[0]) +
-          (npc.position[2] - playerPosition[2]) * (npc.position[2] - playerPosition[2])
-        );
-        return distance < 20 && npc.type === 'civilian';
+          (npc.position[2] - playerPosition[2]) *
+            (npc.position[2] - playerPosition[2]);
+        return distanceSq < 400 && npc.type === 'civilian';
       }).length;
-
       const crime: CrimeEvent = {
         id: crypto.randomUUID(),
         type: crimeType,

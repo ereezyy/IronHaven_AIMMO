@@ -70,19 +70,12 @@ const ImmersiveWorld: React.FC<ImmersiveWorldProps> = ({
           Math.sin(vehicle.direction) * vehicle.speed * delta;
 
         // Respawn if too far from player
-        const distance = Math.sqrt(
+        const distanceSq =
           (vehicle.position[0] - playerPosition[0]) *
             (vehicle.position[0] - playerPosition[0]) +
-            (vehicle.position[2] - playerPosition[2]) *
-              (vehicle.position[2] - playerPosition[2])
-        );
+          (vehicle.position[2] - playerPosition[2]) *
+            (vehicle.position[2] - playerPosition[2]);
 
-        if (distance > 80) {
-        const distanceSq = (
-          (vehicle.position[0] - playerPosition[0]) * (vehicle.position[0] - playerPosition[0]) +
-          (vehicle.position[2] - playerPosition[2]) * (vehicle.position[2] - playerPosition[2])
-        );
-        
         if (distanceSq > 6400) {
           const newAngle = Math.random() * Math.PI * 2;
           const newDistance = 30 + Math.random() * 10;
