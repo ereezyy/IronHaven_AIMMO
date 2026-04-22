@@ -375,15 +375,6 @@ class PersistenceService {
   }
 
   private generatePlayerId(): string {
-    return (
-      'player_' + Math.random().toString(36).substr(2, 16) + '_' + Date.now()
-    );
-  }
-
-  private generateSessionId(): string {
-    return (
-      'session_' + Math.random().toString(36).substr(2, 16) + '_' + Date.now()
-    );
     return 'player_' + crypto.randomUUID();
   }
 

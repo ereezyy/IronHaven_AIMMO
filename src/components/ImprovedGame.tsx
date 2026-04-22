@@ -360,9 +360,9 @@ const ImprovedGame = () => {
 
           // Remove projectiles that are too far
           const distanceSq =
-            projectile.position[0] ** 2 +
-            projectile.position[1] ** 2 +
-            projectile.position[2] ** 2;
+            projectile.position[0] * projectile.position[0] +
+            projectile.position[1] * projectile.position[1] +
+            projectile.position[2] * projectile.position[2];
           return distanceSq < 100 * 100;
         });
 
