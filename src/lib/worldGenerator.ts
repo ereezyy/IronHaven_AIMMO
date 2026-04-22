@@ -76,7 +76,7 @@ export class WorldGenerator {
     const distance = Math.sqrt(chunkX * chunkX + chunkZ * chunkZ);
 
     const distanceSq = chunkX * chunkX + chunkZ * chunkZ;
-    
+
     // Center is downtown
     if (distance < 1) return 'downtown';
 
@@ -84,7 +84,7 @@ export class WorldGenerator {
     if (distance < 2) return Math.random() > 0.5 ? 'residential' : 'downtown';
 
     if (distanceSq < 4) return Math.random() > 0.5 ? 'residential' : 'downtown';
-    
+
     // Further out becomes industrial and slums
     if (distanceSq < 16) {
       const rand = Math.random();

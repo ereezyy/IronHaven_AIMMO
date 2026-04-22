@@ -140,13 +140,9 @@ const ActionSequence = ({ stage }: { stage: number }) => {
 
       {/* AI NPCs in combat */}
       {STATIC_NPCS.map((_, i) => (
-        <group 
-          key={i} 
-          position={[
-            Math.sin(i * 1.2) * 15,
-            1,
-            Math.cos(i * 1.2) * 15
-          ]}
+        <group
+          key={i}
+          position={[Math.sin(i * 1.2) * 15, 1, Math.cos(i * 1.2) * 15]}
         >
           <Sphere scale={[0.8, 1.8, 0.8]}>
             <meshStandardMaterial

@@ -62,7 +62,9 @@ const ThirdPersonCamera: React.FC<{
 const MMOGame: React.FC = () => {
   const gameStore = useGameStore();
   const [otherPlayers, setOtherPlayers] = useState<OtherPlayer[]>([]);
-  const [playerId] = useState(() => `player_${crypto.randomUUID().substring(0, 9)}`);
+  const [playerId] = useState(
+    () => `player_${crypto.randomUUID().substring(0, 9)}`
+  );
   const [playerPosition, setPlayerPosition] = useState<THREE.Vector3>(
     new THREE.Vector3(0, 0, 0)
   );
