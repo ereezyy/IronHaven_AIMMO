@@ -77,7 +77,6 @@ const ImmersiveWorld: React.FC<ImmersiveWorldProps> = ({
               (vehicle.position[2] - playerPosition[2])
         );
 
-        if (distance > 80) {
         const distanceSq = (
           (vehicle.position[0] - playerPosition[0]) * (vehicle.position[0] - playerPosition[0]) +
           (vehicle.position[2] - playerPosition[2]) * (vehicle.position[2] - playerPosition[2])
