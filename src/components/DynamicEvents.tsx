@@ -230,7 +230,7 @@ const DynamicEvents: React.FC<DynamicEventsProps> = ({
   useEffect(() => {
     setActiveEvents((prev) =>
       prev.map((event) => {
-        const distance = Math.sqrt(
+        const distanceSq = (
           (event.location[0] - playerPosition[0]) *
             (event.location[0] - playerPosition[0]) +
             (event.location[2] - playerPosition[2]) *
@@ -238,7 +238,7 @@ const DynamicEvents: React.FC<DynamicEventsProps> = ({
         );
 
         const wasInvolved = event.playerInvolved;
-        const isInvolved = distance <= event.radius;
+        const isInvolved = distanceSq <= (event.radius * event.radius);
 
         if (isInvolved && !wasInvolved) {
           gameStore.addAction(`entered_event_${event.type}`);
@@ -272,42 +272,7 @@ const DynamicEvents: React.FC<DynamicEventsProps> = ({
                 });
                 gameStore.addAction('found_drug_money');
               }
-              break;
           }
-    setActiveEvents(prev => prev.map(event => {
-      const distanceSq = (
-        (event.location[0] - playerPosition[0]) * (event.location[0] - playerPosition[0]) +
-        (event.location[2] - playerPosition[2]) * (event.location[2] - playerPosition[2])
-      );
-      
-      const wasInvolved = event.playerInvolved;
-      const isInvolved = distanceSq <= event.radius * event.radius;
-      
-      if (isInvolved && !wasInvolved) {
-        gameStore.addAction(`entered_event_${event.type}`);
-        
-        // Apply event effects
-        switch (event.type) {
-          case 'gang_war':
-            gameStore.updateStats({ wanted: Math.min(gameStore.playerStats.wanted + 1, 5) });
-            break;
-          case 'police_raid':
-            gameStore.updateStats({ wanted: Math.min(gameStore.playerStats.wanted + 2, 5) });
-            break;
-          case 'street_race':
-            // Chance to win money
-            if (Math.random() > 0.5) {
-              gameStore.updateStats({ money: gameStore.playerStats.money + 1000 });
-              gameStore.addAction('won_street_race');
-            }
-            break;
-          case 'drug_bust':
-            // Chance to find money or drugs
-            if (Math.random() > 0.6) {
-              gameStore.updateStats({ money: gameStore.playerStats.money + 500 });
-              gameStore.addAction('found_drug_money');
-            }
-            break;
         }
 
         return { ...event, playerInvolved: isInvolved };
@@ -380,16 +345,6 @@ const DynamicEvents: React.FC<DynamicEventsProps> = ({
           </h3>
 
           <div className="space-y-2 max-h-40 overflow-y-auto">
-            {activeEvents.map((event) => {
-              const timeLeft = Math.max(
-                0,
-                event.duration - (Date.now() - event.startTime)
-              );
-              const distance = Math.sqrt(
-                (event.location[0] - playerPosition[0]) *
-                  (event.location[0] - playerPosition[0]) +
-                  (event.location[2] - playerPosition[2]) *
-                    (event.location[2] - playerPosition[2])
             {activeEvents.map(event => {
               const timeLeft = Math.max(0, event.duration - (Date.now() - event.startTime));
               const distanceSq = (
