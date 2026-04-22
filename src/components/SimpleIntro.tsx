@@ -90,7 +90,9 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
         />
 
         {/* Floating particles */}
-        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((_, i) => (
+        {[
+          0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+        ].map((_, i) => (
           <div
             key={i}
             className="absolute w-2 h-2 bg-cyan-400 rounded-full opacity-60"

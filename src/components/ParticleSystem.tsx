@@ -69,11 +69,15 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({
                 )
               ),
             id: `fire_${crypto.randomUUID()}_${i}`,
-            position: basePosition.clone().add(new THREE.Vector3(
-              (Math.random() - 0.5) * 2,
-              Math.random() * 2,
-              (Math.random() - 0.5) * 2
-            )),
+            position: basePosition
+              .clone()
+              .add(
+                new THREE.Vector3(
+                  (Math.random() - 0.5) * 2,
+                  Math.random() * 2,
+                  (Math.random() - 0.5) * 2
+                )
+              ),
             velocity: new THREE.Vector3(
               (Math.random() - 0.5) * 15,
               Math.random() * 20 + 5,
@@ -101,11 +105,15 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({
                 )
               ),
             id: `smoke_${crypto.randomUUID()}_${i}`,
-            position: basePosition.clone().add(new THREE.Vector3(
-              (Math.random() - 0.5) * 3,
-              Math.random() * 3,
-              (Math.random() - 0.5) * 3
-            )),
+            position: basePosition
+              .clone()
+              .add(
+                new THREE.Vector3(
+                  (Math.random() - 0.5) * 3,
+                  Math.random() * 3,
+                  (Math.random() - 0.5) * 3
+                )
+              ),
             velocity: new THREE.Vector3(
               (Math.random() - 0.5) * 5,
               Math.random() * 8 + 2,
@@ -135,11 +143,15 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({
                 )
               ),
             id: `spark_${crypto.randomUUID()}_${i}`,
-            position: basePosition.clone().add(new THREE.Vector3(
-              (Math.random() - 0.5) * 0.5,
-              (Math.random() - 0.5) * 0.5,
-              (Math.random() - 0.5) * 0.5
-            )),
+            position: basePosition
+              .clone()
+              .add(
+                new THREE.Vector3(
+                  (Math.random() - 0.5) * 0.5,
+                  (Math.random() - 0.5) * 0.5,
+                  (Math.random() - 0.5) * 0.5
+                )
+              ),
             velocity: new THREE.Vector3(
               (Math.random() - 0.5) * 8,
               (Math.random() - 0.5) * 8,
@@ -167,11 +179,15 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({
                 )
               ),
             id: `gunsmoke_${crypto.randomUUID()}_${i}`,
-            position: basePosition.clone().add(new THREE.Vector3(
-              (Math.random() - 0.5) * 1,
-              Math.random() * 1,
-              (Math.random() - 0.5) * 1
-            )),
+            position: basePosition
+              .clone()
+              .add(
+                new THREE.Vector3(
+                  (Math.random() - 0.5) * 1,
+                  Math.random() * 1,
+                  (Math.random() - 0.5) * 1
+                )
+              ),
             velocity: new THREE.Vector3(
               (Math.random() - 0.5) * 2,
               Math.random() * 3 + 1,
@@ -201,11 +217,15 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({
                 )
               ),
             id: `blood_${crypto.randomUUID()}_${i}`,
-            position: basePosition.clone().add(new THREE.Vector3(
-              (Math.random() - 0.5) * 2,
-              Math.random() * 2,
-              (Math.random() - 0.5) * 2
-            )),
+            position: basePosition
+              .clone()
+              .add(
+                new THREE.Vector3(
+                  (Math.random() - 0.5) * 2,
+                  Math.random() * 2,
+                  (Math.random() - 0.5) * 2
+                )
+              ),
             velocity: new THREE.Vector3(
               (Math.random() - 0.5) * 6,
               Math.random() * 4 + 1,
@@ -235,11 +255,15 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({
                 )
               ),
             id: `exhaust_${crypto.randomUUID()}_${i}`,
-            position: basePosition.clone().add(new THREE.Vector3(
-              (Math.random() - 0.5) * 0.5,
-              Math.random() * 0.5,
-              (Math.random() - 0.5) * 0.5
-            )),
+            position: basePosition
+              .clone()
+              .add(
+                new THREE.Vector3(
+                  (Math.random() - 0.5) * 0.5,
+                  Math.random() * 0.5,
+                  (Math.random() - 0.5) * 0.5
+                )
+              ),
             velocity: new THREE.Vector3(
               (Math.random() - 0.5) * 1,
               Math.random() * 2 + 0.5,
@@ -269,11 +293,15 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({
                 )
               ),
             id: `debris_${crypto.randomUUID()}_${i}`,
-            position: basePosition.clone().add(new THREE.Vector3(
-              (Math.random() - 0.5) * 1,
-              Math.random() * 1,
-              (Math.random() - 0.5) * 1
-            )),
+            position: basePosition
+              .clone()
+              .add(
+                new THREE.Vector3(
+                  (Math.random() - 0.5) * 1,
+                  Math.random() * 1,
+                  (Math.random() - 0.5) * 1
+                )
+              ),
             velocity: new THREE.Vector3(
               (Math.random() - 0.5) * 10,
               Math.random() * 8 + 2,
