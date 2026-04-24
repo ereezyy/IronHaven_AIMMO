@@ -86,7 +86,8 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({ playerId, onUpdate }) => {
     newVelocity.x *= Math.max(0, 1 - friction * delta);
     newVelocity.z *= Math.max(0, 1 - friction * delta);
 
-    const horizontalSpeedSq = newVelocity.x ** 2 + newVelocity.z ** 2;
+    const horizontalSpeedSq =
+      newVelocity.x * newVelocity.x + newVelocity.z * newVelocity.z;
     if (horizontalSpeedSq > moveSpeed * moveSpeed) {
       const horizontalSpeed = Math.sqrt(horizontalSpeedSq);
       const scale = moveSpeed / horizontalSpeed;
@@ -123,11 +124,13 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({ playerId, onUpdate }) => {
     }
 
     const worldRadius = 100;
-    const distFromCenterSq = newPosition.x ** 2 + newPosition.z ** 2;
+    const distFromCenterSq =
+      newPosition.x * newPosition.x + newPosition.z * newPosition.z;
     if (distFromCenterSq > worldRadius * worldRadius) {
-      const angle = Math.atan2(newPosition.z, newPosition.x);
-      newPosition.x = Math.cos(angle) * worldRadius;
-      newPosition.z = Math.sin(angle) * worldRadius;
+      // Memory Convention: Prefer vector scaling over trigonometric functions
+      const dist = Math.sqrt(distFromCenterSq);
+      newPosition.x = (newPosition.x / dist) * worldRadius;
+      newPosition.z = (newPosition.z / dist) * worldRadius;
       newVelocity.x = 0;
       newVelocity.z = 0;
     }

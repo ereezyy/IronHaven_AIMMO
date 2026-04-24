@@ -111,17 +111,12 @@ const VehicleSystem: React.FC<VehicleSystemProps> = ({
         } else {
           // Try to enter nearby vehicle
           const nearbyVehicle = vehicles.find((v) => {
-            const distance = Math.sqrt(
+            const distanceSq =
               (v.position[0] - playerPosition[0]) *
                 (v.position[0] - playerPosition[0]) +
-                (v.position[2] - playerPosition[2]) *
-                  (v.position[2] - playerPosition[2])
-          const nearbyVehicle = vehicles.find(v => {
-            const distance = (
-              (v.position[0] - playerPosition[0]) * (v.position[0] - playerPosition[0]) +
-              (v.position[2] - playerPosition[2]) * (v.position[2] - playerPosition[2])
-            );
-            return distance < 5 && !v.isPlayerDriving;
+              (v.position[2] - playerPosition[2]) *
+                (v.position[2] - playerPosition[2]);
+            return distanceSq < 25 && !v.isPlayerDriving;
           });
 
           if (nearbyVehicle) {
@@ -338,16 +333,12 @@ const VehicleSystem: React.FC<VehicleSystemProps> = ({
           {/* Interaction prompt when near */}
           {!vehicle.isPlayerDriving &&
             (() => {
-              const distance = Math.sqrt(
+              const distanceSq =
                 (vehicle.position[0] - playerPosition[0]) *
                   (vehicle.position[0] - playerPosition[0]) +
-                  (vehicle.position[2] - playerPosition[2]) *
-                    (vehicle.position[2] - playerPosition[2])
-              const distance = (
-                (vehicle.position[0] - playerPosition[0]) * (vehicle.position[0] - playerPosition[0]) +
-                (vehicle.position[2] - playerPosition[2]) * (vehicle.position[2] - playerPosition[2])
-              );
-              return distance < 5 ? (
+                (vehicle.position[2] - playerPosition[2]) *
+                  (vehicle.position[2] - playerPosition[2]);
+              return distanceSq < 25 ? (
                 <Box position={[0, 2.5, 0]} scale={[0.3, 0.3, 0.3]}>
                   <meshBasicMaterial
                     color="#ffff00"
