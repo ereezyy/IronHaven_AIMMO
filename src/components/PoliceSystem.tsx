@@ -150,15 +150,6 @@ const PoliceSystem: React.FC<PoliceSystemProps> = ({
 
   // Auto-attack player if in range
   useEffect(() => {
-    policeUnits.forEach((unit) => {
-      const distance = Math.sqrt(
-        (unit.position[0] - playerPosition[0]) *
-          (unit.position[0] - playerPosition[0]) +
-          (unit.position[2] - playerPosition[2]) *
-            (unit.position[2] - playerPosition[2])
-      );
-
-      if (distance < 15 && Math.random() > 0.95) {
     policeUnits.forEach(unit => {
       const distanceSq = (
         (unit.position[0] - playerPosition[0]) * (unit.position[0] - playerPosition[0]) +

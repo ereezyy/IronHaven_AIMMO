@@ -246,9 +246,6 @@ class MultiplayerManager {
     this.worldState.players.forEach((player) => {
       if (player.id === this.playerId) return;
 
-      const distance = this.calculateDistance(position, player.position);
-      if (distance <= range) {
-      
       const distanceSq = this.calculateDistanceSq(position, player.position);
       if (distanceSq <= range * range) {
         nearby.push(player);
@@ -336,10 +333,6 @@ class MultiplayerManager {
     console.log('🗺️ Territory update:', data);
   }
 
-  private calculateDistance(
-    pos1: [number, number, number],
-    pos2: [number, number, number]
-  ): number {
   private calculateDistanceSq(pos1: [number, number, number], pos2: [number, number, number]): number {
     const dx = pos1[0] - pos2[0];
     const dy = pos1[1] - pos2[1];
