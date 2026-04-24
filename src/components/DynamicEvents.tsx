@@ -345,12 +345,16 @@ const DynamicEvents: React.FC<DynamicEventsProps> = ({
           </h3>
 
           <div className="space-y-2 max-h-40 overflow-y-auto">
-            {activeEvents.map(event => {
-              const timeLeft = Math.max(0, event.duration - (Date.now() - event.startTime));
-              const distanceSq = (
-                (event.location[0] - playerPosition[0]) * (event.location[0] - playerPosition[0]) +
-                (event.location[2] - playerPosition[2]) * (event.location[2] - playerPosition[2])
+            {activeEvents.map((event) => {
+              const timeLeft = Math.max(
+                0,
+                event.duration - (Date.now() - event.startTime)
               );
+              const distanceSq =
+                (event.location[0] - playerPosition[0]) *
+                  (event.location[0] - playerPosition[0]) +
+                (event.location[2] - playerPosition[2]) *
+                  (event.location[2] - playerPosition[2]);
 
               return (
                 <div

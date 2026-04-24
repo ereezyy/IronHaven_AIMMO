@@ -56,10 +56,10 @@ const MinimalGame = () => {
 
   // Enemy collision detection
   useEffect(() => {
-    enemies.forEach(enemy => {
-      const distanceSq = (
-        (playerPos.x - enemy.x) * (playerPos.x - enemy.x) + (playerPos.y - enemy.y) * (playerPos.y - enemy.y)
-      );
+    enemies.forEach((enemy) => {
+      const distanceSq =
+        (playerPos.x - enemy.x) * (playerPos.x - enemy.x) +
+        (playerPos.y - enemy.y) * (playerPos.y - enemy.y);
 
       if (distanceSq < 25) {
         setScore((prev) => prev + 10);
@@ -87,9 +87,21 @@ const MinimalGame = () => {
           x: Math.random() * 90 + 5,
           y: Math.random() * 90 + 5,
         },
-        { id: crypto.randomUUID(), x: Math.random() * 90 + 5, y: Math.random() * 90 + 5 },
-        { id: crypto.randomUUID(), x: Math.random() * 90 + 5, y: Math.random() * 90 + 5 },
-        { id: crypto.randomUUID(), x: Math.random() * 90 + 5, y: Math.random() * 90 + 5 }
+        {
+          id: crypto.randomUUID(),
+          x: Math.random() * 90 + 5,
+          y: Math.random() * 90 + 5,
+        },
+        {
+          id: crypto.randomUUID(),
+          x: Math.random() * 90 + 5,
+          y: Math.random() * 90 + 5,
+        },
+        {
+          id: crypto.randomUUID(),
+          x: Math.random() * 90 + 5,
+          y: Math.random() * 90 + 5,
+        },
       ]);
     }
   }, [enemies]);

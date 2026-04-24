@@ -59,7 +59,8 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
       (position[0] - playerPosition[0]) * (position[0] - playerPosition[0]) +
         (position[2] - playerPosition[2]) * (position[2] - playerPosition[2])
     );
-    const distanceToPlayerSq = (position[0] - playerPosition[0]) * (position[0] - playerPosition[0]) +
+    const distanceToPlayerSq =
+      (position[0] - playerPosition[0]) * (position[0] - playerPosition[0]) +
       (position[2] - playerPosition[2]) * (position[2] - playerPosition[2]);
 
     const playerWanted = gameStore.playerStats.wanted;
@@ -70,7 +71,7 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
     const hasLineOfSight = distanceToPlayer < 30 && Math.random() > 0.2;
 
     const hasLineOfSight = distanceToPlayerSq < 900 && Math.random() > 0.2;
-    
+
     if (hasLineOfSight) {
       setState((prev) => ({
         ...prev,
@@ -132,9 +133,9 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
     } else if (type === 'gangster' || type === 'hitman' || type === 'boss') {
       // Gangsters react differently based on player reputation
       if (playerRep < 20 && distanceToPlayerSq < 400) {
-        setState(prev => ({ 
-          ...prev, 
-          mood: 'hostile', 
+        setState((prev) => ({
+          ...prev,
+          mood: 'hostile',
           currentAction: 'attack',
           target: [...playerPosition],
         }));
@@ -146,10 +147,14 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
           currentAction: 'attack',
           target: [...playerPosition],
         }));
-      } else if (playerRep >= 20 && playerRep <= 80 && distanceToPlayerSq < 225) {
-        setState(prev => ({ 
-          ...prev, 
-          mood: 'hostile', 
+      } else if (
+        playerRep >= 20 &&
+        playerRep <= 80 &&
+        distanceToPlayerSq < 225
+      ) {
+        setState((prev) => ({
+          ...prev,
+          mood: 'hostile',
           currentAction: 'attack',
           target: [...playerPosition],
         }));
@@ -231,7 +236,8 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
         if (state.target) {
           moveToTarget(state.target, delta, 8);
           // Attack logic
-          const distanceToTargetSq = (position[0] - state.target[0]) * (position[0] - state.target[0]) +
+          const distanceToTargetSq =
+            (position[0] - state.target[0]) * (position[0] - state.target[0]) +
             (position[2] - state.target[2]) * (position[2] - state.target[2]);
           if (distanceToTargetSq < 25 && Math.random() > 0.93) {
             // NPC attacks player
@@ -290,7 +296,7 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
     const dx = target[0] - position[0];
     const dz = target[2] - position[2];
     const distanceSq = dx * dx + dz * dz;
-    
+
     if (distanceSq > 1) {
       const distance = Math.sqrt(distanceSq);
       const moveX = (dx / distance) * speed * delta;
