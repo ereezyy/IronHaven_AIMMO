@@ -99,31 +99,6 @@ const PoliceSystem: React.FC<PoliceSystemProps> = ({
           // Move towards player
           const dx = playerPosition[0] - unit.position[0];
           const dz = playerPosition[2] - unit.position[2];
-          const distance = Math.sqrt(dx * dx + dz * dz);
-
-          if (distance > 2) {
-            const moveX = (dx / distance) * unit.speed * 0.1;
-            const moveZ = (dz / distance) * unit.speed * 0.1;
-
-            return {
-              ...unit,
-              position: [
-                unit.position[0] + moveX,
-                unit.position[1],
-                unit.position[2] + moveZ,
-              ] as [number, number, number],
-              target: [...playerPosition] as [number, number, number],
-            };
-          }
-
-          return unit;
-        })
-      );
-      setPoliceUnits((prev) =>
-        prev.map((unit) => {
-          // Move towards player
-          const dx = playerPosition[0] - unit.position[0];
-          const dz = playerPosition[2] - unit.position[2];
           const distanceSq = dx * dx + dz * dz;
 
           if (distanceSq > 4) {

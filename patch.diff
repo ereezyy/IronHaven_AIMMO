@@ -1,0 +1,170 @@
+--- src/components/SmartNPC.tsx
++++ src/components/SmartNPC.tsx
+@@ -55,10 +55,6 @@
+
+   // Advanced AI Decision Making
+   const makeDecision = () => {
+-    const distanceToPlayer = Math.sqrt(
+-      (position[0] - playerPosition[0]) * (position[0] - playerPosition[0]) +
+-        (position[2] - playerPosition[2]) * (position[2] - playerPosition[2])
+-    );
+     const distanceToPlayerSq =
+       (position[0] - playerPosition[0]) * (position[0] - playerPosition[0]) +
+       (position[2] - playerPosition[2]) * (position[2] - playerPosition[2]);
+@@ -68,8 +64,6 @@
+     const playerKills = gameStore.playerStats.policeKillCount;
+
+     // Line of sight check
+-    const hasLineOfSight = distanceToPlayer < 30 && Math.random() > 0.2;
+-
+     const hasLineOfSight = distanceToPlayerSq < 900 && Math.random() > 0.2;
+
+     if (hasLineOfSight) {
+
+--- src/components/PoliceSystem.tsx
++++ src/components/PoliceSystem.tsx
+@@ -94,31 +94,6 @@
+     if (policeUnits.length === 0) return;
+
+     const updateInterval = setInterval(() => {
+-      setPoliceUnits((prev) =>
+-        prev.map((unit) => {
+-          // Move towards player
+-          const dx = playerPosition[0] - unit.position[0];
+-          const dz = playerPosition[2] - unit.position[2];
+-          const distance = Math.sqrt(dx * dx + dz * dz);
+-
+-          if (distance > 2) {
+-            const moveX = (dx / distance) * unit.speed * 0.1;
+-            const moveZ = (dz / distance) * unit.speed * 0.1;
+-
+-            return {
+-              ...unit,
+-              position: [
+-                unit.position[0] + moveX,
+-                unit.position[1],
+-                unit.position[2] + moveZ,
+-              ] as [number, number, number],
+-              target: [...playerPosition] as [number, number, number],
+-            };
+-          }
+-
+-          return unit;
+-        })
+-      );
+       setPoliceUnits((prev) =>
+         prev.map((unit) => {
+           // Move towards player
+
+--- src/components/DynamicEvents.tsx
++++ src/components/DynamicEvents.tsx
+@@ -230,15 +230,14 @@
+   useEffect(() => {
+     setActiveEvents((prev) =>
+       prev.map((event) => {
+-        const distance = Math.sqrt(
++        const distanceSq =
+           (event.location[0] - playerPosition[0]) *
+             (event.location[0] - playerPosition[0]) +
+             (event.location[2] - playerPosition[2]) *
+-              (event.location[2] - playerPosition[2])
+-        );
++              (event.location[2] - playerPosition[2]);
+
+         const wasInvolved = event.playerInvolved;
+-        const isInvolved = distance <= event.radius;
++        const isInvolved = distanceSq <= event.radius * event.radius;
+
+         if (isInvolved && !wasInvolved) {
+           gameStore.addAction(\`entered_event_\${event.type}\`);
+
+--- src/components/MinimalGame.tsx
++++ src/components/MinimalGame.tsx
+@@ -7,9 +7,9 @@
+   const [playerPos, setPlayerPos] = useState({ x: 50, y: 50 });
+   const [score, setScore] = useState(0);
+   const [enemies, setEnemies] = useState([
+-    { id: 1, x: 20, y: 20 },
+-    { id: 2, x: 80, y: 30 },
+-    { id: 3, x: 30, y: 80 },
++    { id: '1', x: 20, y: 20 },
++    { id: '2', x: 80, y: 30 },
++    { id: '3', x: 30, y: 80 },
+   ]);
+
+   useEffect(() => {
+@@ -73,17 +73,17 @@
+     if (enemies.length === 0) {
+       setEnemies([
+         {
+-          id: Date.now() + 1,
++          id: crypto.randomUUID(),
+           x: Math.random() * 90 + 5,
+           y: Math.random() * 90 + 5,
+         },
+         {
+-          id: Date.now() + 2,
++          id: crypto.randomUUID(),
+           x: Math.random() * 90 + 5,
+           y: Math.random() * 90 + 5,
+         },
+         {
+-          id: Date.now() + 3,
++          id: crypto.randomUUID(),
+           x: Math.random() * 90 + 5,
+           y: Math.random() * 90 + 5,
+         },
+
+--- src/components/Game.tsx
++++ src/components/Game.tsx
+@@ -570,7 +570,7 @@
+
+       // Add multiple effects for police kills
+       const bloodEffect: CombatEffect = {
+-        id: \`police_blood_\${Date.now()}\`,
++        id: \`police_blood_\${crypto.randomUUID()}\`,
+         position: playerPosition,
+         type: 'death_burst',
+         intensity: 1,
+@@ -579,7 +579,7 @@
+       };
+
+       const explosionEffect = {
+-        id: \`police_explosion_\${Date.now()}\`,
++        id: \`police_explosion_\${crypto.randomUUID()}\`,
+         position: playerPosition,
+         intensity: 0.8,
+       };
+@@ -589,7 +589,7 @@
+       setBloodPools((prev) => [
+         ...prev,
+         {
+-          id: \`blood_pool_\${Date.now()}\`,
++          id: \`blood_pool_\${crypto.randomUUID()}\`,
+           position: playerPosition,
+           size: 2 + Math.random(),
+         },
+@@ -715,23 +715,6 @@
+     }
+   }, []);
+
+-  const handleEventTriggered = useCallback(
+-    (event: any) => {
+-      // Add particle effects for events
+-      if (event.type === 'gang_war' || event.type === 'police_raid') {
+-        const effect = {
+-          id: \`event_particle_\${Date.now()}\`,
+-          type: 'explosion',
+-          position: event.location,
+-          intensity: event.severity / 100,
+-        };
+-        setParticleEffects((prev) => [...prev, effect]);
+-      }
+-
+-      gameStore.addAction(\`event_\${event.type}_started\`);
+-    },
+-    [gameStore]
+-  );
+   const handleEventTriggered = useCallback(
+     (event: any) => {
+       // Add particle effects for events

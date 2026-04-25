@@ -570,7 +570,7 @@ const Game: React.FC = () => {
 
       // Add multiple effects for police kills
       const bloodEffect: CombatEffect = {
-        id: `police_blood_${crypto.randomUUID()}`,
+        id: `police_blood_${Date.now()}`,
         position: playerPosition,
         type: 'death_burst',
         intensity: 1,
@@ -579,7 +579,7 @@ const Game: React.FC = () => {
       };
 
       const explosionEffect = {
-        id: `police_explosion_${crypto.randomUUID()}`,
+        id: `police_explosion_${Date.now()}`,
         position: playerPosition,
         intensity: 0.8,
       };
@@ -589,7 +589,7 @@ const Game: React.FC = () => {
       setBloodPools((prev) => [
         ...prev,
         {
-          id: `blood_pool_${crypto.randomUUID()}`,
+          id: `blood_pool_${Date.now()}`,
           position: playerPosition,
           size: 2 + Math.random(),
         },
@@ -715,7 +715,23 @@ const Game: React.FC = () => {
     }
   }, []);
 
+  const handleEventTriggered = useCallback(
+    (event: any) => {
+      // Add particle effects for events
+      if (event.type === 'gang_war' || event.type === 'police_raid') {
+        const effect = {
+          id: `event_particle_${Date.now()}`,
+          type: 'explosion',
+          position: event.location,
+          intensity: event.severity / 100,
+        };
+        setParticleEffects((prev) => [...prev, effect]);
+      }
 
+      gameStore.addAction(`event_${event.type}_started`);
+    },
+    [gameStore]
+  );
   const handleEventTriggered = useCallback(
     (event: any) => {
       // Add particle effects for events

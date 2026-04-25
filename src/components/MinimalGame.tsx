@@ -7,9 +7,9 @@ const MinimalGame = () => {
   const [playerPos, setPlayerPos] = useState({ x: 50, y: 50 });
   const [score, setScore] = useState(0);
   const [enemies, setEnemies] = useState([
-    { id: 1, x: 20, y: 20 },
-    { id: 2, x: 80, y: 30 },
-    { id: 3, x: 30, y: 80 },
+    { id: '1', x: 20, y: 20 },
+    { id: '2', x: 80, y: 30 },
+    { id: '3', x: 30, y: 80 },
   ]);
 
   useEffect(() => {
@@ -73,17 +73,17 @@ const MinimalGame = () => {
     if (enemies.length === 0) {
       setEnemies([
         {
-          id: Date.now() + 1,
+          id: crypto.randomUUID(),
           x: Math.random() * 90 + 5,
           y: Math.random() * 90 + 5,
         },
         {
-          id: Date.now() + 2,
+          id: crypto.randomUUID(),
           x: Math.random() * 90 + 5,
           y: Math.random() * 90 + 5,
         },
         {
-          id: Date.now() + 3,
+          id: crypto.randomUUID(),
           x: Math.random() * 90 + 5,
           y: Math.random() * 90 + 5,
         },
