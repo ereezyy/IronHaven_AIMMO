@@ -73,7 +73,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({ playerId, onUpdate }) => {
     if (left) inputVector.x -= 1;
     if (right) inputVector.x += 1;
 
-    if (inputVector.length() > 0) {
+    if (inputVector.lengthSq() > 0) {
       inputVector.normalize();
       inputVector.applyAxisAngle(new THREE.Vector3(0, 1, 0), mouseX.current);
     }
