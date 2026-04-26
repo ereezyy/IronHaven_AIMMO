@@ -89,7 +89,9 @@ class AIService {
         },
       });
 
-      console.log('Raw AI Response:', response);
+      if (import.meta.env.DEV) {
+        console.log('Raw AI Response:', response);
+      }
 
       const generatedText = response.generated_text?.trim() || '';
       const cleanedText = this.cleanAIResponse(generatedText);
@@ -465,7 +467,9 @@ class AIService {
         },
       });
 
-      console.log('AI Test Response:', response);
+      if (import.meta.env.DEV) {
+        console.log('AI Test Response:', response);
+      }
 
       if (
         response &&
