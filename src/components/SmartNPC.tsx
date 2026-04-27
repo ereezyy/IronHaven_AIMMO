@@ -180,15 +180,15 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
   };
 
   const generateFleeTarget = (): [number, number, number] => {
-    const angle = Math.atan2(
-      position[2] - playerPosition[2],
-      position[0] - playerPosition[0]
-    );
-    const distance = 20 + Math.random() * 15;
+    const dx = position[0] - playerPosition[0];
+    const dz = position[2] - playerPosition[2];
+    const distSq = dx * dx + dz * dz;
+    const dist = distSq > 0 ? Math.sqrt(distSq) : 1;
+    const fleeDist = 20 + Math.random() * 15;
     return [
-      position[0] + Math.cos(angle) * distance,
+      position[0] + (dx / dist) * fleeDist,
       position[1],
-      position[2] + Math.sin(angle) * distance,
+      position[2] + (dz / dist) * fleeDist,
     ];
   };
 

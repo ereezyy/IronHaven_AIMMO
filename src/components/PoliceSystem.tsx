@@ -99,9 +99,10 @@ const PoliceSystem: React.FC<PoliceSystemProps> = ({
           // Move towards player
           const dx = playerPosition[0] - unit.position[0];
           const dz = playerPosition[2] - unit.position[2];
-          const distance = Math.sqrt(dx * dx + dz * dz);
+          const distSq = dx * dx + dz * dz;
+          const distance = distSq > 4 ? Math.sqrt(distSq) : distSq;
 
-          if (distance > 2) {
+          if (distSq > 4) {
             const moveX = (dx / distance) * unit.speed * 0.1;
             const moveZ = (dz / distance) * unit.speed * 0.1;
 
