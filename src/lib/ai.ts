@@ -89,7 +89,9 @@ class AIService {
         },
       });
 
-      console.log('Raw AI Response:', response);
+      if (import.meta.env.DEV) {
+        console.log('Raw AI Response:', response);
+      }
 
       const generatedText = response.generated_text?.trim() || '';
       const cleanedText = this.cleanAIResponse(generatedText);
