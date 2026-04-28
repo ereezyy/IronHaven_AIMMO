@@ -170,16 +170,36 @@ export const PlayerList: React.FC<{
 }> = ({ playerPosition }) => {
   const [nearbyPlayers, setNearbyPlayers] = useState<PlayerData[]>([]);
   const [isVisible, setIsVisible] = useState(false);
+  const playerPositionRef = React.useRef(playerPosition);
+
+  useEffect(() => {
+    playerPositionRef.current = playerPosition;
+  }, [playerPosition]);
 
   useEffect(() => {
     const updateNearbyPlayers = () => {
-      const players = multiplayerManager.getNearbyPlayers(playerPosition, 50);
+      const players = multiplayerManager.getNearbyPlayers(
+        playerPositionRef.current,
+        50
+      );
       setNearbyPlayers(players);
     };
 
-    const interval = setInterval(updateNearbyPlayers, 1000);
-    return () => clearInterval(interval);
-  }, [playerPosition]);
+    multiplayerManager.on('world_state_update', updateNearbyPlayers);
+    multiplayerManager.on('player_moved', updateNearbyPlayers);
+    multiplayerManager.on('player_joined', updateNearbyPlayers);
+    multiplayerManager.on('player_left', updateNearbyPlayers);
+
+    // Initial fetch
+    updateNearbyPlayers();
+
+    return () => {
+      multiplayerManager.off('world_state_update', updateNearbyPlayers);
+      multiplayerManager.off('player_moved', updateNearbyPlayers);
+      multiplayerManager.off('player_joined', updateNearbyPlayers);
+      multiplayerManager.off('player_left', updateNearbyPlayers);
+    };
+  }, []);
 
   if (!isVisible) {
     return (
