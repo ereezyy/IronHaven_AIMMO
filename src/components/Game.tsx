@@ -720,7 +720,7 @@ const Game: React.FC = () => {
       // Add particle effects for events
       if (event.type === 'gang_war' || event.type === 'police_raid') {
         const effect = {
-        id: `event_particle_${crypto.randomUUID()}`,
+          id: `event_particle_${crypto.randomUUID()}`,
           type: 'explosion',
           position: event.location,
           intensity: event.severity / 100,
