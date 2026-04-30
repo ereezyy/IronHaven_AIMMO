@@ -55,10 +55,6 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
 
   // Advanced AI Decision Making
   const makeDecision = () => {
-    const distanceToPlayer = Math.sqrt(
-      (position[0] - playerPosition[0]) * (position[0] - playerPosition[0]) +
-        (position[2] - playerPosition[2]) * (position[2] - playerPosition[2])
-    );
     const distanceToPlayerSq =
       (position[0] - playerPosition[0]) * (position[0] - playerPosition[0]) +
       (position[2] - playerPosition[2]) * (position[2] - playerPosition[2]);

@@ -373,7 +373,7 @@ const ImprovedGame = () => {
           const dz = newState.player.position[2] - enemy.position[2];
           const distanceSq = dx * dx + dz * dz;
 
-          if (distanceSq > 2 * 2) {
+          if (distanceSq > 4) {
             const moveSpeed = 0.05;
             const distance = Math.sqrt(distanceSq);
             enemy.position[0] += (dx / distance) * moveSpeed;
