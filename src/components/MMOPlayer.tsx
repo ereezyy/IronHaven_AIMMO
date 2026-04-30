@@ -89,6 +89,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({ playerId, onUpdate }) => {
     const horizontalSpeedSq =
       newVelocity.x * newVelocity.x + newVelocity.z * newVelocity.z;
     if (horizontalSpeedSq > moveSpeed * moveSpeed) {
+      // Memory Convention: Prefer vector scaling via division and Math.sqrt over trig
       const horizontalSpeed = Math.sqrt(horizontalSpeedSq);
       const scale = moveSpeed / horizontalSpeed;
       newVelocity.x *= scale;

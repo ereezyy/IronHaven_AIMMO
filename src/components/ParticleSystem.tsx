@@ -58,7 +58,7 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({
         // Fire particles
         for (let i = 0; i < 20 * effect.intensity; i++) {
           particles.push({
-            id: `fire_${Date.now()}_${i}`,
+            id: `fire_${crypto.randomUUID()}_${i}`,
             position: basePosition
               .clone()
               .add(
@@ -94,7 +94,7 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({
         // Smoke particles
         for (let i = 0; i < 15 * effect.intensity; i++) {
           particles.push({
-            id: `smoke_${Date.now()}_${i}`,
+            id: `smoke_${crypto.randomUUID()}_${i}`,
             position: basePosition
               .clone()
               .add(
@@ -132,7 +132,7 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({
         // Muzzle flash sparks
         for (let i = 0; i < 10 * effect.intensity; i++) {
           particles.push({
-            id: `spark_${Date.now()}_${i}`,
+            id: `spark_${crypto.randomUUID()}_${i}`,
             position: basePosition
               .clone()
               .add(
@@ -168,7 +168,7 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({
         // Gun smoke
         for (let i = 0; i < 5 * effect.intensity; i++) {
           particles.push({
-            id: `gunsmoke_${Date.now()}_${i}`,
+            id: `gunsmoke_${crypto.randomUUID()}_${i}`,
             position: basePosition
               .clone()
               .add(
@@ -206,7 +206,7 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({
         // Blood droplets
         for (let i = 0; i < 15 * effect.intensity; i++) {
           particles.push({
-            id: `blood_${Date.now()}_${i}`,
+            id: `blood_${crypto.randomUUID()}_${i}`,
             position: basePosition
               .clone()
               .add(
@@ -244,7 +244,7 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({
         // Exhaust smoke
         for (let i = 0; i < 8 * effect.intensity; i++) {
           particles.push({
-            id: `exhaust_${Date.now()}_${i}`,
+            id: `exhaust_${crypto.randomUUID()}_${i}`,
             position: basePosition
               .clone()
               .add(
@@ -282,7 +282,7 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({
         // Debris particles
         for (let i = 0; i < 12 * effect.intensity; i++) {
           particles.push({
-            id: `debris_${Date.now()}_${i}`,
+            id: `debris_${crypto.randomUUID()}_${i}`,
             position: basePosition
               .clone()
               .add(

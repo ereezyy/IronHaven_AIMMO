@@ -170,10 +170,10 @@ const VehicleSystem: React.FC<VehicleSystemProps> = ({
           }
 
           // Steering
-          const speed = Math.sqrt(
-            newVelocity[0] * newVelocity[0] + newVelocity[2] * newVelocity[2]
-          );
-          if (speed > 1) {
+          const speedSq =
+            newVelocity[0] * newVelocity[0] + newVelocity[2] * newVelocity[2];
+          if (speedSq > 1) {
+            // 1^2 is 1
             if (keys['a'] || keys['arrowleft']) {
               newRotation -= handling * delta * 3;
             }
