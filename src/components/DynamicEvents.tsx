@@ -233,8 +233,8 @@ const DynamicEvents: React.FC<DynamicEventsProps> = ({
         const distanceSq =
           (event.location[0] - playerPosition[0]) *
             (event.location[0] - playerPosition[0]) +
-            (event.location[2] - playerPosition[2]) *
-              (event.location[2] - playerPosition[2]);
+          (event.location[2] - playerPosition[2]) *
+            (event.location[2] - playerPosition[2]);
 
         const wasInvolved = event.playerInvolved;
         const isInvolved = distanceSq <= event.radius * event.radius;
