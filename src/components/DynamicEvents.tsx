@@ -230,15 +230,14 @@ const DynamicEvents: React.FC<DynamicEventsProps> = ({
   useEffect(() => {
     setActiveEvents((prev) =>
       prev.map((event) => {
-        const distance = Math.sqrt(
+        const distanceSq =
           (event.location[0] - playerPosition[0]) *
             (event.location[0] - playerPosition[0]) +
             (event.location[2] - playerPosition[2]) *
-              (event.location[2] - playerPosition[2])
-        );
+              (event.location[2] - playerPosition[2]);
 
         const wasInvolved = event.playerInvolved;
-        const isInvolved = distance <= event.radius;
+        const isInvolved = distanceSq <= event.radius * event.radius;
 
         if (isInvolved && !wasInvolved) {
           gameStore.addAction(`entered_event_${event.type}`);
