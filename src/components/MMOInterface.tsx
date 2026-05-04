@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   multiplayerManager,
   PlayerData,
@@ -171,15 +171,31 @@ export const PlayerList: React.FC<{
   const [nearbyPlayers, setNearbyPlayers] = useState<PlayerData[]>([]);
   const [isVisible, setIsVisible] = useState(false);
 
+  const playerPositionRef = useRef(playerPosition);
+
+  // Keep ref in sync
   useEffect(() => {
+    playerPositionRef.current = playerPosition;
+  }, [playerPosition]);
+
+  useEffect(() => {
+    let lastUpdate = 0;
+
     const updateNearbyPlayers = () => {
-      const players = multiplayerManager.getNearbyPlayers(playerPosition, 50);
-      setNearbyPlayers(players);
+      const now = Date.now();
+      if (now - lastUpdate > 500) {
+        const players = multiplayerManager.getNearbyPlayers(playerPositionRef.current, 50);
+        setNearbyPlayers(players);
+        lastUpdate = now;
+      }
     };
 
-    const interval = setInterval(updateNearbyPlayers, 1000);
-    return () => clearInterval(interval);
-  }, [playerPosition]);
+    // Initial update
+    updateNearbyPlayers();
+
+    multiplayerManager.on('player_moved', updateNearbyPlayers);
+    return () => multiplayerManager.off('player_moved', updateNearbyPlayers);
+  }, []);
 
   if (!isVisible) {
     return (

@@ -120,7 +120,11 @@ class MultiplayerManager {
         };
 
         this.ws.onmessage = (event) => {
-          this.handleMessage(JSON.parse(event.data));
+          try {
+            this.handleMessage(JSON.parse(event.data));
+          } catch (error) {
+            console.error('❌ Failed to parse multiplayer message:', error);
+          }
         };
 
         this.ws.onclose = () => {

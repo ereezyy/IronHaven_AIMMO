@@ -55,10 +55,6 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
 
   // Advanced AI Decision Making
   const makeDecision = () => {
-    const distanceToPlayer = Math.sqrt(
-      (position[0] - playerPosition[0]) * (position[0] - playerPosition[0]) +
-        (position[2] - playerPosition[2]) * (position[2] - playerPosition[2])
-    );
     const distanceToPlayerSq =
       (position[0] - playerPosition[0]) * (position[0] - playerPosition[0]) +
       (position[2] - playerPosition[2]) * (position[2] - playerPosition[2]);
@@ -68,8 +64,6 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
     const playerKills = gameStore.playerStats.policeKillCount;
 
     // Line of sight check
-    const hasLineOfSight = distanceToPlayer < 30 && Math.random() > 0.2;
-
     const hasLineOfSight = distanceToPlayerSq < 900 && Math.random() > 0.2;
 
     if (hasLineOfSight) {
