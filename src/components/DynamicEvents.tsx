@@ -237,7 +237,7 @@ const DynamicEvents: React.FC<DynamicEventsProps> = ({
             (event.location[2] - playerPosition[2]);
 
         const wasInvolved = event.playerInvolved;
-        const isInvolved = distanceSq <= (event.radius * event.radius);
+        const isInvolved = distanceSq <= event.radius * event.radius;
 
         if (isInvolved && !wasInvolved) {
           gameStore.addAction(`entered_event_${event.type}`);

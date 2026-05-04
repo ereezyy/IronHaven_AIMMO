@@ -184,7 +184,10 @@ export const PlayerList: React.FC<{
     const updateNearbyPlayers = () => {
       const now = Date.now();
       if (now - lastUpdate > 500) {
-        const players = multiplayerManager.getNearbyPlayers(playerPositionRef.current, 50);
+        const players = multiplayerManager.getNearbyPlayers(
+          playerPositionRef.current,
+          50
+        );
         setNearbyPlayers(players);
         lastUpdate = now;
       }
