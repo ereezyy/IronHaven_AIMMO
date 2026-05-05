@@ -9,21 +9,27 @@ const getHfToken = () => {
     (window as any).HUGGING_FACE_TOKEN ||
     'YOUR_HUGGING_FACE_TOKEN_HERE'; // Placeholder - replace with your token
 
-  console.log(
-    'AI Token Status:',
-    token && token !== 'YOUR_HUGGING_FACE_TOKEN_HERE'
-      ? 'Token found'
-      : 'No token'
-  );
+  if (import.meta.env.DEV) {
+    console.log(
+      'AI Token Status:',
+      token && token !== 'YOUR_HUGGING_FACE_TOKEN_HERE'
+        ? 'Token found'
+        : 'Token missing'
+    );
+  }
   return token;
 };
 
 let hf: HfInference;
 try {
   hf = new HfInference(getHfToken());
-  console.log('Hugging Face client initialized successfully');
+  if (import.meta.env.DEV) {
+    console.log('Hugging Face client initialized successfully');
+  }
 } catch (error) {
-  console.error('Failed to initialize Hugging Face client:', error);
+  if (import.meta.env.DEV) {
+    console.error('Failed to initialize Hugging Face client:', error);
+  }
 }
 
 export interface AIResponse {
@@ -68,7 +74,9 @@ class AIService {
     context: string
   ): Promise<AIResponse> {
     try {
-      console.log(`Generating NPC dialogue for ${personality.type}...`);
+      if (import.meta.env.DEV) {
+        console.log(`Generating NPC dialogue for ${personality.type}...`);
+      }
 
       if (!hf) {
         console.warn('Hugging Face client not available, using fallback');
@@ -450,7 +458,9 @@ class AIService {
   // Public method to check if AI is working
   async testConnection(): Promise<boolean> {
     try {
-      console.log('Testing Hugging Face connection...');
+      if (import.meta.env.DEV) {
+        console.log('Testing Hugging Face connection...');
+      }
 
       if (!hf) {
         console.error('Hugging Face client not initialized');
@@ -478,7 +488,9 @@ class AIService {
         (response.generated_text || response.generated_text === '')
       ) {
         this.isOnline = true;
-        console.log('✅ Hugging Face AI connection successful');
+        if (import.meta.env.DEV) {
+          console.log('✅ Hugging Face AI connection successful');
+        }
         return true;
       } else {
         throw new Error('Invalid response format');

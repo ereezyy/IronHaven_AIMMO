@@ -73,17 +73,17 @@ const MinimalGame = () => {
     if (enemies.length === 0) {
       setEnemies([
         {
-          id: Date.now() + 1,
+          id: crypto.randomUUID(),
           x: Math.random() * 90 + 5,
           y: Math.random() * 90 + 5,
         },
         {
-          id: Date.now() + 2,
+          id: crypto.randomUUID(),
           x: Math.random() * 90 + 5,
           y: Math.random() * 90 + 5,
         },
         {
-          id: Date.now() + 3,
+          id: crypto.randomUUID(),
           x: Math.random() * 90 + 5,
           y: Math.random() * 90 + 5,
         },
