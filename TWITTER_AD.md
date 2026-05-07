@@ -3,6 +3,9 @@
 🏙️ Return to the neon-lit streets of IronHaven! Our latest MASSIVE update brings you the ultimate, hyper-optimized browser MMORPG experience. Jump in instantly. No downloads. Just 100% pure action.
 
 🔥 LATEST IMPROVEMENTS:
+⚡ Blistering Performance: We’ve completely overhauled our physics and distance calculation loops and crushed memory leaks. Enjoy incredibly fluid 60FPS combat as you navigate the chaos without any stutters!
+🛡️ Uncompromised Security: Your progression is locked down. With our new cryptographic UUIDs everywhere, and robust Row Level Security database infrastructure, your empire is safer than ever.
+🤖 Unmatched AI: Encounter dynamic, intelligent NPCs that react instantly to your choices and tactics.
 ⚡ Blistering Performance: We’ve completely overhauled our UI elements and physics loops with event-driven updates. Enjoy incredibly fluid 60FPS combat as you navigate the chaos without CPU bottlenecks!
 🛡️ Uncompromised Security: Your progression is locked down. We've enhanced multiplayer integrity with secure error handling and zero-leak production logs.
 🤖 Dynamic World: Encounter dynamic, intelligent NPCs with zero-overhead spatial proximity mechanics that instantly react to your choices and tactics.

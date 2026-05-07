@@ -64,6 +64,7 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
     const playerKills = gameStore.playerStats.policeKillCount;
 
     // Line of sight check
+    const hasLineOfSight = distanceToPlayerSq < 30 * 30 && Math.random() > 0.2;
     const hasLineOfSight = distanceToPlayerSq < 900 && Math.random() > 0.2;
 
     if (hasLineOfSight) {
