@@ -89,7 +89,9 @@ class AIService {
         },
       });
 
-      console.log('Raw AI Response:', response);
+      if (import.meta.env.DEV) {
+        console.log('Raw AI Response:', response);
+      }
 
       const generatedText = response.generated_text?.trim() || '';
       const cleanedText = this.cleanAIResponse(generatedText);
@@ -104,7 +106,9 @@ class AIService {
 
       const finalText = cleanedText || this.getFallbackDialogue(personality);
 
-      console.log(`✅ Generated dialogue: "${finalText}"`);
+      if (import.meta.env.DEV) {
+        console.log(`✅ Generated dialogue: "${finalText}"`);
+      }
 
       return {
         text: finalText,
@@ -465,7 +469,9 @@ class AIService {
         },
       });
 
-      console.log('AI Test Response:', response);
+      if (import.meta.env.DEV) {
+        console.log('AI Test Response:', response);
+      }
 
       if (
         response &&

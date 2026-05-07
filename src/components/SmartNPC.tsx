@@ -65,6 +65,7 @@ const SmartNPC: React.FC<SmartNPCProps> = ({
 
     // Line of sight check
     const hasLineOfSight = distanceToPlayerSq < 30 * 30 && Math.random() > 0.2;
+    const hasLineOfSight = distanceToPlayerSq < 900 && Math.random() > 0.2;
 
     if (hasLineOfSight) {
       setState((prev) => ({
