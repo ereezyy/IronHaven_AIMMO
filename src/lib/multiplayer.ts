@@ -159,18 +159,6 @@ class MultiplayerManager {
       case 'player_moved':
         this.updatePlayerPosition(data);
         break;
-      case 'combat_event':
-        this.handleCombatEvent(data);
-        break;
-      case 'chat_message':
-        this.handleChatMessage(data);
-        break;
-      case 'guild_update':
-        this.handleGuildUpdate(data);
-        break;
-      case 'territory_update':
-        this.handleTerritoryUpdate(data);
-        break;
     }
 
     // Trigger callbacks
@@ -315,26 +303,6 @@ class MultiplayerManager {
       player.velocity = data.velocity;
       player.lastSeen = data.timestamp;
     }
-  }
-
-  private handleCombatEvent(data: any) {
-    // Handle combat events between players
-    console.log('⚔️ Combat event:', data);
-  }
-
-  private handleChatMessage(data: any) {
-    // Handle incoming chat messages
-    console.log('💬 Chat:', data);
-  }
-
-  private handleGuildUpdate(data: any) {
-    // Handle guild-related updates
-    console.log('🏰 Guild update:', data);
-  }
-
-  private handleTerritoryUpdate(data: any) {
-    // Handle territory control changes
-    console.log('🗺️ Territory update:', data);
   }
 
   private calculateDistanceSq(
