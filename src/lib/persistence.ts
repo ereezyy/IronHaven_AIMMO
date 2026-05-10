@@ -338,8 +338,7 @@ class PersistenceService {
         .filter((player) => {
           const dx = player.position_x - position[0];
           const dz = player.position_z - position[2];
-          const distance = Math.sqrt(dx * dx + dz * dz);
-          return distance <= radius;
+          return dx * dx + dz * dz <= radius * radius;
         })
         .map((player) => ({
           id: player.id,
