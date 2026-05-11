@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameState';
 
-const STATIC_PARTICLES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
+const STATIC_PARTICLES = [
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+];
 const MinimalGame = () => {
   const initializePlayer = useGameStore((state) => state.initializePlayer);
   const [playerPos, setPlayerPos] = useState({ x: 50, y: 50 });
