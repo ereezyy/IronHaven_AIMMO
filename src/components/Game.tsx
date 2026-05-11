@@ -494,18 +494,24 @@ const Game: React.FC = () => {
   }, [playerPosition, lastUpdate]);
 
   // Analyze threat level periodically
+  const isAnalyzing = useRef(false);
   useEffect(() => {
     const analyzeThreat = async () => {
+      if (isAnalyzing.current) return;
+      isAnalyzing.current = true;
       try {
         const analysis = await analyzeThreatLevel(playerPosition, allNPCs);
         setThreatLevel(analysis.level);
       } catch (error) {
         console.error('Error analyzing threat:', error);
+      } finally {
+        setTimeout(() => {
+          isAnalyzing.current = false;
+        }, 3000); // Throttle frequency
       }
     };
 
-    const interval = setInterval(analyzeThreat, 3000);
-    return () => clearInterval(interval);
+    analyzeThreat();
   }, [playerPosition, allNPCs]);
 
   const handleNPCClick = useCallback(
@@ -570,7 +576,7 @@ const Game: React.FC = () => {
 
       // Add multiple effects for police kills
       const bloodEffect: CombatEffect = {
-        id: `police_blood_${Date.now()}`,
+        id: `police_blood_${crypto.randomUUID()}`,
         position: playerPosition,
         type: 'death_burst',
         intensity: 1,
@@ -579,7 +585,7 @@ const Game: React.FC = () => {
       };
 
       const explosionEffect = {
-        id: `police_explosion_${Date.now()}`,
+        id: `police_explosion_${crypto.randomUUID()}`,
         position: playerPosition,
         intensity: 0.8,
       };
@@ -589,7 +595,7 @@ const Game: React.FC = () => {
       setBloodPools((prev) => [
         ...prev,
         {
-          id: `blood_pool_${Date.now()}`,
+          id: `blood_pool_${crypto.randomUUID()}`,
           position: playerPosition,
           size: 2 + Math.random(),
         },
@@ -720,7 +726,7 @@ const Game: React.FC = () => {
       // Add particle effects for events
       if (event.type === 'gang_war' || event.type === 'police_raid') {
         const effect = {
-          id: `event_particle_${Date.now()}`,
+          id: `event_particle_${crypto.randomUUID()}`,
           type: 'explosion',
           position: event.location,
           intensity: event.severity / 100,
