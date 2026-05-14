@@ -4,6 +4,10 @@ interface SimpleIntroProps {
   onComplete: () => void;
 }
 
+const FLOATING_PARTICLES = [
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+];
+
 const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
   const [timeLeft, setTimeLeft] = useState(20);
   const [stage, setStage] = useState(0);
@@ -90,9 +94,7 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
         />
 
         {/* Floating particles */}
-        {[
-          0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-        ].map((_, i) => (
+        {FLOATING_PARTICLES.map((_, i) => (
           <div
             key={i}
             className="absolute w-2 h-2 bg-cyan-400 rounded-full opacity-60"

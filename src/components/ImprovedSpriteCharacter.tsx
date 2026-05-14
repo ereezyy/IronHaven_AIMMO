@@ -3,6 +3,8 @@ import { useFrame, useLoader } from '@react-three/fiber';
 import { TextureLoader } from 'three';
 import * as THREE from 'three';
 
+const MOVEMENT_PARTICLES = [0, 1, 2];
+
 interface ImprovedSpriteCharacterProps {
   position: [number, number, number];
   characterType: 'player' | 'npc' | 'enemy';
@@ -156,7 +158,7 @@ const ImprovedSpriteCharacter: React.FC<ImprovedSpriteCharacterProps> = ({
       {isMoving && (
         <>
           {/* Movement particles */}
-          {[0, 1, 2].map((_, i) => (
+          {MOVEMENT_PARTICLES.map((_, i) => (
             <mesh
               key={i}
               position={[

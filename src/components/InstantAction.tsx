@@ -3,6 +3,11 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Box, Sphere, Text } from '@react-three/drei';
 import * as THREE from 'three';
 
+const ENEMIES = [0, 1, 2, 3, 4, 5, 6, 7];
+const ENVIRONMENT_PROPS = [
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+];
+
 interface InstantActionProps {
   onAIDemo: () => void;
   onMultiplayerDemo: () => void;
@@ -85,7 +90,7 @@ const AutoActionSequence = () => {
       </group>
 
       {/* AI-controlled enemies */}
-      {[0, 1, 2, 3, 4, 5, 6, 7].map((_, i) => {
+      {ENEMIES.map((_, i) => {
         const angle = (i / 8) * Math.PI * 2;
         const radius = 20 + Math.sin(Date.now() * 0.001 + i) * 5;
 
@@ -161,9 +166,7 @@ const AutoActionSequence = () => {
       ))}
 
       {/* Epic environment */}
-      {[
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-      ].map((_, i) => (
+      {ENVIRONMENT_PROPS.map((_, i) => (
         <group
           key={i}
           position={[
