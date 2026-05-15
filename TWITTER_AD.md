@@ -1,15 +1,17 @@
-# 🚀 IronHaven AIMMO: The Next Level of Cyberpunk Action! 🚀
+# 🌌 IronHaven AIMMO: The Ultimate Cyberpunk MMORPG Update is HERE! 🌌
 
-🏙️ Return to the neon-lit streets of IronHaven! Our latest MASSIVE update brings you the ultimate, hyper-optimized browser MMORPG experience. Jump in instantly. No downloads. Just 100% pure action.
+The neon streets of IronHaven just got a massive upgrade! Dive into the most immersive, hyper-optimized browser MMO experience ever created. No downloads, just pure action. 💥
 
-🔥 LATEST IMPROVEMENTS:
-⚡ Blistering Performance: We’ve completely overhauled our UI elements with React optimizations and reactive throttling. Enjoy incredibly fluid 60FPS combat as you navigate the chaos without CPU bottlenecks!
-🛡️ Uncompromised Security: Your progression is locked down. We've enhanced multiplayer integrity with cryptographic UUIDs to prevent collision and prediction attacks, and maintained append-only records with zero-leak production logs.
-🤖 Dynamic World: Encounter dynamic, intelligent NPCs with zero-overhead spatial proximity mechanics that instantly react to your choices and tactics.
-💾 Unstoppable Grind: Out of network? With our persistent offline data saving mode, you never lose progression.
+🔥 WHAT'S NEW:
+💾 **Seamless Progression:** Cross-session saves and offline persistence powered by Supabase! Your grind never stops, even without network.
+🎨 **Next-Gen Graphics:** Expanded FOV, ultra-crisp dynamic rendering, physically correct lighting, and enhanced shadows for jaw-dropping realism!
+🤖 **Smarter AI NPCs:** Zero-overhead dynamic NPCs that react intelligently to your every move and choice.
+🎮 **Tighter Controls:** Increased speed, responsive dash, smoother camera following, and advanced physics to dominate combat.
+⚡ **60FPS Action:** Blistering performance with smart culling and React optimizations.
+🛡️ **Ironclad Security:** Append-only logs and cryptographic multiplayer integrity protect your hard-earned progress!
 
-Ready to dominate the underworld? The city is waiting.
+The underworld is calling. Are you ready?
 
-👉 Play instantly: ironhaven-aimmo.com
+👉 Play Instantly: ironhaven-aimmo.com
 
-#IndieGame #GameDev #Cyberpunk #MMORPG #AI #BrowserGame #ThreeJS #ReactJS #Web3D #CryptoSecurity
+#IndieGame #GameDev #Cyberpunk #MMORPG #AI #BrowserGame #ThreeJS #ReactJS #Supabase #Web3D
