@@ -101,7 +101,9 @@ const MMOGame: React.FC = () => {
       })
       .on('presence', { event: 'sync' }, () => {
         const state = channel.presenceState();
-        console.log('Players online:', Object.keys(state).length);
+        if (import.meta.env.DEV) {
+          console.log('Players online:', Object.keys(state).length);
+        }
       })
       .subscribe();
 
