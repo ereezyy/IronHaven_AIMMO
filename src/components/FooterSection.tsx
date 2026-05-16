@@ -18,7 +18,9 @@ const FooterSection: React.FC = () => {
     if (isAgeVerified && email) {
       setIsSubmitted(true);
       // This would normally submit to a backend
-      console.log('Submitted email:', email);
+      if (import.meta.env.DEV) {
+        console.log('Submitted email:', email);
+      }
     }
   };
 

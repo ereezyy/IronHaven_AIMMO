@@ -206,7 +206,9 @@ export class AIConfigManager {
   static saveConfiguration(config: AIConfiguration): void {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(config));
-      console.log('AI configuration saved successfully');
+      if (import.meta.env.DEV) {
+        console.log('AI configuration saved successfully');
+      }
     } catch (error) {
       console.error('Failed to save AI configuration:', error);
     }
@@ -284,6 +286,8 @@ export class AIConfigManager {
 
   static resetToDefaults(): void {
     localStorage.removeItem(this.STORAGE_KEY);
-    console.log('AI configuration reset to defaults');
+    if (import.meta.env.DEV) {
+      console.log('AI configuration reset to defaults');
+    }
   }
 }
