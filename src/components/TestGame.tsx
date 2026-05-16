@@ -80,10 +80,16 @@ const TestGame = () => {
 
   // Movement logic
   useEffect(() => {
-    const moveLoop = setInterval(() => {
+    let animationFrameId: number;
+    let lastTime = performance.now();
+
+    const loop = (time: number) => {
+      const dt = Math.min((time - lastTime) / 1000, 0.1);
+      lastTime = time;
+
       setPlayerPos((prev) => {
         const newPos: [number, number, number] = [...prev];
-        const speed = 0.1;
+        const speed = 6.25 * dt; // 0.1 per 16ms -> ~6.25 per sec
 
         if (keys.has('KeyW') || keys.has('ArrowUp')) newPos[2] -= speed;
         if (keys.has('KeyS') || keys.has('ArrowDown')) newPos[2] += speed;
@@ -92,9 +98,13 @@ const TestGame = () => {
 
         return newPos;
       });
-    }, 16);
 
-    return () => clearInterval(moveLoop);
+      animationFrameId = requestAnimationFrame(loop);
+    };
+
+    animationFrameId = requestAnimationFrame(loop);
+
+    return () => cancelAnimationFrame(animationFrameId);
   }, [keys]);
 
   return (
