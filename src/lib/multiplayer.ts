@@ -110,7 +110,7 @@ class MultiplayerManager {
         this.ws = new WebSocket(serverUrl);
 
         this.ws.onopen = () => {
-          console.log('🌐 Connected to IronHaven AIMMO multiplayer server');
+          if (import.meta.env.DEV) console.log('🌐 Connected to IronHaven AIMMO multiplayer server');
           this.reconnectAttempts = 0;
           this.sendMessage('player_join', {
             playerId: this.playerId,
@@ -123,17 +123,17 @@ class MultiplayerManager {
           try {
             this.handleMessage(JSON.parse(event.data));
           } catch (error) {
-            console.error('❌ Failed to parse multiplayer message:', error);
+            if (import.meta.env.DEV) console.error('❌ Failed to parse multiplayer message:', error);
           }
         };
 
         this.ws.onclose = () => {
-          console.log('🔌 Disconnected from multiplayer server');
+          if (import.meta.env.DEV) console.log('🔌 Disconnected from multiplayer server');
           this.attemptReconnect();
         };
 
         this.ws.onerror = (error) => {
-          console.error('❌ Multiplayer connection error:', error);
+          if (import.meta.env.DEV) console.error('❌ Multiplayer connection error:', error);
           reject(error);
         };
       } catch (error) {
@@ -319,22 +319,22 @@ class MultiplayerManager {
 
   private handleCombatEvent(data: any) {
     // Handle combat events between players
-    console.log('⚔️ Combat event:', data);
+    if (import.meta.env.DEV) console.log('⚔️ Combat event:', data);
   }
 
   private handleChatMessage(data: any) {
     // Handle incoming chat messages
-    console.log('💬 Chat:', data);
+    if (import.meta.env.DEV) console.log('💬 Chat:', data);
   }
 
   private handleGuildUpdate(data: any) {
     // Handle guild-related updates
-    console.log('🏰 Guild update:', data);
+    if (import.meta.env.DEV) console.log('🏰 Guild update:', data);
   }
 
   private handleTerritoryUpdate(data: any) {
     // Handle territory control changes
-    console.log('🗺️ Territory update:', data);
+    if (import.meta.env.DEV) console.log('🗺️ Territory update:', data);
   }
 
   private calculateDistanceSq(
@@ -357,7 +357,7 @@ class MultiplayerManager {
   private attemptReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      console.log(
+      if (import.meta.env.DEV) console.log(
         `🔄 Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`
       );
 
@@ -365,7 +365,7 @@ class MultiplayerManager {
         this.connect();
       }, 2000 * this.reconnectAttempts); // Exponential backoff
     } else {
-      console.log(
+      if (import.meta.env.DEV) console.log(
         '❌ Max reconnection attempts reached. Switching to offline mode.'
       );
     }

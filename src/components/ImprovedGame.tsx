@@ -322,16 +322,22 @@ const ImprovedGame = () => {
 
   // Game loop
   useEffect(() => {
-    const gameLoop = setInterval(() => {
+    let animationFrameId: number;
+    let lastTime = performance.now();
+
+    const gameLoop = (currentTime: number) => {
+      const dt = (currentTime - lastTime) / 1000;
+      lastTime = currentTime;
+
       setGameState((prev) => {
         const newState = { ...prev };
 
         // Update game time
-        newState.gameTime += 0.016; // ~60fps
+        newState.gameTime += dt;
 
         // Player movement
         let isMoving = false;
-        const moveSpeed = 0.3;
+        const moveSpeed = 18.75 * dt; // Base 0.3 / 0.016s = 18.75 units/sec
 
         if (keys.has('KeyW') || keys.has('ArrowUp')) {
           newState.player.position[2] -= moveSpeed;
@@ -374,10 +380,10 @@ const ImprovedGame = () => {
           const distanceSq = dx * dx + dz * dz;
 
           if (distanceSq > 2 * 2) {
-            const moveSpeed = 0.05;
+            const enemyMoveSpeed = 3.125 * dt; // Base 0.05 / 0.016s = 3.125 units/sec
             const distance = Math.sqrt(distanceSq);
-            enemy.position[0] += (dx / distance) * moveSpeed;
-            enemy.position[2] += (dz / distance) * moveSpeed;
+            enemy.position[0] += (dx / distance) * enemyMoveSpeed;
+            enemy.position[2] += (dz / distance) * enemyMoveSpeed;
             enemy.isMoving = true;
           } else {
             enemy.isMoving = false;
@@ -386,9 +392,13 @@ const ImprovedGame = () => {
 
         return newState;
       });
-    }, 16); // ~60fps
 
-    return () => clearInterval(gameLoop);
+      animationFrameId = requestAnimationFrame(gameLoop);
+    };
+
+    animationFrameId = requestAnimationFrame(gameLoop);
+
+    return () => cancelAnimationFrame(animationFrameId);
   }, [keys]);
 
   const handleWeaponFire = (
