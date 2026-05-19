@@ -110,7 +110,8 @@ class MultiplayerManager {
         this.ws = new WebSocket(serverUrl);
 
         this.ws.onopen = () => {
-          if (import.meta.env.DEV) console.log('🌐 Connected to IronHaven AIMMO multiplayer server');
+          if (import.meta.env.DEV)
+            console.log('🌐 Connected to IronHaven AIMMO multiplayer server');
           this.reconnectAttempts = 0;
           this.sendMessage('player_join', {
             playerId: this.playerId,
@@ -123,17 +124,20 @@ class MultiplayerManager {
           try {
             this.handleMessage(JSON.parse(event.data));
           } catch (error) {
-            if (import.meta.env.DEV) console.error('❌ Failed to parse multiplayer message:', error);
+            if (import.meta.env.DEV)
+              console.error('❌ Failed to parse multiplayer message:', error);
           }
         };
 
         this.ws.onclose = () => {
-          if (import.meta.env.DEV) console.log('🔌 Disconnected from multiplayer server');
+          if (import.meta.env.DEV)
+            console.log('🔌 Disconnected from multiplayer server');
           this.attemptReconnect();
         };
 
         this.ws.onerror = (error) => {
-          if (import.meta.env.DEV) console.error('❌ Multiplayer connection error:', error);
+          if (import.meta.env.DEV)
+            console.error('❌ Multiplayer connection error:', error);
           reject(error);
         };
       } catch (error) {
@@ -357,17 +361,19 @@ class MultiplayerManager {
   private attemptReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      if (import.meta.env.DEV) console.log(
-        `🔄 Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`
-      );
+      if (import.meta.env.DEV)
+        console.log(
+          `🔄 Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+        );
 
       setTimeout(() => {
         this.connect();
       }, 2000 * this.reconnectAttempts); // Exponential backoff
     } else {
-      if (import.meta.env.DEV) console.log(
-        '❌ Max reconnection attempts reached. Switching to offline mode.'
-      );
+      if (import.meta.env.DEV)
+        console.log(
+          '❌ Max reconnection attempts reached. Switching to offline mode.'
+        );
     }
   }
 
