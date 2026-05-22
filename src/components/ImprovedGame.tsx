@@ -322,16 +322,24 @@ const ImprovedGame = () => {
 
   // Game loop
   useEffect(() => {
-    const gameLoop = setInterval(() => {
+    let animationFrameId: number;
+    let lastTime = performance.now();
+
+    const gameLoop = (time: number) => {
+      const dt = (time - lastTime) / 1000;
+      lastTime = time;
+      const safeDt = Math.min(dt, 0.1); // Max 100ms step
+
       setGameState((prev) => {
         const newState = { ...prev };
 
         // Update game time
-        newState.gameTime += 0.016; // ~60fps
+        newState.gameTime += safeDt;
 
         // Player movement
         let isMoving = false;
-        const moveSpeed = 0.3;
+        // ~0.3 per 16ms -> ~18.75 per second
+        const moveSpeed = 18.75 * safeDt;
 
         if (keys.has('KeyW') || keys.has('ArrowUp')) {
           newState.player.position[2] -= moveSpeed;
@@ -354,9 +362,11 @@ const ImprovedGame = () => {
 
         // Update projectiles
         newState.projectiles = newState.projectiles.filter((projectile) => {
-          projectile.position[0] += projectile.direction[0] * projectile.speed;
-          projectile.position[1] += projectile.direction[1] * projectile.speed;
-          projectile.position[2] += projectile.direction[2] * projectile.speed;
+          // Scale original speed per frame to per second
+          const projSpeed = projectile.speed * 60 * safeDt;
+          projectile.position[0] += projectile.direction[0] * projSpeed;
+          projectile.position[1] += projectile.direction[1] * projSpeed;
+          projectile.position[2] += projectile.direction[2] * projSpeed;
 
           // Remove projectiles that are too far
           const distanceSq =
@@ -374,7 +384,8 @@ const ImprovedGame = () => {
           const distanceSq = dx * dx + dz * dz;
 
           if (distanceSq > 2 * 2) {
-            const moveSpeed = 0.05;
+            // ~0.05 per 16ms -> ~3.125 per second
+            const moveSpeed = 3.125 * safeDt;
             const distance = Math.sqrt(distanceSq);
             enemy.position[0] += (dx / distance) * moveSpeed;
             enemy.position[2] += (dz / distance) * moveSpeed;
@@ -386,9 +397,13 @@ const ImprovedGame = () => {
 
         return newState;
       });
-    }, 16); // ~60fps
 
-    return () => clearInterval(gameLoop);
+      animationFrameId = requestAnimationFrame(gameLoop);
+    };
+
+    animationFrameId = requestAnimationFrame(gameLoop);
+
+    return () => cancelAnimationFrame(animationFrameId);
   }, [keys]);
 
   const handleWeaponFire = (
