@@ -319,22 +319,30 @@ class MultiplayerManager {
 
   private handleCombatEvent(data: any) {
     // Handle combat events between players
-    console.log('⚔️ Combat event:', data);
+    if (import.meta.env.DEV) {
+      console.log('⚔️ Combat event:', data);
+    }
   }
 
   private handleChatMessage(data: any) {
     // Handle incoming chat messages
-    console.log('💬 Chat:', data);
+    if (import.meta.env.DEV) {
+      console.log('💬 Chat:', data);
+    }
   }
 
   private handleGuildUpdate(data: any) {
     // Handle guild-related updates
-    console.log('🏰 Guild update:', data);
+    if (import.meta.env.DEV) {
+      console.log('🏰 Guild update:', data);
+    }
   }
 
   private handleTerritoryUpdate(data: any) {
     // Handle territory control changes
-    console.log('🗺️ Territory update:', data);
+    if (import.meta.env.DEV) {
+      console.log('🗺️ Territory update:', data);
+    }
   }
 
   private calculateDistanceSq(
