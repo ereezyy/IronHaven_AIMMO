@@ -329,6 +329,13 @@ const ImprovedGame = () => {
       const dt = (time - lastTime) / 1000;
       lastTime = time;
       const safeDt = Math.min(dt, 0.1); // Max 100ms step
+    const gameLoop = (currentTime: number) => {
+      // Calculate delta time in seconds
+      const dt = (currentTime - lastTime) / 1000;
+      lastTime = currentTime;
+
+      // Cap dt to prevent massive jumps if tab is inactive
+      const safeDt = Math.min(dt, 0.1);
 
       setGameState((prev) => {
         const newState = { ...prev };
@@ -339,6 +346,7 @@ const ImprovedGame = () => {
         // Player movement
         let isMoving = false;
         // ~0.3 per 16ms -> ~18.75 per second
+        // Base speed roughly equivalent to 0.3 per 16ms (0.3 / 0.016 ≈ 18.75)
         const moveSpeed = 18.75 * safeDt;
 
         if (keys.has('KeyW') || keys.has('ArrowUp')) {
@@ -363,6 +371,7 @@ const ImprovedGame = () => {
         // Update projectiles
         newState.projectiles = newState.projectiles.filter((projectile) => {
           // Scale original speed per frame to per second
+          // Assuming original speed was per frame, adjust to per second (speed / 0.016)
           const projSpeed = projectile.speed * 60 * safeDt;
           projectile.position[0] += projectile.direction[0] * projSpeed;
           projectile.position[1] += projectile.direction[1] * projSpeed;
@@ -386,9 +395,11 @@ const ImprovedGame = () => {
           if (distanceSq > 2 * 2) {
             // ~0.05 per 16ms -> ~3.125 per second
             const moveSpeed = 3.125 * safeDt;
+            // Adjust enemy speed (0.05 / 0.016 ≈ 3.125)
+            const enemySpeed = 3.125 * safeDt;
             const distance = Math.sqrt(distanceSq);
-            enemy.position[0] += (dx / distance) * moveSpeed;
-            enemy.position[2] += (dz / distance) * moveSpeed;
+            enemy.position[0] += (dx / distance) * enemySpeed;
+            enemy.position[2] += (dz / distance) * enemySpeed;
             enemy.isMoving = true;
           } else {
             enemy.isMoving = false;
