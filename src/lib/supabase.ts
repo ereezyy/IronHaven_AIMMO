@@ -1,13 +1,57 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as
+  | string
+  | undefined;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+export const SUPABASE_CONFIGURED = Boolean(supabaseUrl && supabaseAnonKey);
+
+// Offline / no-op stub so the app boots without Supabase credentials.
+// Every query/mutation resolves to an empty result; the persistence layer
+// already handles failure by switching to localStorage-only mode.
+function createOfflineStub(): SupabaseClient {
+  const query: any = {
+    select: () => query,
+    insert: () => query,
+    update: () => query,
+    upsert: () => query,
+    delete: () => query,
+    eq: () => query,
+    gte: () => query,
+    lte: () => query,
+    maybeSingle: () =>
+      Promise.resolve({ data: null, error: { message: 'offline' } }),
+    single: () =>
+      Promise.resolve({ data: null, error: { message: 'offline' } }),
+    then: (
+      resolve: (v: { data: null; error: { message: string } }) => unknown
+    ) => resolve({ data: null, error: { message: 'offline' } }),
+  };
+  const channel: any = {
+    on: () => channel,
+    subscribe: () => channel,
+    unsubscribe: () => Promise.resolve('ok'),
+    send: () => Promise.resolve('ok'),
+    presenceState: () => ({}),
+  };
+  return {
+    from: () => query,
+    channel: () => channel,
+    removeChannel: () => Promise.resolve('ok'),
+  } as unknown as SupabaseClient;
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase: SupabaseClient = SUPABASE_CONFIGURED
+  ? createClient(supabaseUrl!, supabaseAnonKey!)
+  : createOfflineStub();
+
+if (!SUPABASE_CONFIGURED && typeof window !== 'undefined') {
+  console.warn(
+    '[ironhaven] VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY not set \u2014 ' +
+      'running in offline mode (localStorage persistence, no multiplayer).'
+  );
+}
 
 export interface Database {
   public: {

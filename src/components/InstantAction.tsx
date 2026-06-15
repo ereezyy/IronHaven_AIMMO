@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Box, Sphere, Text } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface InstantActionProps {
@@ -9,335 +8,245 @@ interface InstantActionProps {
   onCombatDemo: () => void;
 }
 
-// Auto-playing action sequence
-const AutoActionSequence = () => {
-  const [actionPhase, setActionPhase] = useState(0);
-  const [explosions, setExplosions] = useState<any[]>([]);
-  const [aiMessages, setAiMessages] = useState<string[]>([]);
+// Deterministic pseudo-random so the city is identical on every load.
+function rand(seed: number) {
+  let s = seed | 0;
+  return () => {
+    s = (s * 1664525 + 1013904223) | 0;
+    return ((s >>> 0) % 100_000) / 100_000;
+  };
+}
 
-  useEffect(() => {
-    const phaseTimer = setInterval(() => {
-      setActionPhase((prev) => (prev + 1) % 4);
-    }, 3000);
-
-    return () => clearInterval(phaseTimer);
-  }, []);
-
-  useEffect(() => {
-    // Auto-trigger explosions and effects
-    const effectTimer = setInterval(() => {
-      const newExplosion = {
-        id: crypto.randomUUID(),
-        position: [
-          (Math.random() - 0.5) * 40,
-          Math.random() * 10 + 2,
-          (Math.random() - 0.5) * 40,
-        ],
-        scale: Math.random() * 3 + 1,
-        color: Math.random() > 0.5 ? '#ff4400' : '#00ffff',
-      };
-
-      setExplosions((prev) => [...prev.slice(-10), newExplosion]);
-    }, 500);
-
-    return () => clearInterval(effectTimer);
-  }, []);
-
-  useEffect(() => {
-    // Auto-generate AI messages
-    const messages = [
-      "🤖 AI NPC: 'Incoming hostiles detected!'",
-      "🧠 Smart AI: 'Analyzing combat patterns...'",
-      "⚡ AI System: 'Optimizing weapon targeting'",
-      "🎯 AI Mission: 'New objective generated'",
-      "🌐 Multiplayer: '5 players joined the battle'",
-    ];
-
-    const messageTimer = setInterval(() => {
-      const randomMessage =
-        messages[Math.floor(Math.random() * messages.length)];
-      setAiMessages((prev) => [...prev.slice(-3), randomMessage]);
-    }, 2000);
-
-    return () => clearInterval(messageTimer);
+function Skyline() {
+  const buildings = useMemo(() => {
+    const r = rand(2087);
+    const arr: Array<{
+      pos: [number, number, number];
+      size: [number, number, number];
+    }> = [];
+    for (let i = 0; i < 90; i++) {
+      const a = r() * Math.PI * 2;
+      const d = 14 + r() * 60;
+      const w = 2 + r() * 4;
+      const h = 6 + r() * 38;
+      arr.push({
+        pos: [Math.cos(a) * d, h / 2, Math.sin(a) * d],
+        size: [w, h, w],
+      });
+    }
+    return arr;
   }, []);
 
   return (
-    <>
-      {/* Player character with epic effects */}
-      <group position={[0, 2, 0]}>
-        <Sphere scale={[1, 2, 1]}>
+    <group>
+      {buildings.map((b, i) => (
+        <mesh key={i} position={b.pos} castShadow receiveShadow>
+          <boxGeometry args={b.size} />
           <meshStandardMaterial
-            color="#00ffff"
-            emissive="#00ffff"
-            emissiveIntensity={0.5 + Math.sin(Date.now() * 0.01) * 0.3}
+            color="#15171a"
+            roughness={0.85}
+            metalness={0.15}
           />
-        </Sphere>
-
-        {/* Power aura */}
-        <Sphere scale={[2, 3, 2]}>
-          <meshBasicMaterial
-            color="#00ffff"
-            transparent
-            opacity={0.1 + Math.sin(Date.now() * 0.005) * 0.1}
-          />
-        </Sphere>
-      </group>
-
-      {/* AI-controlled enemies */}
-      {[0, 1, 2, 3, 4, 5, 6, 7].map((_, i) => {
-        const angle = (i / 8) * Math.PI * 2;
-        const radius = 20 + Math.sin(Date.now() * 0.001 + i) * 5;
-
-        return (
-          <group
-            key={i}
-            position={[Math.sin(angle) * radius, 2, Math.cos(angle) * radius]}
-          >
-            <Sphere scale={[0.8, 1.6, 0.8]}>
-              <meshStandardMaterial
-                color="#ff0066"
-                emissive="#ff0066"
-                emissiveIntensity={0.4}
-              />
-            </Sphere>
-
-            {/* AI indicator */}
-            <Text
-              position={[0, 3, 0]}
-              fontSize={0.4}
-              color="#00ff00"
-              anchorX="center"
-              anchorY="middle"
-            >
-              AI
-            </Text>
-
-            {/* Laser beams */}
-            <Box
-              position={[0, 0, -radius * 0.8]}
-              scale={[0.1, 0.1, radius * 0.6]}
-              rotation={[0, angle, 0]}
-            >
-              <meshBasicMaterial
-                color="#ff0066"
-                emissive="#ff0066"
-                emissiveIntensity={1}
-                transparent
-                opacity={0.8}
-              />
-            </Box>
-          </group>
-        );
-      })}
-
-      {/* Dynamic explosions */}
-      {explosions.map((explosion) => (
-        <group key={explosion.id} position={explosion.position}>
-          <Sphere scale={[explosion.scale, explosion.scale, explosion.scale]}>
-            <meshBasicMaterial
-              color={explosion.color}
-              emissive={explosion.color}
-              emissiveIntensity={1}
-              transparent
-              opacity={0.7}
-            />
-          </Sphere>
-        </group>
+        </mesh>
       ))}
+    </group>
+  );
+}
 
-      {/* Floating AI messages */}
-      {aiMessages.map((message, index) => (
-        <Text
-          key={index}
-          position={[-15, 8 - index * 2, 10]}
-          fontSize={0.8}
-          color="#00ff00"
-          anchorX="left"
-          anchorY="middle"
-        >
-          {message}
-        </Text>
-      ))}
-
-      {/* Epic environment */}
-      {[
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-      ].map((_, i) => (
-        <group
-          key={i}
-          position={[
-            (Math.random() - 0.5) * 100,
-            Math.random() * 20 + 5,
-            (Math.random() - 0.5) * 100,
-          ]}
-        >
-          <Box
-            scale={[
-              Math.random() * 5 + 2,
-              Math.random() * 15 + 10,
-              Math.random() * 5 + 2,
-            ]}
-          >
-            <meshStandardMaterial
-              color={Math.random() > 0.7 ? '#ff0066' : '#0066ff'}
-              emissive={Math.random() > 0.7 ? '#ff0066' : '#0066ff'}
-              emissiveIntensity={0.2}
-            />
-          </Box>
-        </group>
-      ))}
+function GroundGrid() {
+  return (
+    <>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[400, 400]} />
+        <meshStandardMaterial color="#0a0a0c" roughness={1} />
+      </mesh>
+      <gridHelper
+        args={[400, 80, '#1d1f23', '#141518']}
+        position={[0, 0.01, 0]}
+      />
     </>
   );
-};
+}
 
-// Dynamic camera that follows the action
-const ActionCamera = () => {
-  useFrame((state) => {
-    const time = state.clock.elapsedTime;
-
-    // Epic camera movement
-    state.camera.position.set(
-      Math.sin(time * 0.3) * 30,
-      15 + Math.sin(time * 0.2) * 5,
-      Math.cos(time * 0.3) * 30
-    );
-
-    state.camera.lookAt(0, 5, 0);
+function SignalBeacon() {
+  const ref = React.useRef<THREE.Mesh>(null!);
+  useFrame((s) => {
+    if (ref.current) {
+      const y = 3 + Math.sin(s.clock.elapsedTime * 0.8) * 0.15;
+      ref.current.position.y = y;
+    }
   });
+  return (
+    <mesh ref={ref} position={[0, 3, 0]}>
+      <cylinderGeometry args={[0.4, 0.4, 6, 12]} />
+      <meshStandardMaterial
+        color="#c03a30"
+        emissive="#c03a30"
+        emissiveIntensity={0.9}
+      />
+    </mesh>
+  );
+}
 
+function SlowOrbit() {
+  useFrame((s) => {
+    const t = s.clock.elapsedTime * 0.06;
+    s.camera.position.set(Math.sin(t) * 60, 28, Math.cos(t) * 60);
+    s.camera.lookAt(0, 6, 0);
+  });
   return null;
-};
+}
+
+const PANEL = 'border border-[#222428] bg-black/55 backdrop-blur-sm';
+const LABEL = 'text-[10px] tracking-[0.32em] uppercase text-neutral-500';
 
 const InstantAction: React.FC<InstantActionProps> = ({
   onAIDemo,
   onMultiplayerDemo,
   onCombatDemo,
 }) => {
-  const [showControls, setShowControls] = useState(false);
-
-  useEffect(() => {
-    // Show controls after 3 seconds
-    const timer = setTimeout(() => {
-      setShowControls(true);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const [hover, setHover] = useState<string | null>(null);
 
   return (
-    <div className="relative w-full h-screen bg-black">
+    <div
+      className="relative w-full h-screen overflow-hidden"
+      style={{
+        background: '#0b0b0c',
+        color: '#e6e6e6',
+        fontFamily: '"Inter Tight", Inter, system-ui, sans-serif',
+      }}
+    >
       <Canvas
-        camera={{ position: [25, 15, 25], fov: 75 }}
+        shadows
+        camera={{ position: [60, 28, 60], fov: 42 }}
         gl={{ antialias: true, alpha: false }}
       >
-        {/* Dramatic lighting */}
-        <ambientLight intensity={0.3} />
+        <color attach="background" args={['#0b0b0c']} />
+        <fog attach="fog" args={['#0b0b0c', 60, 180]} />
+        <ambientLight intensity={0.18} />
         <directionalLight
-          position={[20, 20, 10]}
-          intensity={0.8}
-          color="#00ffff"
+          position={[40, 60, 20]}
+          intensity={0.55}
+          color="#cccfd4"
+          castShadow
+          shadow-mapSize={[2048, 2048]}
         />
         <directionalLight
-          position={[-20, 20, -10]}
-          intensity={0.8}
-          color="#ff0066"
+          position={[-30, 30, -40]}
+          intensity={0.18}
+          color="#c03a30"
         />
-        <pointLight position={[0, 30, 0]} intensity={2} color="#ffffff" />
-
-        {/* Dynamic camera */}
-        <ActionCamera />
-
-        {/* Auto-playing action sequence */}
-        <AutoActionSequence />
-
-        {/* Ground with cyberpunk grid */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-          <planeGeometry args={[200, 200]} />
-          <meshStandardMaterial
-            color="#001122"
-            metalness={0.8}
-            roughness={0.2}
-            wireframe={true}
-          />
-        </mesh>
+        <SlowOrbit />
+        <GroundGrid />
+        <Skyline />
+        <SignalBeacon />
       </Canvas>
 
-      {/* Epic HUD overlay */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Top status bar */}
-        <div className="absolute top-4 left-4 right-4 flex justify-between text-cyan-400">
-          <div className="bg-black/80 px-4 py-2 rounded border border-cyan-500/50">
-            🤖 AI Systems: ACTIVE
-          </div>
-          <div className="bg-black/80 px-4 py-2 rounded border border-purple-500/50">
-            🌐 Multiplayer: CONNECTED
-          </div>
-          <div className="bg-black/80 px-4 py-2 rounded border border-red-500/50">
-            ⚔️ Combat: ENGAGED
-          </div>
+      {/* Top status rail */}
+      <div className="absolute inset-x-0 top-0 flex items-baseline justify-between px-10 pt-6 font-mono text-[11px] tracking-[0.32em] uppercase pointer-events-none">
+        <span className="text-neutral-500">
+          ironhaven · live demo · build 2087
+        </span>
+        <span className="text-neutral-500">
+          node <span className="text-neutral-200">eu-west-3</span> · ping{' '}
+          <span className="text-neutral-200">38ms</span> ·{' '}
+          <span style={{ color: '#7dd97d' }}>online</span>
+        </span>
+      </div>
+
+      {/* Left wordmark */}
+      <div className="absolute left-10 bottom-32 max-w-[640px]">
+        <div
+          className="text-[11px] tracking-[0.4em] uppercase mb-4"
+          style={{ color: '#8a3b34' }}
+        >
+          district 01 · north spine
         </div>
+        <h1
+          className="font-bold leading-[0.85] tracking-[-0.04em]"
+          style={{ fontSize: 'clamp(64px, 9vw, 144px)' }}
+        >
+          A city that
+          <br />
+          plays <span style={{ color: '#c03a30' }}>back</span>.
+        </h1>
+        <p className="mt-5 max-w-[440px] text-[15px] leading-relaxed text-neutral-400 font-mono">
+          50+ AI-directed factions. Persistent presence on a shared world
+          server. Pick a path below — every demo loads the same authoritative
+          simulation.
+        </p>
+      </div>
 
-        {/* Center title */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
-          <h1 className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 mb-4 animate-pulse">
-            IRONHAVEN AIMMO
-          </h1>
-          <p className="text-xl text-cyan-300 mb-8">
-            AI-Powered Cyberpunk MMORPG
-          </p>
-
-          {showControls && (
-            <div className="space-y-4 pointer-events-auto">
-              <button
-                onClick={onAIDemo}
-                className="block mx-auto bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-3 rounded-lg font-bold transition-all transform hover:scale-105"
+      {/* Action menu */}
+      <div className="absolute right-10 bottom-10 w-[320px]">
+        <div className={`${LABEL} mb-3`}>00 — entry points</div>
+        <div className="divide-y divide-[#1a1c1f]">
+          {(
+            [
+              {
+                id: 'ai',
+                label: 'Walk into a conversation',
+                sub: 'AI · director · NPCs',
+                on: onAIDemo,
+              },
+              {
+                id: 'mp',
+                label: 'Join the live world',
+                sub: 'Multiplayer · 24/7 shard',
+                on: onMultiplayerDemo,
+              },
+              {
+                id: 'cb',
+                label: 'Pick a fight',
+                sub: 'Combat · ballistics · cover',
+                on: onCombatDemo,
+              },
+            ] as const
+          ).map((opt, i) => (
+            <button
+              key={opt.id}
+              onClick={opt.on}
+              onMouseEnter={() => setHover(opt.id)}
+              onMouseLeave={() => setHover(null)}
+              className={`${PANEL} w-full text-left px-5 py-4 flex items-center justify-between transition-colors`}
+              style={{
+                borderColor: hover === opt.id ? '#c03a30' : '#222428',
+                marginTop: i === 0 ? 0 : -1,
+              }}
+            >
+              <span>
+                <span className="block text-[15px] tracking-tight">
+                  {opt.label}
+                </span>
+                <span className="block mt-1 text-[10px] tracking-[0.28em] uppercase text-neutral-500 font-mono">
+                  {opt.sub}
+                </span>
+              </span>
+              <span
+                className="font-mono text-[14px]"
+                style={{ color: hover === opt.id ? '#c03a30' : '#5a5d62' }}
               >
-                🤖 DEMO AI FEATURES
-              </button>
-
-              <button
-                onClick={onMultiplayerDemo}
-                className="block mx-auto bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white px-8 py-3 rounded-lg font-bold transition-all transform hover:scale-105"
-              >
-                🌐 JOIN MULTIPLAYER
-              </button>
-
-              <button
-                onClick={onCombatDemo}
-                className="block mx-auto bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 text-white px-8 py-3 rounded-lg font-bold transition-all transform hover:scale-105"
-              >
-                ⚔️ START COMBAT
-              </button>
-            </div>
-          )}
+                →
+              </span>
+            </button>
+          ))}
         </div>
+      </div>
 
-        {/* Bottom feature showcase */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center">
-          <div className="flex space-x-8 text-lg text-cyan-400 mb-4">
-            <div className="animate-bounce">🧠 Smart AI NPCs</div>
-            <div className="animate-bounce delay-100">
-              🎮 Real-time Multiplayer
-            </div>
-            <div className="animate-bounce delay-200">⚡ Dynamic Combat</div>
-            <div className="animate-bounce delay-300">🏰 Guild Warfare</div>
-          </div>
-
-          <p className="text-gray-400">
-            Built with Hugging Face AI • React • Three.js • WebSocket
-            Multiplayer
-          </p>
-        </div>
-
-        {/* Cyberpunk scan lines */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent animate-pulse" />
-
-        {/* Corner decorations */}
-        <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-cyan-400" />
-        <div className="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 border-purple-600" />
-        <div className="absolute bottom-0 left-0 w-16 h-16 border-b-2 border-l-2 border-purple-600" />
-        <div className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-cyan-400" />
+      {/* Corner ticks */}
+      <div className="pointer-events-none absolute inset-0">
+        {[
+          'top-6 left-6 border-t border-l',
+          'top-6 right-6 border-t border-r',
+          'bottom-6 left-6 border-b border-l',
+          'bottom-6 right-6 border-b border-r',
+        ].map((c) => (
+          <div
+            key={c}
+            className={`absolute w-6 h-6 ${c}`}
+            style={{ borderColor: '#3a3a3e' }}
+          />
+        ))}
       </div>
     </div>
   );

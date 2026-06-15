@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase, SUPABASE_CONFIGURED } from './supabase';
 
 export interface PlayerData {
   id: string;
@@ -30,11 +30,23 @@ export interface GameSession {
   maxWantedLevel: number;
 }
 
+export interface NearbyPlayer {
+  id: string;
+  username: string;
+  position: [number, number, number];
+  rotation: number;
+  velocity: [number, number, number];
+  health: number;
+  stamina: number;
+  level: number;
+  isInCombat: boolean;
+}
+
 class PersistenceService {
   private currentPlayerId: string | null = null;
   private currentSessionId: string | null = null;
   private autoSaveInterval: NodeJS.Timeout | null = null;
-  private offlineMode: boolean = false;
+  private offlineMode: boolean = !SUPABASE_CONFIGURED;
   private lastSavedStateHash: string | null = null;
 
   async initializePlayer(username: string): Promise<string> {
@@ -318,62 +330,81 @@ class PersistenceService {
     }
   }
 
+  private mapMultiplayerRow(row: any): NearbyPlayer {
+    return {
+      id: row.id,
+      username: row.username,
+      position: [row.position_x, row.position_y, row.position_z],
+      rotation: row.rotation,
+      velocity: [row.velocity_x, row.velocity_y, row.velocity_z],
+      health: row.health,
+      stamina: row.stamina,
+      level: row.level,
+      isInCombat: row.is_in_combat,
+    };
+  }
+
+  // One-shot snapshot used to seed the local roster before the live stream
+  // takes over. Live position/health updates now arrive via
+  // subscribeToNearbyPlayers (postgres_changes), not by re-polling this.
   async getNearbyPlayers(
     position: [number, number, number],
     radius: number = 50
-  ): Promise<any[]> {
+  ): Promise<NearbyPlayer[]> {
     if (this.offlineMode) return [];
 
     try {
       const { data, error } = await supabase
         .from('multiplayer_players')
         .select('*')
-        .gte('last_seen', new Date(Date.now() - 10000).toISOString());
+        .gte('last_seen', new Date(Date.now() - 30000).toISOString());
 
       if (error || !data) {
         return [];
       }
 
+      const radiusSq = radius * radius;
       return data
         .filter((player) => {
           const dx = player.position_x - position[0];
           const dz = player.position_z - position[2];
-          const distance = Math.sqrt(dx * dx + dz * dz);
-          return distance <= radius;
+          return dx * dx + dz * dz <= radiusSq;
         })
-        .map((player) => ({
-          id: player.id,
-          username: player.username,
-          position: [player.position_x, player.position_y, player.position_z],
-          rotation: player.rotation,
-          velocity: [player.velocity_x, player.velocity_y, player.velocity_z],
-          health: player.health,
-          stamina: player.stamina,
-          level: player.level,
-          isInCombat: player.is_in_combat,
-        }));
-      return data
-        .filter((player) => {
-          const dx = player.position_x - position[0];
-          const dz = player.position_z - position[2];
-          const distanceSq = dx * dx + dz * dz;
-          return distanceSq <= radius * radius;
-        })
-        .map((player) => ({
-          id: player.id,
-          username: player.username,
-          position: [player.position_x, player.position_y, player.position_z],
-          rotation: player.rotation,
-          velocity: [player.velocity_x, player.velocity_y, player.velocity_z],
-          health: player.health,
-          stamina: player.stamina,
-          level: player.level,
-          isInCombat: player.is_in_combat,
-        }));
+        .map((player) => this.mapMultiplayerRow(player));
     } catch (error) {
       console.error('Error getting nearby players:', error);
       return [];
     }
+  }
+
+  // Live multiplayer sync: subscribe to row-level changes on multiplayer_players
+  // so other players' positions/health propagate with sub-100ms latency instead
+  // of a 10s poll. Returns an unsubscribe function.
+  subscribeToNearbyPlayers(handlers: {
+    onUpsert: (player: NearbyPlayer) => void;
+    onRemove?: (id: string) => void;
+  }): () => void {
+    if (this.offlineMode) return () => {};
+
+    const channel = supabase
+      .channel('multiplayer_players_live')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'multiplayer_players' },
+        (payload: any) => {
+          if (payload.eventType === 'DELETE') {
+            const id = payload.old?.id;
+            if (id) handlers.onRemove?.(id);
+          } else if (payload.new) {
+            handlers.onUpsert(this.mapMultiplayerRow(payload.new));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }
 
   private generatePlayerId(): string {

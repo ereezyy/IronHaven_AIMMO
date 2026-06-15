@@ -6,11 +6,18 @@ import * as THREE from 'three';
 interface MMOPlayerProps {
   playerId: string;
   onUpdate: (position: THREE.Vector3, rotation: number) => void;
+  flashApi?: React.MutableRefObject<(() => void) | null>;
 }
 
-const MMOPlayer: React.FC<MMOPlayerProps> = ({ playerId, onUpdate }) => {
+const MMOPlayer: React.FC<MMOPlayerProps> = ({
+  playerId,
+  onUpdate,
+  flashApi,
+}) => {
   const { camera, gl } = useThree();
   const playerRef = useRef<THREE.Group>(null);
+  const bodyMat = useRef<THREE.MeshStandardMaterial>(null);
+  const flash = useRef(0);
 
   const [position, setPosition] = useState(new THREE.Vector3(0, 1, 0));
   const [velocity, setVelocity] = useState(new THREE.Vector3(0, 0, 0));
@@ -19,6 +26,16 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({ playerId, onUpdate }) => {
   const [stamina, setStamina] = useState(100);
 
   const [, get] = useKeyboardControls();
+
+  React.useEffect(() => {
+    if (!flashApi) return;
+    flashApi.current = () => {
+      flash.current = 1;
+    };
+    return () => {
+      flashApi.current = null;
+    };
+  }, [flashApi]);
 
   const mouseX = useRef(0);
   const mouseY = useRef(0);
@@ -139,6 +156,12 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({ playerId, onUpdate }) => {
     setVelocity(newVelocity);
     setRotation(mouseX.current);
 
+    // Ref-driven hit-flash: decay the emissive without touching React state.
+    if (flash.current > 0) {
+      flash.current = Math.max(0, flash.current - delta * 4);
+      if (bodyMat.current) bodyMat.current.emissiveIntensity = flash.current;
+    }
+
     onUpdate(newPosition, mouseX.current);
   });
 
@@ -146,26 +169,33 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({ playerId, onUpdate }) => {
     <group ref={playerRef} position={position}>
       <mesh castShadow receiveShadow>
         <capsuleGeometry args={[0.5, 1.5, 8, 16]} />
-        <meshStandardMaterial color="#ff3366" metalness={0.3} roughness={0.7} />
+        <meshStandardMaterial
+          ref={bodyMat}
+          color="#d4d5d8"
+          emissive="#c03a30"
+          emissiveIntensity={0}
+          metalness={0.2}
+          roughness={0.6}
+        />
       </mesh>
 
       <mesh position={[0, 1.2, 0]} castShadow>
         <sphereGeometry args={[0.3, 16, 16]} />
-        <meshStandardMaterial color="#ffccdd" />
+        <meshStandardMaterial color="#9a9da2" roughness={0.8} />
       </mesh>
 
       {stamina < 100 && (
         <mesh position={[0, 2.5, 0]}>
           <planeGeometry args={[1, 0.1]} />
-          <meshBasicMaterial color="#00ff00" transparent opacity={0.7} />
+          <meshBasicMaterial color="#c03a30" transparent opacity={0.7} />
         </mesh>
       )}
 
       <pointLight
         position={[0, 1, 0]}
-        intensity={0.5}
+        intensity={0.4}
         distance={5}
-        color="#ff3366"
+        color="#c03a30"
       />
     </group>
   );

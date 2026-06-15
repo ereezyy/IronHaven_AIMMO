@@ -86,15 +86,15 @@ const MMOChat: React.FC = () => {
   const getChannelColor = (channel: string) => {
     switch (channel) {
       case 'global':
-        return 'text-cyan-400';
+        return 'text-[#c03a30]';
       case 'local':
-        return 'text-green-400';
+        return 'text-neutral-300';
       case 'party':
-        return 'text-purple-400';
+        return 'text-neutral-400';
       case 'guild':
-        return 'text-yellow-400';
+        return 'text-neutral-500';
       default:
-        return 'text-gray-400';
+        return 'text-neutral-500';
     }
   };
 
@@ -102,69 +102,69 @@ const MMOChat: React.FC = () => {
     return (
       <button
         onClick={() => setIsExpanded(true)}
-        className="absolute bottom-20 left-4 bg-black/80 backdrop-blur-sm border border-cyan-500/50 rounded-lg p-3 hover:border-cyan-400 transition-colors"
+        className="absolute bottom-32 left-4 font-mono border border-[#222428] bg-black/60 backdrop-blur-sm p-3 text-neutral-400 hover:text-neutral-200 transition-colors"
       >
-        <MessageCircle className="text-cyan-400" size={20} />
+        <MessageCircle size={18} />
       </button>
     );
   }
 
   return (
-    <div className="absolute bottom-20 left-4 w-96 bg-black/90 backdrop-blur-sm border border-cyan-500/50 rounded-lg overflow-hidden">
-      <div className="bg-gradient-to-r from-cyan-900/50 to-blue-900/50 p-2 flex items-center justify-between">
-        <div className="flex gap-2">
+    <div className="absolute bottom-32 left-4 w-96 font-mono border border-[#222428] bg-black/70 backdrop-blur-sm overflow-hidden">
+      <div className="border-b border-[#1a1c1f] p-2 flex items-center justify-between">
+        <div className="flex gap-1">
           {['global', 'local', 'party', 'guild'].map((channel) => (
             <button
               key={channel}
               onClick={() => setActiveChannel(channel as any)}
-              className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
+              className={`px-2.5 py-1 text-[10px] tracking-[0.2em] uppercase transition-colors ${
                 activeChannel === channel
-                  ? 'bg-cyan-500 text-black'
-                  : 'text-gray-400 hover:text-cyan-400'
+                  ? 'text-neutral-100 border-b border-[#c03a30]'
+                  : 'text-neutral-500 hover:text-neutral-300'
               }`}
             >
-              {channel.toUpperCase()}
+              {channel}
             </button>
           ))}
         </div>
         <button
           onClick={() => setIsExpanded(false)}
-          className="text-gray-400 hover:text-white transition-colors"
+          className="text-neutral-500 hover:text-neutral-200 transition-colors text-xs px-1"
         >
-          ✕
+          ×
         </button>
       </div>
 
-      <div className="h-64 overflow-y-auto p-3 space-y-2 text-sm">
+      <div className="h-64 overflow-y-auto p-3 space-y-1.5 text-[12px] leading-relaxed">
         {messages.map((msg) => (
           <div key={msg.id} className="animate-fadeIn">
-            <span className={`font-bold ${getChannelColor(msg.channel)}`}>
-              [{msg.channel.toUpperCase()}]
+            <span
+              className={`${getChannelColor(msg.channel)} text-[10px] tracking-[0.15em] uppercase`}
+            >
+              [{msg.channel}]
             </span>
-            <span className="text-white font-semibold ml-1">
-              {msg.username}:
-            </span>
-            <span className="text-gray-300 ml-1">{msg.message}</span>
+            <span className="text-neutral-200 ml-1">{msg.username}:</span>
+            <span className="text-neutral-400 ml-1">{msg.message}</span>
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="border-t border-cyan-500/30 p-2 flex gap-2">
+      <div className="border-t border-[#1a1c1f] p-2 flex gap-2">
         <input
           type="text"
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder={`Message to ${activeChannel}...`}
-          className="flex-1 bg-gray-900 border border-cyan-500/30 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-400 transition-colors"
+          placeholder={`message ${activeChannel}...`}
+          className="flex-1 bg-[#0d0d0f] border border-[#222428] px-3 py-2 text-neutral-200 text-[12px] placeholder:text-neutral-600 focus:outline-none focus:border-[#c03a30] transition-colors"
           maxLength={200}
         />
         <button
           onClick={handleSendMessage}
-          className="bg-cyan-500 hover:bg-cyan-600 text-black font-bold px-4 py-2 rounded transition-colors flex items-center gap-2"
+          className="border border-[#222428] text-neutral-300 hover:border-[#c03a30] hover:text-neutral-100 px-3 py-2 transition-colors flex items-center"
         >
-          <Send size={16} />
+          <Send size={15} />
         </button>
       </div>
     </div>

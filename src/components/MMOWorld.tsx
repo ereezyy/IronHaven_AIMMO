@@ -17,7 +17,7 @@ const MMOWorld: React.FC = () => {
       const height = 10 + Math.random() * 30;
       const depth = 3 + Math.random() * 5;
 
-      const colors = ['#1a1a2e', '#16213e', '#0f3460', '#533483', '#2d4059'];
+      const colors = ['#15171a', '#121417', '#181a1e', '#1b1d22', '#101114'];
       const color = colors[Math.floor(Math.random() * colors.length)];
 
       buildingArray.push({
@@ -126,17 +126,17 @@ const MMOWorld: React.FC = () => {
                 building.size[2] / 2 + 0.1,
               ]}
             >
-              <boxGeometry args={[building.size[0] * 0.6, 0.8, 0.1]} />
+              <boxGeometry args={[building.size[0] * 0.6, 0.5, 0.1]} />
               <meshBasicMaterial
-                color="#00ffff"
-                emissive="#00ffff"
-                emissiveIntensity={2}
+                color="#c03a30"
+                emissive="#c03a30"
+                emissiveIntensity={1.1}
               />
               <pointLight
                 position={[0, 0, 1]}
-                color="#00ffff"
-                intensity={2}
-                distance={15}
+                color="#c03a30"
+                intensity={0.9}
+                distance={12}
               />
             </mesh>
           )}
@@ -152,7 +152,7 @@ const MMOWorld: React.FC = () => {
 
           <mesh castShadow position={[0, 5, 0]}>
             <coneGeometry args={[2, 4, 8]} />
-            <meshStandardMaterial color="#1a4d2e" />
+            <meshStandardMaterial color="#1c2a20" />
           </mesh>
         </group>
       ))}
@@ -165,26 +165,26 @@ const MMOWorld: React.FC = () => {
           </mesh>
 
           <mesh position={[0, 6.5, 0]}>
-            <boxGeometry args={[0.5, 0.5, 0.5]} />
+            <boxGeometry args={[0.4, 0.4, 0.4]} />
             <meshBasicMaterial
-              color="#ffaa00"
-              emissive="#ffaa00"
-              emissiveIntensity={2}
+              color="#c89b5a"
+              emissive="#c89b5a"
+              emissiveIntensity={1.2}
             />
           </mesh>
 
           <pointLight
             position={[0, 6, 0]}
-            color="#ffaa00"
-            intensity={3}
-            distance={20}
+            color="#caa066"
+            intensity={1.4}
+            distance={16}
             castShadow
           />
         </group>
       ))}
 
       <gridHelper
-        args={[200, 40, '#00ff88', '#003322']}
+        args={[200, 40, '#1d1f23', '#141518']}
         position={[0, 0.02, 0]}
       />
     </group>
