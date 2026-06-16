@@ -93,7 +93,16 @@ const PoliceSystem: React.FC<PoliceSystemProps> = ({
   useEffect(() => {
     if (policeUnits.length === 0) return;
 
-    const updateInterval = setInterval(() => {
+    let animationFrameId: number;
+    let lastTime = performance.now();
+
+    const updatePolice = (time: number) => {
+      const dt = (time - lastTime) / 1000; // Delta time in seconds
+      lastTime = time;
+
+      // Limit max delta time to prevent huge jumps if tab was inactive
+      const safeDt = Math.min(dt, 0.1);
+
       setPoliceUnits((prev) =>
         prev.map((unit) => {
           // Move towards player
@@ -103,8 +112,9 @@ const PoliceSystem: React.FC<PoliceSystemProps> = ({
 
           if (distanceSq > 4) {
             const distance = Math.sqrt(distanceSq);
-            const moveX = (dx / distance) * unit.speed * 0.1;
-            const moveZ = (dz / distance) * unit.speed * 0.1;
+            // using speed directly with safeDt
+            const moveX = (dx / distance) * unit.speed * safeDt;
+            const moveZ = (dz / distance) * unit.speed * safeDt;
 
             return {
               ...unit,
@@ -120,36 +130,14 @@ const PoliceSystem: React.FC<PoliceSystemProps> = ({
           return unit;
         })
       );
-      setPoliceUnits((prev) =>
-        prev.map((unit) => {
-          // Move towards player
-          const dx = playerPosition[0] - unit.position[0];
-          const dz = playerPosition[2] - unit.position[2];
-          const distanceSq = dx * dx + dz * dz;
 
-          if (distanceSq > 4) {
-            const distance = Math.sqrt(distanceSq);
-            const moveX = (dx / distance) * unit.speed * 0.1;
-            const moveZ = (dz / distance) * unit.speed * 0.1;
+      animationFrameId = requestAnimationFrame(updatePolice);
+    };
 
-            return {
-              ...unit,
-              position: [
-                unit.position[0] + moveX,
-                unit.position[1],
-                unit.position[2] + moveZ,
-              ] as [number, number, number],
-              target: [...playerPosition] as [number, number, number],
-            };
-          }
+    animationFrameId = requestAnimationFrame(updatePolice);
 
-          return unit;
-        })
-      );
-    }, 100);
-
-    return () => clearInterval(updateInterval);
-  }, [policeUnits, playerPosition]);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [policeUnits.length, playerPosition]);
 
   // Auto-attack player if in range
   useEffect(() => {
