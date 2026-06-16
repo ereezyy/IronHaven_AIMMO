@@ -86,6 +86,10 @@ const TestGame = () => {
     const moveLoop = (time: number) => {
       const dt = (time - lastTime) / 1000;
       lastTime = time;
+
+      setPlayerPos((prev) => {
+        const newPos: [number, number, number] = [...prev];
+        const speed = 6.25 * dt; // 0.1 / 0.016
     const moveLoop = (currentTime: number) => {
       const dt = (currentTime - lastTime) / 1000;
       lastTime = currentTime;

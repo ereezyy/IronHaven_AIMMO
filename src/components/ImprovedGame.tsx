@@ -341,6 +341,11 @@ const ImprovedGame = () => {
         const newState = { ...prev };
 
         // Update game time
+        newState.gameTime += dt;
+
+        // Player movement
+        let isMoving = false;
+        const moveSpeed = 18.75 * dt; // 0.3 / 0.016
         newState.gameTime += safeDt;
 
         // Player movement
@@ -370,6 +375,7 @@ const ImprovedGame = () => {
 
         // Update projectiles
         newState.projectiles = newState.projectiles.filter((projectile) => {
+          const projSpeed = projectile.speed * 60 * dt; // 2 * 60 for equivalent base speed
           // Scale original speed per frame to per second
           // Assuming original speed was per frame, adjust to per second (speed / 0.016)
           const projSpeed = projectile.speed * 60 * safeDt;
@@ -393,6 +399,7 @@ const ImprovedGame = () => {
           const distanceSq = dx * dx + dz * dz;
 
           if (distanceSq > 2 * 2) {
+            const enemySpeed = 3.125 * dt; // 0.05 / 0.016
             // ~0.05 per 16ms -> ~3.125 per second
             const moveSpeed = 3.125 * safeDt;
             // Adjust enemy speed (0.05 / 0.016 ≈ 3.125)
