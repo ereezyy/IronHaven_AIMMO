@@ -322,6 +322,8 @@ CREATE POLICY "Anyone can send chat"
   TO authenticated
   WITH CHECK (auth.uid() = player_id);
 
+-- NOTE: No UPDATE policy for chat_messages to enforce append-only security
+
 -- NPCs policies (public read)
 CREATE POLICY "Anyone can view NPCs"
   ON world_npcs FOR SELECT
@@ -338,6 +340,8 @@ CREATE POLICY "Anyone can insert combat logs"
   ON combat_logs FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = attacker_id);
+
+-- NOTE: No UPDATE policy for combat_logs to enforce append-only security
 
 -- Trigger for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at()
