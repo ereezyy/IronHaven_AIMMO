@@ -1,4 +1,4 @@
-import { supabase, SUPABASE_CONFIGURED } from './supabase';
+import { supabase, SUPABASE_CONFIGURED, ensureAuthUser } from './supabase';
 
 export interface PlayerData {
   id: string;
@@ -51,6 +51,10 @@ class PersistenceService {
 
   async initializePlayer(username: string): Promise<string> {
     try {
+      // Sign in anonymously first so the insert carries a JWT; the DB stamps
+      // owner = auth.uid() and owner-scoped RLS gates every later read/write.
+      await ensureAuthUser();
+
       const playerId = this.generatePlayerId();
 
       const playerData = {

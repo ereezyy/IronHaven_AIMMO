@@ -43,7 +43,9 @@ function createOfflineStub(): SupabaseClient {
 }
 
 export const supabase: SupabaseClient = SUPABASE_CONFIGURED
-  ? createClient(supabaseUrl!, supabaseAnonKey!)
+  ? createClient(supabaseUrl!, supabaseAnonKey!, {
+      auth: { persistSession: true, autoRefreshToken: true },
+    })
   : createOfflineStub();
 
 if (!SUPABASE_CONFIGURED && typeof window !== 'undefined') {
@@ -53,12 +55,38 @@ if (!SUPABASE_CONFIGURED && typeof window !== 'undefined') {
   );
 }
 
+// Establish a (persistent) anonymous Supabase session before any DB write so
+// every request carries a JWT. The DB stamps `owner = auth.uid()` on insert and
+// owner-scoped RLS keys off it, so a player can only touch their own rows. The
+// promise is memoized: sign-in happens once, then the session is reused/refreshed.
+let authReady: Promise<string | null> | null = null;
+export function ensureAuthUser(): Promise<string | null> {
+  if (!SUPABASE_CONFIGURED) return Promise.resolve(null);
+  if (!authReady) {
+    authReady = (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.user) return session.user.id;
+
+      const { data, error } = await supabase.auth.signInAnonymously();
+      if (error) {
+        console.error('[ironhaven] anonymous sign-in failed:', error.message);
+        return null;
+      }
+      return data.user?.id ?? null;
+    })();
+  }
+  return authReady;
+}
+
 export interface Database {
   public: {
     Tables: {
       players: {
         Row: {
           id: string;
+          owner: string;
           username: string;
           position_x: number;
           position_y: number;
@@ -82,13 +110,14 @@ export interface Database {
         };
         Insert: Omit<
           Database['public']['Tables']['players']['Row'],
-          'created_at' | 'updated_at'
+          'owner' | 'created_at' | 'updated_at'
         >;
         Update: Partial<Database['public']['Tables']['players']['Insert']>;
       };
       game_sessions: {
         Row: {
           id: string;
+          owner: string;
           player_id: string;
           start_time: string;
           end_time: string | null;
@@ -99,7 +128,7 @@ export interface Database {
         };
         Insert: Omit<
           Database['public']['Tables']['game_sessions']['Row'],
-          'created_at'
+          'owner' | 'created_at'
         >;
         Update: Partial<
           Database['public']['Tables']['game_sessions']['Insert']
@@ -127,6 +156,7 @@ export interface Database {
       multiplayer_players: {
         Row: {
           id: string;
+          owner: string;
           username: string;
           position_x: number;
           position_y: number;
@@ -143,7 +173,7 @@ export interface Database {
         };
         Insert: Omit<
           Database['public']['Tables']['multiplayer_players']['Row'],
-          'last_seen'
+          'owner' | 'last_seen'
         >;
         Update: Partial<
           Database['public']['Tables']['multiplayer_players']['Insert']
