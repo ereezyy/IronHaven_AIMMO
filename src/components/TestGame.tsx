@@ -83,9 +83,6 @@ const TestGame = () => {
     let animationFrameId: number;
     let lastTime = performance.now();
 
-    const moveLoop = (time: number) => {
-      const dt = (time - lastTime) / 1000;
-      lastTime = time;
     const moveLoop = (currentTime: number) => {
       const dt = (currentTime - lastTime) / 1000;
       lastTime = currentTime;
@@ -94,9 +91,7 @@ const TestGame = () => {
 
       setPlayerPos((prev) => {
         const newPos: [number, number, number] = [...prev];
-        const speed = 6.25 * safeDt; // 0.1 per 16ms is ~6.25 per second
-        // Original speed 0.1 per 16ms -> ~6.25 units per second
-        const speed = 6.25 * safeDt;
+        const speed = 6.25 * safeDt; // ~6.25 units per second
 
         if (keys.has('KeyW') || keys.has('ArrowUp')) newPos[2] -= speed;
         if (keys.has('KeyS') || keys.has('ArrowDown')) newPos[2] += speed;

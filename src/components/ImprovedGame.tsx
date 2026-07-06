@@ -325,10 +325,6 @@ const ImprovedGame = () => {
     let animationFrameId: number;
     let lastTime = performance.now();
 
-    const gameLoop = (time: number) => {
-      const dt = (time - lastTime) / 1000;
-      lastTime = time;
-      const safeDt = Math.min(dt, 0.1); // Max 100ms step
     const gameLoop = (currentTime: number) => {
       // Calculate delta time in seconds
       const dt = (currentTime - lastTime) / 1000;
