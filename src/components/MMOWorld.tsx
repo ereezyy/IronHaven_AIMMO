@@ -1,5 +1,39 @@
 import React, { useMemo } from 'react';
+import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
+
+// Textured asphalt ground using CC0 Poly Haven maps served from /public.
+// Split out so its useTexture suspense is scoped to the ground only.
+const Ground: React.FC = () => {
+  const [map, normalMap, roughnessMap] = useTexture([
+    '/textures/ground/asphalt_diff_1k.jpg',
+    '/textures/ground/asphalt_nor_1k.jpg',
+    '/textures/ground/asphalt_rough_1k.jpg',
+  ]);
+
+  useMemo(() => {
+    for (const t of [map, normalMap, roughnessMap]) {
+      t.wrapS = t.wrapT = THREE.RepeatWrapping;
+      t.repeat.set(28, 28);
+      t.anisotropy = 4;
+    }
+    map.colorSpace = THREE.SRGBColorSpace;
+  }, [map, normalMap, roughnessMap]);
+
+  return (
+    <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+      <circleGeometry args={[100, 64]} />
+      <meshStandardMaterial
+        map={map}
+        normalMap={normalMap}
+        roughnessMap={roughnessMap}
+        color="#6b7080"
+        metalness={0.25}
+        roughness={1}
+      />
+    </mesh>
+  );
+};
 
 const MMOWorld: React.FC = () => {
   const buildings = useMemo(() => {
@@ -83,10 +117,7 @@ const MMOWorld: React.FC = () => {
 
   return (
     <group>
-      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-        <circleGeometry args={[100, 64]} />
-        <meshStandardMaterial color="#1a1a1a" roughness={0.8} metalness={0.2} />
-      </mesh>
+      <Ground />
 
       <mesh
         receiveShadow

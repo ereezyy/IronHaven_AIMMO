@@ -6,12 +6,7 @@ import React, {
   useState,
 } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import {
-  KeyboardControls,
-  Environment,
-  Lightformer,
-  Sparkles,
-} from '@react-three/drei';
+import { KeyboardControls, Environment, Sparkles } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import { KernelSize } from 'postprocessing';
 import * as THREE from 'three';
@@ -451,43 +446,15 @@ const MMOGame: React.FC = () => {
           />
 
           <Suspense fallback={null}>
-            {/* Procedural image-based lighting: coloured Lightformers act as
-                neon billboards reflecting off metallic surfaces. Baked once
-                (frames={1}) and fully offline — no external HDRI download. */}
-            <Environment resolution={256} frames={1}>
-              <Lightformer
-                intensity={0.6}
-                color="#20242e"
-                form="rect"
-                position={[0, 12, 0]}
-                rotation={[Math.PI / 2, 0, 0]}
-                scale={[60, 60, 1]}
-              />
-              <Lightformer
-                intensity={2.4}
-                color="#ff2d6b"
-                form="rect"
-                position={[-18, 6, -10]}
-                rotation={[0, Math.PI / 2, 0]}
-                scale={[20, 8, 1]}
-              />
-              <Lightformer
-                intensity={2.2}
-                color="#22d3ee"
-                form="rect"
-                position={[18, 6, 10]}
-                rotation={[0, -Math.PI / 2, 0]}
-                scale={[20, 8, 1]}
-              />
-              <Lightformer
-                intensity={1.6}
-                color="#f5a524"
-                form="rect"
-                position={[10, 5, -18]}
-                rotation={[0, 0, 0]}
-                scale={[16, 6, 1]}
-              />
-            </Environment>
+            {/* Real image-based lighting from a CC0 night HDRI (Poly Haven),
+                served locally from /public so there's no runtime CDN call.
+                Lights ambient + metallic reflections; the neon colour pop
+                comes from the emissive signs, point lights and bloom. */}
+            <Environment
+              files="/hdri/night_1k.hdr"
+              resolution={256}
+              background={false}
+            />
 
             {/* Floating embers / ash drifting through the district. */}
             <Sparkles
