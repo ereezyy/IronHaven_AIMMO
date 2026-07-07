@@ -1,4 +1,5 @@
 import { HfInference } from '@huggingface/inference';
+import { llmClient } from './llmClient';
 
 // Initialize Hugging Face client with better token handling
 const getHfToken = () => {
@@ -65,17 +66,48 @@ class AIService {
   async generateNPCDialogue(
     personality: NPCPersonality,
     playerMessage: string,
-    context: string
+    context: string,
+    memoryContext: string = ''
   ): Promise<AIResponse> {
+    const npcId = `${personality.type}_${personality.background}`;
     try {
-      console.log(`Generating NPC dialogue for ${personality.type}...`);
+      // Preferred path: the configured modern LLM. memoryContext lets the NPC
+      // react to who the player is to *them* (past encounters, sentiment).
+      if (llmClient.isConfigured()) {
+        const system = this.buildNPCSystemPrompt(personality, memoryContext);
+        const history = (this.conversationHistory.get(npcId) || [])
+          .slice(-4)
+          .join('\n');
+        const user =
+          `${context ? `Scene: ${context}\n` : ''}` +
+          `${history ? `Recent exchange:\n${history}\n` : ''}` +
+          `Player says: "${playerMessage}"\n` +
+          `Reply in character, one or two sentences, no narration.`;
+        const llmText = await llmClient.complete(system, user, {
+          maxTokens: 80,
+        });
+        if (llmText) {
+          const cleaned = this.cleanAIResponse(llmText);
+          this.rememberExchange(npcId, playerMessage, cleaned);
+          return {
+            text: cleaned || this.getFallbackDialogue(personality),
+            emotion: this.analyzeEmotion(cleaned, personality),
+            confidence: 0.92,
+            context: `${personality.type} in ${context}`,
+          };
+        }
+      }
 
       if (!hf) {
-        console.warn('Hugging Face client not available, using fallback');
         return this.getFallbackResponse(personality, playerMessage, context);
       }
 
-      const prompt = this.buildNPCPrompt(personality, playerMessage, context);
+      const prompt = this.buildNPCPrompt(
+        personality,
+        playerMessage,
+        context,
+        memoryContext
+      );
 
       const response = await hf.textGeneration({
         model: 'gpt2',
@@ -89,26 +121,13 @@ class AIService {
         },
       });
 
-      if (import.meta.env.DEV) {
-        console.log('Raw AI Response:', response);
-      }
-
       const generatedText = response.generated_text?.trim() || '';
       const cleanedText = this.cleanAIResponse(generatedText);
       const emotion = this.analyzeEmotion(cleanedText, personality);
 
-      // Store conversation history
-      const npcId = `${personality.type}_${personality.background}`;
-      if (!this.conversationHistory.has(npcId)) {
-        this.conversationHistory.set(npcId, []);
-      }
-      this.conversationHistory.get(npcId)?.push(playerMessage, cleanedText);
+      this.rememberExchange(npcId, playerMessage, cleanedText);
 
       const finalText = cleanedText || this.getFallbackDialogue(personality);
-
-      if (import.meta.env.DEV) {
-        console.log(`✅ Generated dialogue: "${finalText}"`);
-      }
 
       return {
         text: finalText,
@@ -122,13 +141,84 @@ class AIService {
     }
   }
 
+  // Records a player/NPC turn in the in-memory conversation buffer so the next
+  // reply has short-term continuity (long-term memory is handled separately by
+  // the persistent playerMemory service).
+  private rememberExchange(npcId: string, player: string, npc: string): void {
+    if (!this.conversationHistory.has(npcId)) {
+      this.conversationHistory.set(npcId, []);
+    }
+    this.conversationHistory
+      .get(npcId)
+      ?.push(`Player: ${player}`, `${npcId}: ${npc}`);
+  }
+
+  private buildNPCSystemPrompt(
+    personality: NPCPersonality,
+    memoryContext: string
+  ): string {
+    return (
+      `You are a ${personality.type.replace('_', ' ')} in IronHaven, a ` +
+      `neon-soaked cyberpunk city ruled by gangs and corporations. ` +
+      `Background: ${personality.background}. ` +
+      `Personality traits: ${personality.traits.join(', ')}. ` +
+      `Current mood: ${personality.currentMood}.` +
+      (memoryContext
+        ? ` What you remember about this person: ${memoryContext}`
+        : '') +
+      ` Stay fully in character, gritty and terse. Never break character or ` +
+      `mention being an AI.`
+    );
+  }
+
   async generateMission(
     playerLevel: number,
     location: string,
-    type: string
+    type: string,
+    directorContext: string = ''
   ): Promise<MissionData> {
+    const difficulty =
+      playerLevel < 5 ? 'easy' : playerLevel < 15 ? 'medium' : 'hard';
     try {
-      const prompt = `Generate a cyberpunk crime mission for a player at level ${playerLevel} in ${location}. 
+      // Preferred path: structured JSON from the configured LLM. directorContext
+      // lets the AI Director thread this mission into the player's personal arc.
+      if (llmClient.isConfigured()) {
+        const system =
+          'You are the mission designer for IronHaven, a cyberpunk crime MMO. ' +
+          'Return ONLY a JSON object with keys: title (string), description ' +
+          '(2 sentences), objectives (array of exactly 3 short strings), ' +
+          'difficulty ("easy"|"medium"|"hard"), reward (integer dollars).';
+        const user =
+          `Player level: ${playerLevel}. District: ${location}. ` +
+          `Mission type: ${type}. Target difficulty: ${difficulty}.` +
+          (directorContext ? ` Story context: ${directorContext}` : '');
+        const parsed = await llmClient.completeJSON<Partial<MissionData>>(
+          system,
+          user,
+          { maxTokens: 400 }
+        );
+        if (parsed?.title && parsed.description) {
+          return {
+            id: `ai_mission_${crypto.randomUUID()}`,
+            title: parsed.title,
+            description: parsed.description,
+            objectives:
+              Array.isArray(parsed.objectives) && parsed.objectives.length
+                ? parsed.objectives.slice(0, 3)
+                : ['Complete the objective', 'Avoid detection', 'Escape'],
+            difficulty: parsed.difficulty || difficulty,
+            reward:
+              typeof parsed.reward === 'number'
+                ? parsed.reward
+                : Math.floor(1000 + playerLevel * 500 + Math.random() * 2000),
+            location,
+          };
+        }
+      }
+
+      if (!hf) return this.generateFallbackMission(playerLevel, location, type);
+
+      const prompt = `Generate a cyberpunk crime mission for a player at level ${playerLevel} in ${location}.
       Mission type: ${type}. Include title, description, 3 objectives, difficulty, and reward amount.
       Format: Title: [title] | Description: [desc] | Objectives: 1.[obj1] 2.[obj2] 3.[obj3] | Difficulty: [easy/medium/hard] | Reward: $[amount]`;
 
@@ -158,8 +248,22 @@ class AIService {
     recentActions: string[]
   ): Promise<string> {
     try {
-      const prompt = `Create a cyberpunk story event based on: Player stats: ${JSON.stringify(playerStats)}, 
-      Location: ${location}, Recent actions: ${recentActions.join(', ')}. 
+      if (llmClient.isConfigured()) {
+        const system =
+          'You are the narrator of IronHaven, a cyberpunk crime MMO. Write a ' +
+          'vivid, dramatic 2-3 sentence world event reacting to the player. ' +
+          'Second person. No preamble, no quotes.';
+        const user =
+          `Player stats: ${JSON.stringify(playerStats)}. Location: ${location}. ` +
+          `Recent actions: ${recentActions.join(', ') || 'none'}.`;
+        const text = await llmClient.complete(system, user, { maxTokens: 160 });
+        if (text) return text.trim();
+      }
+
+      if (!hf) return this.getFallbackStory(recentActions);
+
+      const prompt = `Create a cyberpunk story event based on: Player stats: ${JSON.stringify(playerStats)},
+      Location: ${location}, Recent actions: ${recentActions.join(', ')}.
       Write a dramatic 2-3 sentence story event that responds to the player's actions.`;
 
       const response = await hf.textGeneration({
@@ -232,7 +336,8 @@ class AIService {
   private buildNPCPrompt(
     personality: NPCPersonality,
     message: string,
-    context: string
+    context: string,
+    memoryContext: string = ''
   ): string {
     const history =
       this.conversationHistory.get(
@@ -240,8 +345,9 @@ class AIService {
       ) || [];
     const recentHistory = history.slice(-4).join(' ');
 
-    return `You are a ${personality.type} in a cyberpunk city. Background: ${personality.background}. 
+    return `You are a ${personality.type} in a cyberpunk city. Background: ${personality.background}.
     Traits: ${personality.traits.join(', ')}. Current mood: ${personality.currentMood}.
+    ${memoryContext ? `Memory of this person: ${memoryContext}.` : ''}
     Context: ${context}. Recent conversation: ${recentHistory}
     Player says: "${message}"
     Respond in character (max 20 words):`;
