@@ -68,7 +68,7 @@ const PoliceSystem: React.FC<PoliceSystemProps> = ({
         }
 
         newUnits.push({
-          id: `police_${i}_${crypto.randomUUID()}`,
+          id: crypto.randomUUID(),
           position: [x, 1, z],
           target: [...playerPosition],
           type,
@@ -93,8 +93,32 @@ const PoliceSystem: React.FC<PoliceSystemProps> = ({
   useEffect(() => {
     if (policeUnits.length === 0) return;
 
-    let animationFrameId: number;
-    let lastTime = performance.now();
+    const updateInterval = setInterval(() => {
+      setPoliceUnits(prev => prev.map(unit => {
+        // Move towards player
+        const dx = playerPosition[0] - unit.position[0];
+        const dz = playerPosition[2] - unit.position[2];
+        const distanceSq = dx * dx + dz * dz;
+        
+        if (distanceSq > 4) {
+          const distance = Math.sqrt(distanceSq);
+          const moveX = (dx / distance) * unit.speed * 0.1;
+          const moveZ = (dz / distance) * unit.speed * 0.1;
+          
+          return {
+            ...unit,
+            position: [
+              unit.position[0] + moveX,
+              unit.position[1],
+              unit.position[2] + moveZ
+            ] as [number, number, number],
+            target: [...playerPosition] as [number, number, number]
+          };
+        }
+        
+        return unit;
+      }));
+    }, 100);
 
     const updatePolice = (time: number) => {
       const dt = (time - lastTime) / 1000; // Delta time in seconds
@@ -141,13 +165,11 @@ const PoliceSystem: React.FC<PoliceSystemProps> = ({
 
   // Auto-attack player if in range
   useEffect(() => {
-    policeUnits.forEach((unit) => {
+    policeUnits.forEach(unit => {
       const distanceSq =
-        (unit.position[0] - playerPosition[0]) *
-          (unit.position[0] - playerPosition[0]) +
-        (unit.position[2] - playerPosition[2]) *
-          (unit.position[2] - playerPosition[2]);
-
+        (unit.position[0] - playerPosition[0]) * (unit.position[0] - playerPosition[0]) +
+        (unit.position[2] - playerPosition[2]) * (unit.position[2] - playerPosition[2]);
+      
       if (distanceSq < 225 && Math.random() > 0.95) {
         // Police shoots at player
         const damage =

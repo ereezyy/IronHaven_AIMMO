@@ -1,9 +1,19 @@
 import { describe, it, expect } from 'vitest';
-import React from 'react';
 import { render } from '@testing-library/react';
+import App from './App';
 
-describe('Placeholder test', () => {
-  it('should pass', () => {
-    expect(true).toBe(true);
+// Setup mock for Three.js which may have issues in JSDOM
+import { vi } from 'vitest';
+vi.mock('@react-three/fiber', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Canvas: ({ children }: any) => (
+    <div data-testid="mock-canvas">{children}</div>
+  ),
+}));
+
+describe('App', () => {
+  it('renders without crashing', () => {
+    const { container } = render(<App />);
+    expect(container).toBeDefined();
   });
 });

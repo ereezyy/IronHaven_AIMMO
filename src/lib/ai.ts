@@ -332,7 +332,7 @@ class AIService {
       lines[1]?.replace('Description:', '').trim() || 'AI-generated objective';
 
     return {
-      id: `ai_mission_${crypto.randomUUID()}`,
+      id: crypto.randomUUID(),
       title,
       description,
       objectives: [
@@ -381,7 +381,7 @@ class AIService {
     const mission = missions[Math.floor(Math.random() * missions.length)];
 
     return {
-      id: `fallback_mission_${crypto.randomUUID()}`,
+      id: crypto.randomUUID(),
       ...mission,
       difficulty:
         playerLevel < 5 ? 'easy' : playerLevel < 15 ? 'medium' : 'hard',
