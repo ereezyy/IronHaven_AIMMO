@@ -17,236 +17,35 @@ function rand(seed: number) {
   };
 }
 
-    return () => clearInterval(phaseTimer);
-  }, []);
-
-  useEffect(() => {
-    // Auto-trigger explosions and effects
-    const effectTimer = setInterval(() => {
-      const newExplosion = {
-        id: crypto.randomUUID(),
-        position: [
-          (Math.random() - 0.5) * 40,
-          Math.random() * 10 + 2,
-          (Math.random() - 0.5) * 40
-        ],
-        scale: Math.random() * 3 + 1,
-        color: Math.random() > 0.5 ? '#ff4400' : '#00ffff'
-      };
-      
-      setExplosions(prev => [...prev.slice(-10), newExplosion]);
-    }, 500);
-
-    return () => clearInterval(effectTimer);
-  }, []);
-
-  useEffect(() => {
-    // Auto-generate AI messages
-    const messages = [
-      "🤖 AI NPC: 'Incoming hostiles detected!'",
-      "🧠 Smart AI: 'Analyzing combat patterns...'",
-      "⚡ AI System: 'Optimizing weapon targeting'",
-      "🎯 AI Mission: 'New objective generated'",
-      "🌐 Multiplayer: '5 players joined the battle'"
-    ];
-
-    const messageTimer = setInterval(() => {
-      const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-      setAiMessages(prev => [...prev.slice(-3), randomMessage]);
-    }, 2000);
-
-    return () => clearInterval(messageTimer);
+function Skyline() {
+  const buildings = useMemo(() => {
+    const r = rand(2087);
+    const arr: Array<{
+      pos: [number, number, number];
+      size: [number, number, number];
+    }> = [];
+    for (let i = 0; i < 90; i++) {
+      const a = r() * Math.PI * 2;
+      const d = 14 + r() * 60;
+      const w = 2 + r() * 4;
+      const h = 6 + r() * 38;
+      arr.push({
+        pos: [Math.cos(a) * d, h / 2, Math.sin(a) * d],
+        size: [w, h, w],
+      });
+    }
+    return arr;
   }, []);
 
   return (
-    <>
-      {/* Player character with epic effects */}
-      <group position={[0, 2, 0]}>
-        <Sphere scale={[1, 2, 1]}>
-          <meshStandardMaterial 
-            color="#00ffff" 
-            emissive="#00ffff" 
-            emissiveIntensity={0.5 + Math.sin(Date.now() * 0.01) * 0.3}
-          />
-        </Sphere>
-        
-        {/* Power aura */}
-        <Sphere scale={[2, 3, 2]}>
-          <meshBasicMaterial 
-            color="#00ffff" 
-            transparent 
-            opacity={0.1 + Math.sin(Date.now() * 0.005) * 0.1}
-          />
-        </Sphere>
-      </group>
-
-      {/* AI-controlled enemies */}
-      {[0, 1, 2, 3, 4, 5, 6, 7].map((_, i) => {
-        const angle = (i / 8) * Math.PI * 2;
-        const radius = 20 + Math.sin(Date.now() * 0.001 + i) * 5;
-        
-        return (
-          <group 
-            key={i}
-            position={[
-              Math.sin(angle) * radius,
-              2,
-              Math.cos(angle) * radius
-            ]}
-          >
-            <Sphere scale={[0.8, 1.6, 0.8]}>
-              <meshStandardMaterial 
-                color="#ff0066" 
-                emissive="#ff0066"
-                emissiveIntensity={0.4}
-              />
-            </Sphere>
-            
-            {/* AI indicator */}
-            <Text
-              position={[0, 3, 0]}
-              fontSize={0.4}
-              color="#00ff00"
-              anchorX="center"
-              anchorY="middle"
-            >
-              AI
-            </Text>
-            
-            {/* Laser beams */}
-            <Box 
-              position={[0, 0, -radius * 0.8]}
-              scale={[0.1, 0.1, radius * 0.6]}
-              rotation={[0, angle, 0]}
-            >
-              <meshBasicMaterial 
-                color="#ff0066" 
-                emissive="#ff0066"
-                emissiveIntensity={1}
-                transparent
-                opacity={0.8}
-              />
-            </Box>
-          </group>
-        );
-      })}
-
-      {/* Dynamic explosions */}
-      {explosions.map((explosion) => (
-        <group key={explosion.id} position={explosion.position}>
-          <Sphere scale={[explosion.scale, explosion.scale, explosion.scale]}>
-            <meshBasicMaterial 
-              color={explosion.color}
-              emissive={explosion.color}
-              emissiveIntensity={1}
-              transparent
-              opacity={0.7}
-            />
-          </Sphere>
-        </group>
-      ))}
-
-      {/* Floating AI messages */}
-      {aiMessages.map((message, index) => (
-        <Text
-          key={index}
-          position={[-15, 8 - index * 2, 10]}
-          fontSize={0.8}
-          color="#00ff00"
-          anchorX="left"
-          anchorY="middle"
-        >
-          {message}
-        </Text>
-      ))}
-
-      {/* Epic environment */}
-      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((_, i) => (
-        <group
-          key={i}
-          position={[
-            (Math.random() - 0.5) * 100,
-            Math.random() * 20 + 5,
-            (Math.random() - 0.5) * 100
-          ]}
-        >
-          <Box scale={[
-            Math.random() * 5 + 2,
-            Math.random() * 15 + 10,
-            Math.random() * 5 + 2
-          ]}>
-            <meshStandardMaterial 
-              color={Math.random() > 0.7 ? "#ff0066" : "#0066ff"}
-              emissive={Math.random() > 0.7 ? "#ff0066" : "#0066ff"}
-              emissiveIntensity={0.2}
-            />
-          </Box>
-        </group>
-      ))}
-    </>
-  );
-};
-
-// Dynamic camera that follows the action
-const ActionCamera = () => {
-  useFrame((state) => {
-    const time = state.clock.elapsedTime;
-    
-    // Epic camera movement
-    state.camera.position.set(
-      Math.sin(time * 0.3) * 30,
-      15 + Math.sin(time * 0.2) * 5,
-      Math.cos(time * 0.3) * 30
-    );
-    
-    state.camera.lookAt(0, 5, 0);
-  });
-  
-  return null;
-};
-
-const InstantAction: React.FC<InstantActionProps> = ({ 
-  onAIDemo, 
-  onMultiplayerDemo, 
-  onCombatDemo 
-}) => {
-  const [showControls, setShowControls] = useState(false);
-
-  useEffect(() => {
-    // Show controls after 3 seconds
-    const timer = setTimeout(() => {
-      setShowControls(true);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <div className="relative w-full h-screen bg-black">
-      <Canvas
-        camera={{ position: [25, 15, 25], fov: 75 }}
-        gl={{ antialias: true, alpha: false }}
-      >
-        {/* Dramatic lighting */}
-        <ambientLight intensity={0.3} />
-        <directionalLight position={[20, 20, 10]} intensity={0.8} color="#00ffff" />
-        <directionalLight position={[-20, 20, -10]} intensity={0.8} color="#ff0066" />
-        <pointLight position={[0, 30, 0]} intensity={2} color="#ffffff" />
-
-        {/* Dynamic camera */}
-        <ActionCamera />
-
-        {/* Auto-playing action sequence */}
-        <AutoActionSequence />
-
-        {/* Ground with cyberpunk grid */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-          <planeGeometry args={[200, 200]} />
-          <meshStandardMaterial 
-            color="#001122" 
-            metalness={0.8}
-            roughness={0.2}
-            wireframe={true}
+    <group>
+      {buildings.map((b, i) => (
+        <mesh key={i} position={b.pos} castShadow receiveShadow>
+          <boxGeometry args={b.size} />
+          <meshStandardMaterial
+            color="#15171a"
+            roughness={0.85}
+            metalness={0.15}
           />
         </mesh>
       ))}

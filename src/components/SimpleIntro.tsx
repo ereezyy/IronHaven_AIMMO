@@ -81,28 +81,8 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
             fontSize: 'clamp(80px, 13vw, 220px)',
             color: '#f4f4f5',
           }}
-        />
-        
-        {/* Floating particles */}
-        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-2 h-2 bg-cyan-400 rounded-full opacity-60"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animation: `float ${3 + Math.random() * 4}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 2}s`
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Main content */}
-      <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-8">
-        {/* Main title */}
-        <h1 className="text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 mb-6 animate-pulse">
-          {content.title}
+        >
+          IRON<span style={{ color: '#c03a30' }}>.</span>HAVEN
         </h1>
         <div
           className="mt-3 text-[13px] tracking-[0.2em] uppercase"
