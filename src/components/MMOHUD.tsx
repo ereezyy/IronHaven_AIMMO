@@ -1,4 +1,10 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import type { Vector3 } from 'three';
+import {
+  CITY_BUILDINGS,
+  CITY_STREET_LIGHTS,
+  CITY_RADIUS,
+} from '../game/cityLayout';
 
 interface MMOHUDProps {
   health: number;
@@ -12,7 +18,123 @@ interface MMOHUDProps {
   reputation: number;
   wanted: number;
   kills: number;
+  playerPosRef?: React.MutableRefObject<Vector3>;
+  playerRotRef?: React.MutableRefObject<number>;
+  otherPlayers?: { id: string; position: [number, number, number] }[];
 }
+
+const MINIMAP_SIZE = 188; // canvas px
+const MINIMAP_RANGE = 65; // world units from centre to map edge
+
+// Live top-down district map, redrawn per frame from refs (no React
+// re-render). North-up with a rotating player arrow — the standard modern
+// MMO minimap idiom.
+const Minimap: React.FC<{
+  playerPosRef?: React.MutableRefObject<Vector3>;
+  playerRotRef?: React.MutableRefObject<number>;
+  otherPlayers: { id: string; position: [number, number, number] }[];
+}> = ({ playerPosRef, playerRotRef, otherPlayers }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const othersRef = useRef(otherPlayers);
+  othersRef.current = otherPlayers;
+
+  useEffect(() => {
+    let raf = 0;
+    const draw = () => {
+      raf = requestAnimationFrame(draw);
+      const ctx = canvasRef.current?.getContext('2d');
+      if (!ctx) return;
+
+      const px = playerPosRef?.current.x ?? 0;
+      const pz = playerPosRef?.current.z ?? 0;
+      const rot = playerRotRef?.current ?? 0;
+      const half = MINIMAP_SIZE / 2;
+      const scale = half / MINIMAP_RANGE;
+      const toX = (wx: number) => half + (wx - px) * scale;
+      const toY = (wz: number) => half + (wz - pz) * scale;
+
+      ctx.fillStyle = '#0b0b0e';
+      ctx.fillRect(0, 0, MINIMAP_SIZE, MINIMAP_SIZE);
+
+      // District boundary.
+      ctx.strokeStyle = '#26282e';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(toX(0), toY(0), CITY_RADIUS * scale, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Buildings as footprints; neon ones carry their sign colour.
+      for (const b of CITY_BUILDINGS) {
+        const x = toX(b.position[0]);
+        const y = toY(b.position[2]);
+        if (x < -8 || x > MINIMAP_SIZE + 8 || y < -8 || y > MINIMAP_SIZE + 8)
+          continue;
+        const w = Math.max(2, b.size[0] * scale);
+        const h = Math.max(2, b.size[2] * scale);
+        ctx.fillStyle = b.hasNeon ? '#2c2f36' : '#22252a';
+        ctx.fillRect(x - w / 2, y - h / 2, w, h);
+        if (b.hasNeon) {
+          ctx.fillStyle = b.neonColor;
+          ctx.globalAlpha = 0.85;
+          ctx.fillRect(x - w / 2, y - h / 2, w, 1.5);
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      // Street lights as faint amber points.
+      ctx.fillStyle = '#8a6f42';
+      for (const l of CITY_STREET_LIGHTS) {
+        const x = toX(l.position[0]);
+        const y = toY(l.position[2]);
+        if (x < 0 || x > MINIMAP_SIZE || y < 0 || y > MINIMAP_SIZE) continue;
+        ctx.fillRect(x - 1, y - 1, 2, 2);
+      }
+
+      // Other players.
+      for (const p of othersRef.current) {
+        const x = toX(p.position[0]);
+        const y = toY(p.position[2]);
+        if (x < 0 || x > MINIMAP_SIZE || y < 0 || y > MINIMAP_SIZE) continue;
+        ctx.fillStyle = '#e5e5e8';
+        ctx.beginPath();
+        ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Player arrow at centre, rotated to heading (three.js +Y rotation is
+      // CCW from above; canvas rotation is CW, hence the negation).
+      ctx.save();
+      ctx.translate(half, half);
+      ctx.rotate(-rot);
+      ctx.fillStyle = '#c03a30';
+      ctx.beginPath();
+      ctx.moveTo(0, -6);
+      ctx.lineTo(4.5, 5);
+      ctx.lineTo(0, 2.5);
+      ctx.lineTo(-4.5, 5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // North marker.
+      ctx.fillStyle = '#5a5d62';
+      ctx.font = '9px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('N', half, 10);
+    };
+    draw();
+    return () => cancelAnimationFrame(raf);
+  }, [playerPosRef, playerRotRef]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={MINIMAP_SIZE}
+      height={MINIMAP_SIZE}
+      className="block border border-[#1a1c1f]"
+    />
+  );
+};
 
 const MMOHUD: React.FC<MMOHUDProps> = ({
   health,
@@ -26,6 +148,9 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
   reputation,
   wanted,
   kills,
+  playerPosRef,
+  playerRotRef,
+  otherPlayers = [],
 }) => {
   const PANEL = 'border border-[#222428] bg-black/60 backdrop-blur-sm';
   const LABEL = 'text-[10px] tracking-[0.3em] uppercase text-neutral-500';
@@ -122,26 +247,13 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
       </div>
 
       <div className="absolute top-4 right-4">
-        <div className={`${PANEL} p-4 min-w-[220px]`}>
-          <div className={`${LABEL} mb-3`}>minimap</div>
-          <div
-            className="w-full aspect-square relative border border-[#1a1c1f]"
-            style={{
-              background:
-                '#0d0d0f linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px) repeat',
-              backgroundImage:
-                'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),' +
-                'linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
-              backgroundSize: '16px 16px',
-            }}
-          >
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-1.5 h-1.5" style={{ background: '#c03a30' }} />
-            </div>
-            <div className="absolute top-2 left-2 w-1 h-1 bg-neutral-500" />
-            <div className="absolute bottom-3 right-4 w-1 h-1 bg-neutral-500" />
-            <div className="absolute top-1/2 right-3 w-1 h-1 bg-neutral-500" />
-          </div>
+        <div className={`${PANEL} p-4`}>
+          <div className={`${LABEL} mb-3`}>district map</div>
+          <Minimap
+            playerPosRef={playerPosRef}
+            playerRotRef={playerRotRef}
+            otherPlayers={otherPlayers}
+          />
         </div>
       </div>
 

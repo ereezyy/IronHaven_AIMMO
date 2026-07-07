@@ -1,6 +1,11 @@
 import React, { useMemo } from 'react';
-import { useTexture } from '@react-three/drei';
+import { MeshReflectorMaterial, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
+import {
+  CITY_BUILDINGS,
+  CITY_TREES,
+  CITY_STREET_LIGHTS,
+} from '../game/cityLayout';
 
 // Textured asphalt ground using CC0 Poly Haven maps served from /public.
 // Split out so its useTexture suspense is scoped to the ground only.
@@ -23,116 +28,40 @@ const Ground: React.FC = () => {
   return (
     <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
       <circleGeometry args={[100, 64]} />
-      <meshStandardMaterial
+      {/* Rain-slick asphalt: real-time planar reflections make the neon
+          signs and street lamps mirror in the street — the single biggest
+          "modern game" realism cue for a night city. */}
+      <MeshReflectorMaterial
         map={map}
         normalMap={normalMap}
         roughnessMap={roughnessMap}
-        color="#6b7080"
-        metalness={0.25}
+        color="#565b66"
+        metalness={0.4}
         roughness={1}
+        mirror={0.45}
+        resolution={512}
+        blur={[300, 100]}
+        mixBlur={1}
+        mixStrength={4.5}
+        depthScale={1.1}
+        minDepthThreshold={0.4}
+        maxDepthThreshold={1.4}
+        depthToBlurRatioBias={0.3}
       />
     </mesh>
   );
 };
 
 const MMOWorld: React.FC = () => {
-  const buildings = useMemo(() => {
-    const buildingArray = [];
-    const cityRadius = 80;
-    const buildingCount = 50;
-
-    for (let i = 0; i < buildingCount; i++) {
-      const angle = (i / buildingCount) * Math.PI * 2;
-      const distance = 20 + Math.random() * 60;
-      const x = Math.cos(angle) * distance;
-      const z = Math.sin(angle) * distance;
-
-      const width = 3 + Math.random() * 5;
-      const height = 10 + Math.random() * 30;
-      const depth = 3 + Math.random() * 5;
-
-      const colors = ['#15171a', '#121417', '#181a1e', '#1b1d22', '#101114'];
-      const color = colors[Math.floor(Math.random() * colors.length)];
-
-      // Varied neon palette so the skyline reads as a living district rather
-      // than one repeated red sign. Picked per-building and reused by the sign
-      // mesh and its point light so glow and cast light always match.
-      const neonPalette = [
-        '#ff2d6b',
-        '#22d3ee',
-        '#a855f7',
-        '#f5a524',
-        '#39ff14',
-      ];
-      const neonColor =
-        neonPalette[Math.floor(Math.random() * neonPalette.length)];
-
-      buildingArray.push({
-        id: `building_${i}`,
-        position: [x, height / 2, z] as [number, number, number],
-        size: [width, height, depth] as [number, number, number],
-        color,
-        neonColor,
-        hasWindows: Math.random() > 0.3,
-        hasNeon: Math.random() > 0.5,
-      });
-    }
-
-    return buildingArray;
-  }, []);
-
-  const trees = useMemo(() => {
-    const treeArray = [];
-    for (let i = 0; i < 30; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const distance = 15 + Math.random() * 40;
-      const x = Math.cos(angle) * distance;
-      const z = Math.sin(angle) * distance;
-
-      treeArray.push({
-        id: `tree_${i}`,
-        position: [x, 0, z] as [number, number, number],
-      });
-    }
-    return treeArray;
-  }, []);
-
-  const streetLights = useMemo(() => {
-    const lights = [];
-    const radius = 50;
-    const count = 20;
-
-    for (let i = 0; i < count; i++) {
-      const angle = (i / count) * Math.PI * 2;
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-
-      lights.push({
-        id: `light_${i}`,
-        position: [x, 0, z] as [number, number, number],
-      });
-    }
-    return lights;
-  }, []);
+  // Shared deterministic layout: the same data drives the 3D meshes here and
+  // the HUD minimap, so the map is always truthful.
+  const buildings = CITY_BUILDINGS;
+  const trees = CITY_TREES;
+  const streetLights = CITY_STREET_LIGHTS;
 
   return (
     <group>
       <Ground />
-
-      <mesh
-        receiveShadow
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, 0.01, 0]}
-      >
-        <ringGeometry args={[0, 100, 64]} />
-        <meshStandardMaterial
-          color="#2a2a2a"
-          roughness={0.9}
-          metalness={0.1}
-          emissive="#0a0a0a"
-          emissiveIntensity={0.2}
-        />
-      </mesh>
 
       {buildings.map((building) => (
         <group key={building.id} position={building.position}>
@@ -231,11 +160,6 @@ const MMOWorld: React.FC = () => {
           />
         </group>
       ))}
-
-      <gridHelper
-        args={[200, 40, '#1d1f23', '#141518']}
-        position={[0, 0.02, 0]}
-      />
     </group>
   );
 };

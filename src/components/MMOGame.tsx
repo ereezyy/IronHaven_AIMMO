@@ -6,9 +6,24 @@ import React, {
   useState,
 } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { KeyboardControls, Environment, Sparkles } from '@react-three/drei';
-import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
-import { KernelSize } from 'postprocessing';
+import {
+  KeyboardControls,
+  Environment,
+  Sparkles,
+  Html,
+  Preload,
+  useProgress,
+} from '@react-three/drei';
+import {
+  EffectComposer,
+  Bloom,
+  Vignette,
+  SMAA,
+  SSAO,
+  ChromaticAberration,
+  Noise,
+} from '@react-three/postprocessing';
+import { KernelSize, BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
 import { useGameStore } from '../store/gameState';
 import { persistenceService } from '../lib/persistence';
@@ -37,6 +52,60 @@ interface OtherPlayer {
 // wanted level) is what gets you killed, so the penalty makes careful,
 // de-escalating play pay off rather than reckless spree-running.
 export const DEATH_LOSS_FRACTION = 0.25;
+
+// Subtle lens fringing, radially modulated so it only shows near the screen
+// edges — cinematic without smearing the crosshair area.
+const CA_OFFSET = new THREE.Vector2(0.0005, 0.001);
+
+// Full-screen loading gate driven by the three.js loader queue (HDRI,
+// textures, models). A modern MMO never shows a half-loaded world; this
+// fades out once every asset is resident. The failsafe timer guarantees we
+// never trap the player on the loader if an asset 404s.
+const LoadingScreen: React.FC = () => {
+  const { active, progress } = useProgress();
+  const [gone, setGone] = useState(false);
+  const done = !active && progress >= 100;
+
+  useEffect(() => {
+    const failsafe = setTimeout(() => setGone(true), 12000);
+    return () => clearTimeout(failsafe);
+  }, []);
+
+  useEffect(() => {
+    if (!done) return;
+    const t = setTimeout(() => setGone(true), 750);
+    return () => clearTimeout(t);
+  }, [done]);
+
+  if (gone) return null;
+
+  return (
+    <div
+      className={`absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#050507] font-mono transition-opacity duration-700 ${
+        done ? 'opacity-0 pointer-events-none' : 'opacity-100'
+      }`}
+    >
+      <div className="text-[12px] tracking-[0.5em] uppercase text-neutral-500">
+        entering
+      </div>
+      <div
+        className="mt-3 text-3xl tracking-[0.35em] uppercase"
+        style={{ color: '#c03a30' }}
+      >
+        iron haven
+      </div>
+      <div className="mt-10 h-[3px] w-64 border border-[#222428] bg-black/60">
+        <div
+          className="h-full transition-[width] duration-300"
+          style={{ width: `${progress}%`, background: '#c03a30' }}
+        />
+      </div>
+      <div className="mt-3 text-[10px] tracking-[0.3em] uppercase text-neutral-600">
+        {Math.round(progress)}% · streaming district assets
+      </div>
+    </div>
+  );
+};
 
 const ThirdPersonCamera: React.FC<{
   targetRef: React.MutableRefObject<THREE.Vector3>;
@@ -113,8 +182,58 @@ const RemotePlayer: React.FC<{ player: OtherPlayer }> = ({ player }) => {
     g.rotation.y += (player.rotation - g.rotation.y) * 0.18;
   });
 
+  const hp = Math.max(0, Math.min(100, player.health));
+
   return (
     <group ref={ref} position={player.position}>
+      {/* MMO nameplate: name, level and health bar floating above the head,
+          scaled down with distance like every modern online game. */}
+      <Html
+        center
+        position={[0, 2.9, 0]}
+        distanceFactor={12}
+        zIndexRange={[20, 0]}
+        style={{ pointerEvents: 'none' }}
+      >
+        <div
+          style={{
+            whiteSpace: 'nowrap',
+            textAlign: 'center',
+            fontFamily: 'monospace',
+          }}
+        >
+          <div
+            style={{
+              color: '#e5e5e8',
+              fontSize: 12,
+              letterSpacing: '0.12em',
+              textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+            }}
+          >
+            {player.username}
+            <span style={{ color: '#8a8d93' }}> · </span>
+            <span style={{ color: '#c9a15a' }}>lv {player.level}</span>
+          </div>
+          <div
+            style={{
+              margin: '3px auto 0',
+              width: 72,
+              height: 3,
+              background: 'rgba(0,0,0,0.65)',
+              border: '1px solid #222428',
+            }}
+          >
+            <div
+              style={{
+                width: `${hp}%`,
+                height: '100%',
+                background: hp > 35 ? '#3f7d4e' : '#c03a30',
+              }}
+            />
+          </div>
+        </div>
+      </Html>
+
       <mesh castShadow>
         <capsuleGeometry args={[0.5, 1.5, 8, 16]} />
         <meshStandardMaterial color="#cfcfd2" roughness={0.7} metalness={0.1} />
@@ -409,7 +528,9 @@ const MMOGame: React.FC = () => {
           shadows
           camera={{ position: [0, 5, 10], fov: 75 }}
           gl={{
-            antialias: true,
+            // MSAA off: SMAA in the post chain handles edges for a fraction
+            // of the cost and works with the offscreen composer buffers.
+            antialias: false,
             powerPreference: 'high-performance',
             alpha: false,
           }}
@@ -491,12 +612,28 @@ const MMOGame: React.FC = () => {
               rotationRef={playerRotRef}
               shakeRef={cameraShake}
             />
+
+            {/* Compile every shader / upload every texture during the load
+                gate instead of hitching on first sight. */}
+            <Preload all />
           </Suspense>
 
-          {/* Post-processing: bloom makes every emissive neon sign, street
-              lamp and hit-flash actually glow; the vignette pulls focus to
-              the player and deepens the noir mood. */}
-          <EffectComposer multisampling={4}>
+          {/* Post-processing: SSAO grounds objects with contact shadows,
+              bloom makes every emissive neon sign glow, subtle radial
+              chromatic aberration + film grain read as a camera lens, the
+              vignette deepens the noir mood, and SMAA resolves edges. */}
+          <EffectComposer multisampling={0} enableNormalPass>
+            <SSAO
+              blendFunction={BlendFunction.MULTIPLY}
+              samples={16}
+              radius={0.08}
+              intensity={18}
+              luminanceInfluence={0.55}
+              worldDistanceThreshold={24}
+              worldDistanceFalloff={4}
+              worldProximityThreshold={0.4}
+              worldProximityFalloff={0.2}
+            />
             <Bloom
               intensity={0.9}
               luminanceThreshold={0.2}
@@ -505,10 +642,19 @@ const MMOGame: React.FC = () => {
               radius={0.7}
               kernelSize={KernelSize.LARGE}
             />
+            <ChromaticAberration
+              offset={CA_OFFSET}
+              radialModulation
+              modulationOffset={0.5}
+            />
+            <Noise premultiply blendFunction={BlendFunction.SCREEN} />
             <Vignette offset={0.3} darkness={0.75} eskil={false} />
+            <SMAA />
           </EffectComposer>
         </Canvas>
       </KeyboardControls>
+
+      <LoadingScreen />
 
       <AtmosphereOverlay />
 
@@ -524,6 +670,9 @@ const MMOGame: React.FC = () => {
         reputation={gameStore.playerStats.reputation}
         wanted={gameStore.playerStats.wanted}
         kills={gameStore.sessionStats.totalKills}
+        playerPosRef={playerPosRef}
+        playerRotRef={playerRotRef}
+        otherPlayers={otherPlayers}
       />
 
       <MMOChat />
