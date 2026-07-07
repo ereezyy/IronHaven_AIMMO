@@ -255,11 +255,10 @@ const RemotePlayer: React.FC<{ player: OtherPlayer }> = ({ player }) => {
 const MMOGame: React.FC = () => {
   const gameStore = useGameStore();
   const [otherPlayers, setOtherPlayers] = useState<OtherPlayer[]>([]);
-  const [playerId] = useState(
-    () => `player_${crypto.randomUUID().substring(0, 9)}`
-  );
-  const playerPosRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 1, 0));
-  const playerRotRef = useRef(0);
+  const [playerId] = useState(() => `player_${crypto.randomUUID()}`);
+  const [playerPosition, setPlayerPosition] = useState<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
+  const [playerRotation, setPlayerRotation] = useState(0);
+  const channelRef = useRef<any>(null);
   const lastBroadcast = useRef(0);
   const lastBroadcastPos = useRef(new THREE.Vector3(0, 1, 0));
   const lastCombat = useRef(false);
