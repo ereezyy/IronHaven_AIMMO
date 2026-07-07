@@ -20,11 +20,25 @@ const MMOWorld: React.FC = () => {
       const colors = ['#15171a', '#121417', '#181a1e', '#1b1d22', '#101114'];
       const color = colors[Math.floor(Math.random() * colors.length)];
 
+      // Varied neon palette so the skyline reads as a living district rather
+      // than one repeated red sign. Picked per-building and reused by the sign
+      // mesh and its point light so glow and cast light always match.
+      const neonPalette = [
+        '#ff2d6b',
+        '#22d3ee',
+        '#a855f7',
+        '#f5a524',
+        '#39ff14',
+      ];
+      const neonColor =
+        neonPalette[Math.floor(Math.random() * neonPalette.length)];
+
       buildingArray.push({
         id: `building_${i}`,
         position: [x, height / 2, z] as [number, number, number],
         size: [width, height, depth] as [number, number, number],
         color,
+        neonColor,
         hasWindows: Math.random() > 0.3,
         hasNeon: Math.random() > 0.5,
       });
@@ -127,16 +141,19 @@ const MMOWorld: React.FC = () => {
               ]}
             >
               <boxGeometry args={[building.size[0] * 0.6, 0.5, 0.1]} />
-              <meshBasicMaterial
-                color="#c03a30"
-                emissive="#c03a30"
-                emissiveIntensity={1.1}
+              {/* toneMapped=false keeps the sign above the bloom threshold so
+                  it reads as a self-lit source, not a flatly coloured box. */}
+              <meshStandardMaterial
+                color="#050506"
+                emissive={building.neonColor}
+                emissiveIntensity={2.6}
+                toneMapped={false}
               />
               <pointLight
                 position={[0, 0, 1]}
-                color="#c03a30"
-                intensity={0.9}
-                distance={12}
+                color={building.neonColor}
+                intensity={1.1}
+                distance={14}
               />
             </mesh>
           )}
@@ -166,10 +183,11 @@ const MMOWorld: React.FC = () => {
 
           <mesh position={[0, 6.5, 0]}>
             <boxGeometry args={[0.4, 0.4, 0.4]} />
-            <meshBasicMaterial
-              color="#c89b5a"
-              emissive="#c89b5a"
-              emissiveIntensity={1.2}
+            <meshStandardMaterial
+              color="#050506"
+              emissive="#ffcf8a"
+              emissiveIntensity={2.2}
+              toneMapped={false}
             />
           </mesh>
 

@@ -1,6 +1,19 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { KeyboardControls } from '@react-three/drei';
+import {
+  KeyboardControls,
+  Environment,
+  Lightformer,
+  Sparkles,
+} from '@react-three/drei';
+import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
+import { KernelSize } from 'postprocessing';
 import * as THREE from 'three';
 import { useGameStore } from '../store/gameState';
 import { persistenceService } from '../lib/persistence';
@@ -405,11 +418,19 @@ const MMOGame: React.FC = () => {
             powerPreference: 'high-performance',
             alpha: false,
           }}
+          onCreated={({ gl }) => {
+            // Filmic tone mapping + a touch of exposure so bloom highlights
+            // roll off cinematically instead of clipping to flat white.
+            gl.toneMapping = THREE.ACESFilmicToneMapping;
+            gl.toneMappingExposure = 1.15;
+          }}
         >
-          <color attach="background" args={['#0b0b0c']} />
-          <fog attach="fog" args={['#0b0b0c', 40, 160]} />
+          <color attach="background" args={['#07070a']} />
+          {/* Exponential fog reads denser near the horizon than linear fog,
+              giving the neon haze a proper Blade Runner falloff. */}
+          <fogExp2 attach="fog" args={['#0a0812', 0.014]} />
 
-          <ambientLight intensity={0.22} />
+          <ambientLight intensity={0.18} color="#3a3550" />
           <directionalLight
             position={[50, 60, 25]}
             intensity={0.6}
@@ -429,30 +450,96 @@ const MMOGame: React.FC = () => {
             color="#c03a30"
           />
 
-          <MMOWorld />
+          <Suspense fallback={null}>
+            {/* Procedural image-based lighting: coloured Lightformers act as
+                neon billboards reflecting off metallic surfaces. Baked once
+                (frames={1}) and fully offline — no external HDRI download. */}
+            <Environment resolution={256} frames={1}>
+              <Lightformer
+                intensity={0.6}
+                color="#20242e"
+                form="rect"
+                position={[0, 12, 0]}
+                rotation={[Math.PI / 2, 0, 0]}
+                scale={[60, 60, 1]}
+              />
+              <Lightformer
+                intensity={2.4}
+                color="#ff2d6b"
+                form="rect"
+                position={[-18, 6, -10]}
+                rotation={[0, Math.PI / 2, 0]}
+                scale={[20, 8, 1]}
+              />
+              <Lightformer
+                intensity={2.2}
+                color="#22d3ee"
+                form="rect"
+                position={[18, 6, 10]}
+                rotation={[0, -Math.PI / 2, 0]}
+                scale={[20, 8, 1]}
+              />
+              <Lightformer
+                intensity={1.6}
+                color="#f5a524"
+                form="rect"
+                position={[10, 5, -18]}
+                rotation={[0, 0, 0]}
+                scale={[16, 6, 1]}
+              />
+            </Environment>
 
-          <MMOPlayer
-            key={spawnKey}
-            playerId={playerId}
-            onUpdate={handlePlayerUpdate}
-            flashApi={playerFlashApi}
-          />
+            {/* Floating embers / ash drifting through the district. */}
+            <Sparkles
+              count={120}
+              scale={[140, 24, 140]}
+              position={[0, 10, 0]}
+              size={3}
+              speed={0.28}
+              opacity={0.5}
+              color="#ffb066"
+            />
 
-          <NPCManager
-            playerPosRef={playerPosRef}
-            onNearest={handleNearest}
-            attackApi={attackApi}
-          />
+            <MMOWorld />
 
-          {otherPlayers.map((player) => (
-            <RemotePlayer key={player.id} player={player} />
-          ))}
+            <MMOPlayer
+              key={spawnKey}
+              playerId={playerId}
+              onUpdate={handlePlayerUpdate}
+              flashApi={playerFlashApi}
+            />
 
-          <ThirdPersonCamera
-            targetRef={playerPosRef}
-            rotationRef={playerRotRef}
-            shakeRef={cameraShake}
-          />
+            <NPCManager
+              playerPosRef={playerPosRef}
+              onNearest={handleNearest}
+              attackApi={attackApi}
+            />
+
+            {otherPlayers.map((player) => (
+              <RemotePlayer key={player.id} player={player} />
+            ))}
+
+            <ThirdPersonCamera
+              targetRef={playerPosRef}
+              rotationRef={playerRotRef}
+              shakeRef={cameraShake}
+            />
+          </Suspense>
+
+          {/* Post-processing: bloom makes every emissive neon sign, street
+              lamp and hit-flash actually glow; the vignette pulls focus to
+              the player and deepens the noir mood. */}
+          <EffectComposer multisampling={4}>
+            <Bloom
+              intensity={0.9}
+              luminanceThreshold={0.2}
+              luminanceSmoothing={0.9}
+              mipmapBlur
+              radius={0.7}
+              kernelSize={KernelSize.LARGE}
+            />
+            <Vignette offset={0.3} darkness={0.75} eskil={false} />
+          </EffectComposer>
         </Canvas>
       </KeyboardControls>
 
