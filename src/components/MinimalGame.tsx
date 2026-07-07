@@ -74,36 +74,9 @@ const MinimalGame = () => {
   useEffect(() => {
     if (enemies.length === 0) {
       setEnemies([
-        {
-          id: crypto.randomUUID(),
-          x: Math.random() * 90 + 5,
-          y: Math.random() * 90 + 5,
-        },
-        {
-          id: crypto.randomUUID(),
-          x: Math.random() * 90 + 5,
-          y: Math.random() * 90 + 5,
-        },
-        {
-          id: crypto.randomUUID(),
-          x: Math.random() * 90 + 5,
-          y: Math.random() * 90 + 5,
-        },
-        {
-          id: crypto.randomUUID(),
-          x: Math.random() * 90 + 5,
-          y: Math.random() * 90 + 5,
-        },
-        {
-          id: crypto.randomUUID(),
-          x: Math.random() * 90 + 5,
-          y: Math.random() * 90 + 5,
-        },
-        {
-          id: crypto.randomUUID(),
-          x: Math.random() * 90 + 5,
-          y: Math.random() * 90 + 5,
-        },
+        { id: crypto.randomUUID(), x: Math.random() * 90 + 5, y: Math.random() * 90 + 5 },
+        { id: crypto.randomUUID(), x: Math.random() * 90 + 5, y: Math.random() * 90 + 5 },
+        { id: crypto.randomUUID(), x: Math.random() * 90 + 5, y: Math.random() * 90 + 5 }
       ]);
     }
   }, [enemies]);
@@ -168,7 +141,7 @@ const MinimalGame = () => {
         ))}
 
         {/* Particles */}
-        {STATIC_PARTICLES.map((_, i) => (
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((_, i) => (
           <div
             key={i}
             className="absolute w-1 h-1 bg-white rounded-full opacity-60 animate-pulse"

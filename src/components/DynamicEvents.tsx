@@ -77,7 +77,7 @@ const DynamicEvents: React.FC<DynamicEventsProps> = ({
     const z = playerPosition[2] + Math.sin(angle) * distance;
 
     const event: DynamicEvent = {
-      id: crypto.randomUUID(),
+      id: `event_${crypto.randomUUID()}`,
       title: getEventTitle(type),
       description: getEventDescription(type),
       type,

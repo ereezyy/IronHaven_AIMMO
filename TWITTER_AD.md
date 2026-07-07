@@ -1,19 +1,14 @@
-# 🚀 IronHaven AIMMO: The Next Level of Cyberpunk Action! 🚀
+# 🚀 Enter the Neon Shadows of IronHaven AIMMO!
 
-🏙️ Return to the neon-lit streets of IronHaven! Our latest MASSIVE update brings you the ultimate, hyper-optimized browser MMORPG experience. Jump in instantly. No downloads. Just 100% pure action.
+The streets are alive, the AI is thinking, and the danger is real. IronHaven just leveled up with massive gameplay and security enhancements! 🏙️🔥
 
-🔥 LATEST IMPROVEMENTS:
-⚡ Blistering Performance: We’ve completely overhauled our UI elements with React optimizations, reactive throttling, and synced game loops with your display's refresh rate! Enjoy incredibly fluid 60FPS combat as you navigate the chaos without CPU bottlenecks or frame rate drops!
-🛡️ Uncompromised Security: Your progression is locked down. We've enhanced multiplayer integrity with cryptographic UUIDs to prevent collision and prediction attacks, and strictly enforced append-only records for chat and combat logs to ensure pure, uneditable history!
-⚡ Blistering Performance: We’ve completely overhauled our UI elements with React optimizations and reactive throttling. Enjoy incredibly fluid 60FPS combat as you navigate the chaos without CPU bottlenecks! Now with dynamically synchronized frame-rates for the smoothest gameplay ever!
-🛡️ Uncompromised Security: Your progression is locked down. We've enhanced multiplayer integrity with cryptographic UUIDs to prevent collision and prediction attacks, and maintained append-only records with zero-leak production logs.
-⚡ Blistering Performance & Silky Smooth Gameplay: We’ve completely overhauled our engine's game loop! Movement, AI, and combat now use dynamic frame-rate-independent physics for ultra-smooth gameplay on any device, unbinding you from FPS limits!
-🛡️ Uncompromised, Production-Grade Security: Your progression is locked down. We've fortified our multiplayer systems to guarantee zero-leak production event logging, ensuring safe, secure, and exploit-free progression for every player.
-🤖 Dynamic World: Encounter dynamic, intelligent NPCs with zero-overhead spatial proximity mechanics that instantly react to your choices and tactics.
-💾 Unstoppable Grind: Out of network? With our persistent offline data saving mode, you never lose progression.
+✅ Ultra-optimized rendering & physics—no more stutter, just pure action!
+✅ Cryptographically secure game state—your legacy is untouchable!
+✅ True AI-driven world—every choice you make ripples across the city.
+✅ Zero downloads, zero wait. Drop straight into the cyberpunk chaos!
 
-Ready to dominate the underworld? The city is waiting.
+Will you rule the underworld or burn out trying? The city is yours to take.
 
-👉 Play instantly: ironhaven-aimmo.com
+👉 Play NOW: ironhaven-aimmo.com
 
-#IndieGame #GameDev #Cyberpunk #MMORPG #AI #BrowserGame #ThreeJS #ReactJS #Web3D #Security
+#IndieGame #Cyberpunk #MMORPG #AI #Web3D #ThreeJS #ReactJS #Gaming
