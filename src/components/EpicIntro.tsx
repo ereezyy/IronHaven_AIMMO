@@ -139,7 +139,7 @@ const ActionSequence = ({ stage }: { stage: number }) => {
       </group>
 
       {/* AI NPCs in combat */}
-      {[0, 1, 2, 3, 4].map((i) => (
+      {[0, 1, 2, 3, 4].map((_, i) => (
         <group 
           key={i} 
           position={[
@@ -353,7 +353,7 @@ const EpicIntro: React.FC<EpicIntroProps> = ({ onComplete }) => {
         <ActionSequence stage={stage} />
 
         {/* Particle effects */}
-        {Array.from({ length: 100 }, (_, i) => i).map((i) => (
+        {Array.from({length: 100}).map((_, i) => (
           <group
             key={i}
             position={[

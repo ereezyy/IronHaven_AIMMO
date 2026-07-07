@@ -86,7 +86,7 @@ const CrimeSystem: React.FC<CrimeSystemProps> = ({
       }).length;
 
       const crime: CrimeEvent = {
-        id: `crime_${crypto.randomUUID()}`,
+        id: crypto.randomUUID(),
         type: crimeType,
         severity,
         witnessCount,

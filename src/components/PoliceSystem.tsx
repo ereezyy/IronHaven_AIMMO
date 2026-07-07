@@ -68,7 +68,7 @@ const PoliceSystem: React.FC<PoliceSystemProps> = ({
         }
 
         newUnits.push({
-          id: `police_${i}_${crypto.randomUUID()}`,
+          id: crypto.randomUUID(),
           position: [x, 1, z],
           target: [...playerPosition],
           type,

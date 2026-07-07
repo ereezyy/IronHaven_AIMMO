@@ -575,7 +575,7 @@ const Game: React.FC = () => {
     
     // Add multiple effects for police kills
     const bloodEffect: CombatEffect = {
-      id: `police_blood_${crypto.randomUUID()}`,
+      id: crypto.randomUUID(),
       position: playerPosition,
       type: 'death_burst',
       intensity: 1,
@@ -584,7 +584,7 @@ const Game: React.FC = () => {
     };
     
     const explosionEffect = {
-      id: `police_explosion_${crypto.randomUUID()}`,
+      id: crypto.randomUUID(),
       position: playerPosition,
       intensity: 0.8
     };
@@ -592,7 +592,7 @@ const Game: React.FC = () => {
     setCombatEffects(prev => [...prev, bloodEffect]);
     setExplosions(prev => [...prev, explosionEffect]);
     setBloodPools(prev => [...prev, {
-      id: `blood_pool_${crypto.randomUUID()}`,
+      id: crypto.randomUUID(),
       position: playerPosition,
       size: 2 + Math.random()
     }]);
@@ -618,7 +618,7 @@ const Game: React.FC = () => {
     // Add particle effects for serious crimes
     if (crime.severity > 70) {
       const effect = {
-        id: `crime_particle_${crypto.randomUUID()}`,
+        id: crypto.randomUUID(),
         type: crime.type === 'murder' ? 'blood_spatter' : 'impact',
         position: crime.location,
         intensity: crime.severity / 100,
@@ -629,7 +629,7 @@ const Game: React.FC = () => {
     // Add visual effects for serious crimes
     if (crime.severity > 70) {
       const effect: CombatEffect = {
-        id: `crime_${crypto.randomUUID()}`,
+        id: crypto.randomUUID(),
         position: crime.location,
         type: crime.type === 'murder' ? 'blood_splatter' : 'impact',
         duration: 8000,
@@ -643,7 +643,7 @@ const Game: React.FC = () => {
     // Add particle effects for events
     if (event.type === 'gang_war' || event.type === 'police_raid') {
       const effect = {
-        id: `event_particle_${crypto.randomUUID()}`,
+        id: crypto.randomUUID(),
         type: 'explosion',
         position: event.location,
         intensity: event.severity / 100
