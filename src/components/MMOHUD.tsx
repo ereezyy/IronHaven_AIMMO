@@ -136,6 +136,55 @@ const Minimap: React.FC<{
   );
 };
 
+// Inline SVG icon sprites — one path library, tinted via currentColor so
+// they inherit each stat's accent. Zero image requests.
+const ICON_PATHS: Record<string, string> = {
+  health:
+    'M8 1.5c-2-2-6-1-6 2.2C2 6.5 8 11 8 11s6-4.5 6-7.3c0-3.2-4-4.2-6-2.2z',
+  stamina: 'M9 1 3 9h4l-1 6 6-8H8l1-6z',
+  mana: 'M8 1C8 1 3 7 3 10a5 5 0 0 0 10 0C13 7 8 1 8 1z',
+  cash: 'M1 4h14v8H1V4zm7 1.5A2.5 2.5 0 1 0 8 10.5 2.5 2.5 0 0 0 8 5.5z',
+  rep: 'M8 1l2 4.3 4.7.5-3.5 3.2 1 4.6L8 11.2 3.8 13.6l1-4.6L1.3 5.8 6 5.3 8 1z',
+  kills:
+    'M8 2a4 4 0 0 0-4 4c0 2 1.5 3.4 1.5 3.4V12h5V9.4S12 8 12 6a4 4 0 0 0-4-4zM6 13h4v1.5H6z',
+  wanted: 'M8 1 1 14h14L8 1zm-.8 5h1.6v4H7.2V6zm0 5h1.6v1.5H7.2V11z',
+  fist: 'M3 8V5.5A1.5 1.5 0 0 1 6 5V4a1.5 1.5 0 0 1 3 0v1a1.5 1.5 0 0 1 3 .5V8c0 3-1.5 5-4.5 5S3 11 3 8z',
+  talk: 'M2 3h12v8H9l-3 3v-3H2V3z',
+  sprint:
+    'M10 2a1.6 1.6 0 1 1 0 3.2A1.6 1.6 0 0 1 10 2zM6 6l3 1 1 3 3 4h-2l-2.6-3L7 12l-1 3H4l1.5-4.5L4 9l-2 1V7.5L6 6z',
+  map: 'M1 3l4.5-1.5L10 3l5-1.5v11L10.5 14 6 12.5 1 14V3zm5 0v9m4-8v9',
+};
+
+const Icon: React.FC<{ name: string; size?: number; className?: string }> = ({
+  name,
+  size = 12,
+  className = '',
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 16 16"
+    className={className}
+    fill="currentColor"
+    stroke="none"
+    aria-hidden
+  >
+    <path d={ICON_PATHS[name] ?? ''} />
+  </svg>
+);
+
+// Action-bar slot definitions: icon + keybind label.
+const ACTION_SLOTS = [
+  { key: '1', icon: 'fist', label: 'strike' },
+  { key: '2', icon: 'talk', label: 'talk' },
+  { key: '3', icon: 'sprint', label: 'sprint' },
+  { key: '4', icon: 'map', label: 'map' },
+  { key: '5', icon: 'cash', label: 'trade' },
+  { key: '6', icon: 'wanted', label: 'heat' },
+  { key: '7', icon: 'rep', label: 'rep' },
+  { key: '8', icon: 'mana', label: 'focus' },
+];
+
 const MMOHUD: React.FC<MMOHUDProps> = ({
   health,
   stamina,
@@ -174,10 +223,18 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
     value: number;
     max: number;
     accent: string;
-  }> = ({ label, value, max, accent }) => (
+    icon?: string;
+  }> = ({ label, value, max, accent, icon }) => (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <span className={LABEL}>{label}</span>
+        <span className="flex items-center gap-1.5">
+          {icon && (
+            <span style={{ color: accent }}>
+              <Icon name={icon} size={11} />
+            </span>
+          )}
+          <span className={LABEL}>{label}</span>
+        </span>
         <span className="text-[10px] text-neutral-300">
           {value}/{max}
         </span>
@@ -206,9 +263,27 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
           </div>
 
           <div className="space-y-3">
-            <Bar label="Health" value={health} max={100} accent="#c03a30" />
-            <Bar label="Stamina" value={stamina} max={100} accent="#cfcfd2" />
-            <Bar label="Mana" value={mana} max={100} accent="#5a5d62" />
+            <Bar
+              label="Health"
+              value={health}
+              max={100}
+              accent="#c03a30"
+              icon="health"
+            />
+            <Bar
+              label="Stamina"
+              value={stamina}
+              max={100}
+              accent="#cfcfd2"
+              icon="stamina"
+            />
+            <Bar
+              label="Mana"
+              value={mana}
+              max={100}
+              accent="#5a5d62"
+              icon="mana"
+            />
           </div>
 
           <div className="mt-4 pt-4 border-t border-[#1a1c1f]">
@@ -217,6 +292,7 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
               value={experience}
               max={maxExperience}
               accent="#8a3b34"
+              icon="rep"
             />
           </div>
         </div>
@@ -225,19 +301,31 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
           <div className={`${LABEL} mb-2`}>street</div>
           <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-[11px] text-neutral-300">
             <div className="flex items-center justify-between">
-              <span className="text-neutral-500">CASH</span>
+              <span className="flex items-center gap-1.5 text-neutral-500">
+                <Icon name="cash" size={11} />
+                CASH
+              </span>
               <span style={{ color: '#b0863a' }}>${money}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-neutral-500">REP</span>
+              <span className="flex items-center gap-1.5 text-neutral-500">
+                <Icon name="rep" size={11} />
+                REP
+              </span>
               <span>{reputation}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-neutral-500">KILLS</span>
+              <span className="flex items-center gap-1.5 text-neutral-500">
+                <Icon name="kills" size={11} />
+                KILLS
+              </span>
               <span>{kills}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-neutral-500">WANTED</span>
+              <span className="flex items-center gap-1.5 text-neutral-500">
+                <Icon name="wanted" size={11} />
+                WANTED
+              </span>
               <span style={{ color: wanted > 0 ? '#c03a30' : '#5a5d62' }}>
                 {'\u2605'.repeat(wanted) || '—'}
               </span>
@@ -279,12 +367,19 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
 
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
         <div className="flex gap-1">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((slot) => (
+          {ACTION_SLOTS.map((slot) => (
             <div
-              key={slot}
-              className={`${PANEL} w-12 h-12 flex items-center justify-center text-[11px] text-neutral-500 hover:text-neutral-200 transition-colors cursor-pointer`}
+              key={slot.key}
+              title={slot.label}
+              className={`${PANEL} relative w-12 h-12 flex flex-col items-center justify-center gap-0.5 text-neutral-500 hover:text-neutral-200 transition-colors cursor-pointer`}
             >
-              {slot}
+              <Icon name={slot.icon} size={16} />
+              <span className="text-[8px] tracking-[0.15em] uppercase">
+                {slot.label}
+              </span>
+              <span className="absolute top-0.5 right-1 text-[8px] text-neutral-600">
+                {slot.key}
+              </span>
             </div>
           ))}
         </div>

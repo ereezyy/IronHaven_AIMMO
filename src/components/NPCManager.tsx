@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import CharacterModel from './CharacterModel';
+import { radialTexture } from './AmbientVFX';
 import { useGameStore } from '../store/gameState';
 import {
   Npc,
@@ -50,6 +51,8 @@ const NPCManager: React.FC<NPCManagerProps> = ({
   const particleLife = useRef(new Float32Array(PARTICLE_COUNT));
   const particleGeo = useRef<THREE.BufferGeometry>(null);
   const nextParticle = useRef(0);
+  // Soft radial sprite so splatter points render as round droplets.
+  const splatterTex = useMemo(() => radialTexture('rgba(255,90,70,1)'), []);
 
   // Escalating feedback: a routine hit pops a small splatter, but a kill erupts
   // — more ink, faster, longer-lived — so finishing a target reads as a
@@ -280,8 +283,9 @@ const NPCManager: React.FC<NPCManagerProps> = ({
           />
         </bufferGeometry>
         <pointsMaterial
+          map={splatterTex}
           color="#c03a30"
-          size={0.22}
+          size={0.3}
           sizeAttenuation
           transparent
           opacity={0.92}

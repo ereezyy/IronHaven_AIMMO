@@ -30,6 +30,7 @@ import { persistenceService } from '../lib/persistence';
 import MMOPlayer from './MMOPlayer';
 import CharacterModel from './CharacterModel';
 import MMOWorld from './MMOWorld';
+import AmbientVFX from './AmbientVFX';
 import MMOHUD from './MMOHUD';
 import MMOChat from './MMOChat';
 import NPCManager from './NPCManager';
@@ -585,6 +586,10 @@ const MMOGame: React.FC = () => {
             />
 
             <MMOWorld />
+
+            {/* Sprite atmosphere: rain, steam vents, crowd silhouettes,
+                patrol drones. */}
+            <AmbientVFX playerPosRef={playerPosRef} />
 
             <MMOPlayer
               key={spawnKey}
