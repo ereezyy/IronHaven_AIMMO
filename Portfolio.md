@@ -1,42 +1,52 @@
-# 📂 Portfolio Narrative
+# Developer Portfolio Narrative
 
-Welcome to my portfolio! Here you will find an overview of my core projects, how they intersect, and my evolving journey in combining artificial intelligence, blockchain technologies, and immersive web experiences.
+Welcome to my portfolio! This document outlines the relationships between my active projects, my development philosophy, and the overarching narrative connecting them.
 
-## 🌟 The Vision
+## Core Philosophy
 
-My work focuses on bridging the gap between intelligent systems and distributed architectures, to create engaging user experiences—whether that’s in high-frequency trading analytics or AI-driven multiplayer environments.
+My work sits at the intersection of **Artificial Intelligence** and **Blockchain Technology**, with a focus on creating real-time, scalable systems. I believe in cross-pollinating concepts between different technological domains—using AI techniques to solve blockchain problems and vice versa.
 
-## 🏗️ Core Projects
+## Project Ecosystem
 
-### 🐋 AgentSwarm
+My projects are divided into two main categories: **Blockchain/Crypto** and **AI Systems**, but they frequently share concepts and architecture.
+
+### 🔗 Blockchain & Crypto Projects
+
+#### 🐋 AgentSwarm
 
 **Real-time blockchain monitoring with AI-driven whale tracking on Solana.**
-AgentSwarm applies swarming intelligence paradigms to analyze on-chain data streams, detecting patterns and market movements.
+AgentSwarm is my flagship blockchain project. It uses advanced monitoring techniques to track large wallet movements and analyze their behavior.
 
-- **Connection:** Uses foundational AI concepts from EBAIF, highly optimized for blockchain data throughput.
+- _Connection_: AgentSwarm utilizes agent-based architecture concepts originally developed in my AI projects (like EBAIF) to create autonomous "watchers" for different blockchain metrics.
 
-### 🧠 AgentSystem & EBAIF
+#### 🐴 Sol_Horse
 
-**Core AI agent architectures.**
-These projects represent my deep dive into building modular, self-sufficient AI agents.
+_(Related blockchain utility/tooling)_
+This project provides supplementary infrastructure for Solana interactions, often working in tandem with the monitoring capabilities of AgentSwarm.
 
-- **AgentSystem:** A highly polished, documented framework showing exactly how to orchestrate multi-agent interactions.
-- **EBAIF (Event-Based AI Framework):** An experimental architecture that forms the theoretical backbone for tools like AgentSwarm.
+### 🤖 AI Systems
 
-### 🐴 Sol_Horse
+#### 🧠 AgentSystem
 
-**Solana ecosystem experimentation.**
-A project exploring specific blockchain interactions, forming part of a broader ecosystem approach to Web3 development.
+**A comprehensive framework for autonomous AI agents.**
+My most mature AI project (⭐️ 1 GitHub Star). This framework provides the underlying architecture for building robust, self-directing AI entities.
 
-- **Connection:** Shares blockchain infrastructure strategies with AgentSwarm.
+- _Connection_: This is the foundation that enables complex decision-making in my other applications. It has been thoroughly documented and polished to serve as a showcase of my system design capabilities.
 
-### 🏙️ IronHaven AIMMO
+#### 🔄 EBAIF (Event-Based AI Framework)
 
-**Next-Generation AI-Powered Massively Multiplayer Online Game.**
-A cutting-edge browser-based MMO that brings the immersive world of cyberpunk together with advanced AI-driven gameplay mechanics. Built with React, Three.js (@react-three/fiber), and WebGL.
+An experimental framework focusing on reactive, event-driven AI architectures.
 
-- **Connection:** Applies the autonomous agent principles from AgentSystem to dynamic NPC behavior, creating a living, breathing world.
+- _Connection_: The event-driven concepts developed here were heavily adapted and optimized to handle the massive event streams in the AgentSwarm blockchain monitor.
 
-## 🗺️ Future Trajectory
+## Future Roadmap & Strategy
 
-I am actively consolidating my projects to foster reusability and clarity. Expect to see my blockchain projects (AgentSwarm, Sol_Horse) migrating toward unified architectures, while my AI frameworks (AgentSystem, EBAIF) continue to evolve as specialized, modular ecosystems.
+### Short to Medium Term
+
+1. **Consolidation**: Moving related blockchain projects (Sol_Horse, AgentSwarm) into a more cohesive monorepo structure to facilitate code reuse and simplify maintenance. AI projects will remain separate modular tools.
+2. **Showcase Polish**: Continuing to refine **AgentSystem** as the primary showcase of my software engineering capabilities.
+
+### Long Term
+
+1. **Community Building**: Transitioning more projects to be fully open-source with proper `CONTRIBUTING.md` guidelines.
+2. **Knowledge Sharing**: Creating a dedicated `docs/tutorials/` section across repositories to demonstrate how to build complex systems using these frameworks.
