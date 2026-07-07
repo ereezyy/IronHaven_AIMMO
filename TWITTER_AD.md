@@ -1,14 +1,15 @@
-# 🚀 IronHaven AIMMO: Forged in the Shadows. Secured by Code.
+# 🚀 IronHaven AIMMO: The Future is NOW
 
-🌃 The neon streets of IronHaven just got a massive upgrade! The ultimate AI-driven Cyberpunk MMORPG is smoother, safer, and ready for you to leave your mark. 🚀
+🏙️ Step into the gritty, neon-soaked underworld of IronHaven. Your legacy starts here. 🚀
 
-🎮 High-Octane Action: Experience buttery-smooth gameplay with major performance and memory optimizations!
-🔒 Cryptographic Security: Play with confidence. Our latest backend updates leverage `crypto.randomUUID()` and hardened database logic so your legacy is safe from tampering.
-🤖 Unpredictable AI: Engage with smarter, fully adaptive NPCs, procedural missions, and dynamic world events that react to your every move!
-🏙️ A Living City: Explore a procedurally generated 3D world with real-time dynamic weather, day/night cycles, and advanced vehicle mechanics!
+Experience the FIRST browser-based Cyberpunk MMORPG driven entirely by cutting-edge AI! 🎮✨
 
-Will you rule the underworld or burn out trying? The city is yours to take.
+🤖 **Dynamic AI NPCs:** They don't just react—they REMEMBER your choices.
+⚔️ **High-Stakes Combat:** Brutal fights, intense chases, and real consequences.
+🌃 **Infinite World:** Explore a stunning, procedurally generated 3D cityscape that never stops evolving.
 
-👉 Play NOW: ironhaven-aimmo.com
+⚡ Zero downloads. ⚡ Zero installs. ⚡ 100% Instant Action.
 
-#IndieGame #GameDev #Cyberpunk #MMORPG #AI #BrowserGame #ThreeJS #ReactJS #Web3D #CryptoSecurity
+👉 Jack in NOW: **ironhaven-aimmo.com**
+
+#IndieGame #GameDev #Cyberpunk #MMORPG #AI #BrowserGame #Web3 #Gaming
