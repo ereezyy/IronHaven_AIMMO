@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useKeyboardControls } from '@react-three/drei';
 import * as THREE from 'three';
+import CharacterModel from './CharacterModel';
 
 interface MMOPlayerProps {
   playerId: string;
@@ -16,8 +17,8 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
 }) => {
   const { camera, gl } = useThree();
   const playerRef = useRef<THREE.Group>(null);
-  const bodyMat = useRef<THREE.MeshStandardMaterial>(null);
   const flash = useRef(0);
+  const speedRef = useRef(0);
 
   const [position, setPosition] = useState(new THREE.Vector3(0, 1, 0));
   const [velocity, setVelocity] = useState(new THREE.Vector3(0, 0, 0));
@@ -156,33 +157,22 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
     setVelocity(newVelocity);
     setRotation(mouseX.current);
 
-    // Ref-driven hit-flash: decay the emissive without touching React state.
-    if (flash.current > 0) {
-      flash.current = Math.max(0, flash.current - delta * 4);
-      if (bodyMat.current) bodyMat.current.emissiveIntensity = flash.current;
-    }
+    // Feed the animation blender the horizontal ground speed.
+    speedRef.current = Math.sqrt(
+      newVelocity.x * newVelocity.x + newVelocity.z * newVelocity.z
+    );
 
     onUpdate(newPosition, mouseX.current);
   });
 
   return (
-    <group ref={playerRef} position={position}>
-      <mesh castShadow receiveShadow>
-        <capsuleGeometry args={[0.5, 1.5, 8, 16]} />
-        <meshStandardMaterial
-          ref={bodyMat}
-          color="#d4d5d8"
-          emissive="#c03a30"
-          emissiveIntensity={0}
-          metalness={0.2}
-          roughness={0.6}
-        />
-      </mesh>
-
-      <mesh position={[0, 1.2, 0]} castShadow>
-        <sphereGeometry args={[0.3, 16, 16]} />
-        <meshStandardMaterial color="#9a9da2" roughness={0.8} />
-      </mesh>
+    <group ref={playerRef} position={position} rotation={[0, rotation, 0]}>
+      {/* Rigged animated character; feet sit 1 unit below the physics
+          center (capsule-era convention kept so collisions/camera match).
+          The Soldier mesh faces +Z, our forward is -Z, hence the flip. */}
+      <group position={[0, -1, 0]} rotation={[0, Math.PI, 0]}>
+        <CharacterModel speedRef={speedRef} flashRef={flash} />
+      </group>
 
       {stamina < 100 && (
         <mesh position={[0, 2.5, 0]}>

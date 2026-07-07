@@ -28,6 +28,7 @@ import * as THREE from 'three';
 import { useGameStore } from '../store/gameState';
 import { persistenceService } from '../lib/persistence';
 import MMOPlayer from './MMOPlayer';
+import CharacterModel from './CharacterModel';
 import MMOWorld from './MMOWorld';
 import MMOHUD from './MMOHUD';
 import MMOChat from './MMOChat';
@@ -166,6 +167,7 @@ const ThirdPersonCamera: React.FC<{
 const RemotePlayer: React.FC<{ player: OtherPlayer }> = ({ player }) => {
   const ref = useRef<THREE.Group>(null);
   const target = useRef(new THREE.Vector3(...player.position));
+  const speedRef = useRef(0);
 
   useEffect(() => {
     target.current.set(
@@ -175,11 +177,17 @@ const RemotePlayer: React.FC<{ player: OtherPlayer }> = ({ player }) => {
     );
   }, [player.position]);
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     const g = ref.current;
     if (!g) return;
+    const before = g.position.clone();
     g.position.lerp(target.current, 0.18);
     g.rotation.y += (player.rotation - g.rotation.y) * 0.18;
+    // Estimate ground speed from the smoothed motion so the walk/run
+    // animation blender tracks what the player is visually doing.
+    const moved = g.position.distanceTo(before);
+    const instant = delta > 0 ? moved / delta : 0;
+    speedRef.current += (instant - speedRef.current) * 0.2;
   });
 
   const hp = Math.max(0, Math.min(100, player.health));
@@ -234,20 +242,10 @@ const RemotePlayer: React.FC<{ player: OtherPlayer }> = ({ player }) => {
         </div>
       </Html>
 
-      <mesh castShadow>
-        <capsuleGeometry args={[0.5, 1.5, 8, 16]} />
-        <meshStandardMaterial color="#cfcfd2" roughness={0.7} metalness={0.1} />
-      </mesh>
-
-      <mesh position={[0, 2, 0]}>
-        <boxGeometry args={[0.04, 0.45, 0.04]} />
-        <meshBasicMaterial color="#3a3a3e" />
-      </mesh>
-
-      <mesh position={[0, 2.4, 0]}>
-        <sphereGeometry args={[0.08, 8, 8]} />
-        <meshBasicMaterial color="#c03a30" />
-      </mesh>
+      {/* Animated character, tinted cooler so remotes read apart from you. */}
+      <group position={[0, -1, 0]} rotation={[0, Math.PI, 0]}>
+        <CharacterModel speedRef={speedRef} tint="#9fb2c8" />
+      </group>
     </group>
   );
 };

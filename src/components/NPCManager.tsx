@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import CharacterModel from './CharacterModel';
 import { useGameStore } from '../store/gameState';
 import {
   Npc,
@@ -30,10 +31,13 @@ const NPCManager: React.FC<NPCManagerProps> = ({
 }) => {
   const npcs = useMemo(() => createNpcs(count, seed), [count, seed]);
   const groups = useRef<(THREE.Group | null)[]>([]);
-  const bodies = useRef<(THREE.MeshStandardMaterial | null)[]>([]);
+  const moodLights = useRef<(THREE.MeshBasicMaterial | null)[]>([]);
   const fills = useRef<(THREE.Mesh | null)[]>([]);
   const bars = useRef<(THREE.Group | null)[]>([]);
   const lastNearest = useRef<string | null>(null);
+  // Per-NPC animation speed feeds (plain refs, no re-renders).
+  const speedRefs = useMemo(() => npcs.map(() => ({ current: 0 })), [npcs]);
+  const prevPos = useMemo(() => npcs.map((n) => ({ x: n.x, z: n.z })), [npcs]);
 
   // Ink-splatter burst pool — a single Points cloud mutated in-place per frame.
   const PARTICLE_COUNT = 300;
@@ -157,15 +161,23 @@ const NPCManager: React.FC<NPCManagerProps> = ({
       tickNpc(npc, snap, dt, events, npcs);
 
       const g = groups.current[i];
+      const dead = npc.mood === 'dead';
       if (g) {
-        const dead = npc.mood === 'dead';
         g.position.set(npc.x, dead ? 0.3 : 1, npc.z);
         g.rotation.y = npc.rotation;
         // Collapse to a fallen silhouette on death.
         g.rotation.x = dead ? Math.PI / 2 : 0;
       }
-      const mat = bodies.current[i];
-      if (mat) mat.color.set(npcColor(npc));
+      const light = moodLights.current[i];
+      if (light) light.color.set(npcColor(npc));
+
+      // Ground speed for the walk/run animation blender.
+      const pdx = npc.x - prevPos[i].x;
+      const pdz = npc.z - prevPos[i].z;
+      prevPos[i].x = npc.x;
+      prevPos[i].z = npc.z;
+      const instant = dead ? 0 : Math.sqrt(pdx * pdx + pdz * pdz) / dt;
+      speedRefs[i].current += (instant - speedRefs[i].current) * 0.2;
 
       const frac = npc.health / npc.maxHealth;
       const bar = bars.current[i];
@@ -222,74 +234,23 @@ const NPCManager: React.FC<NPCManagerProps> = ({
           ref={(el) => (groups.current[i] = el)}
           position={[npc.x, 1, npc.z]}
         >
-          {/* Legs */}
-          <mesh castShadow position={[-0.13, -0.6, 0]}>
-            <boxGeometry args={[0.16, 0.8, 0.18]} />
-            <meshStandardMaterial
-              color="#2a2c30"
-              roughness={0.9}
-              metalness={0.05}
+          {/* Rigged animated character (shared GLTF, skeleton-cloned). */}
+          <group position={[0, -1, 0]} rotation={[0, Math.PI, 0]}>
+            <CharacterModel
+              speedRef={speedRefs[i]}
+              tint={npc.type === 'police' ? '#7d94b8' : '#b9a98f'}
             />
-          </mesh>
-          <mesh castShadow position={[0.13, -0.6, 0]}>
-            <boxGeometry args={[0.16, 0.8, 0.18]} />
-            <meshStandardMaterial
-              color="#2a2c30"
-              roughness={0.9}
-              metalness={0.05}
-            />
-          </mesh>
-          {/* Pelvis */}
-          <mesh castShadow position={[0, -0.1, 0]}>
-            <boxGeometry args={[0.46, 0.26, 0.26]} />
-            <meshStandardMaterial
-              color="#222428"
-              roughness={0.9}
-              metalness={0.05}
-            />
-          </mesh>
-          {/* Torso — the mood-colored mass */}
-          <mesh castShadow position={[0, 0.35, 0]}>
-            <boxGeometry args={[0.5, 0.7, 0.28]} />
-            <meshStandardMaterial
+          </group>
+          {/* Mood indicator — small marker over the head whose color
+              tracks calm/alert/hostile/fleeing/dead state. */}
+          <mesh position={[0, 1.15, 0]}>
+            <sphereGeometry args={[0.07, 8, 8]} />
+            <meshBasicMaterial
               ref={(el) =>
-                (bodies.current[i] = el as THREE.MeshStandardMaterial)
+                (moodLights.current[i] = el as THREE.MeshBasicMaterial)
               }
               color={npcColor(npc)}
-              roughness={0.8}
-              metalness={0.05}
             />
-          </mesh>
-          {/* Faction band — restrained red accent */}
-          <mesh position={[0, 0.52, 0.145]}>
-            <boxGeometry args={[0.52, 0.1, 0.04]} />
-            <meshStandardMaterial
-              color="#c03a30"
-              roughness={0.6}
-              metalness={0.1}
-            />
-          </mesh>
-          {/* Arms */}
-          <mesh castShadow position={[-0.33, 0.32, 0]}>
-            <boxGeometry args={[0.14, 0.66, 0.16]} />
-            <meshStandardMaterial
-              color="#2a2c30"
-              roughness={0.9}
-              metalness={0.05}
-            />
-          </mesh>
-          <mesh castShadow position={[0.33, 0.32, 0]}>
-            <boxGeometry args={[0.14, 0.66, 0.16]} />
-            <meshStandardMaterial
-              color="#2a2c30"
-              roughness={0.9}
-              metalness={0.05}
-            />
-          </mesh>
-          {/* Head */}
-          <mesh position={[0, 0.9, 0]} castShadow>
-            <boxGeometry args={[0.32, 0.34, 0.3]} />
-            <meshStandardMaterial color="#b8b8bc" roughness={0.85} />
           </mesh>
           <group
             ref={(el) => (bars.current[i] = el)}
