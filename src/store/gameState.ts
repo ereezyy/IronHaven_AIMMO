@@ -648,7 +648,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const node = getNode(nodeId);
     if (!node) return false;
     const ranks = { ...s.skillRanks, [nodeId]: (s.skillRanks[nodeId] || 0) + 1 };
-    let abilityBar = [...s.abilityBar] as (ActiveAbilityId | null)[];
+    const abilityBar = [...s.abilityBar] as (ActiveAbilityId | null)[];
     if (node.unlocksActive && ranks[nodeId] === 1) {
       const empty = abilityBar.findIndex((a) => a === null);
       if (empty >= 0) abilityBar[empty] = node.unlocksActive;

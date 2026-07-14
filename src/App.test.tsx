@@ -5,7 +5,7 @@ import App from './App';
 // Setup mock for Three.js which may have issues in JSDOM
 import { vi } from 'vitest';
 vi.mock('@react-three/fiber', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   Canvas: ({ children }: any) => (
     <div data-testid="mock-canvas">{children}</div>
   ),

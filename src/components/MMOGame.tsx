@@ -1364,11 +1364,11 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       setLastCrit(crit);
       if (crit) window.setTimeout(() => setLastCrit(false), 400);
 
-      let dmg = rolled;
+      const dmg = rolled;
       attackApi.current?.(dmg, weapon.range);
 
       // Boss / hunt with specialized multipliers
-      let bossDmg = Math.round(
+      const bossDmg = Math.round(
         dmg *
           mods.bossDamage *
           (now < st.buffs.pvpBossUntil ? st.buffs.pvpBossMult : 1)

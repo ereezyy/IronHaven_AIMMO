@@ -119,7 +119,7 @@ const MMOChat: React.FC<MMOChatProps> = ({
   }, [messages]);
 
   const parseAndSend = () => {
-    let text = inputMessage.trim();
+    const text = inputMessage.trim();
     if (!text) return;
 
     let channel = activeChannel;

@@ -12,7 +12,7 @@ export const PASS_STORAGE_KEY = 'ironhaven-pass';
 /** ISO currency display. */
 export const PASS_PRICE_USD = 1.99;
 export const PASS_PRICE_CENTS = 199;
-export const PASS_INTERVAL: 'week' = 'week';
+export const PASS_INTERVAL = 'week' as const;
 export const PASS_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const PASS_PRODUCT = {

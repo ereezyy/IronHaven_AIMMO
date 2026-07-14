@@ -50,7 +50,7 @@ const DialogueOverlay: React.FC<DialogueOverlayProps> = ({
       cancelled = true;
     };
     // Only re-roll when the NPC changes mid-session.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [npc.id]);
 
   const speaker = scripted.speaker;
