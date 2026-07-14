@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import type { GearLevel, ArchetypeId } from '../game/character';
 import {
   AVATAR_PART_REGISTRY,
+  AVATAR_PART_URLS,
   type AvatarPartDef,
   type AvatarParts,
 } from '../game/avatarParts';
@@ -368,5 +369,6 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
 };
 
 useGLTF.preload(MODEL_URL);
+for (const url of AVATAR_PART_URLS) useGLTF.preload(url);
 
 export default CharacterModel;

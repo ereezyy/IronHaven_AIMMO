@@ -12,7 +12,11 @@ import type { KinematicCharacterController } from '@dimforge/rapier3d-compat';
 import CharacterModel from './CharacterModel';
 import { gameAudio } from '../lib/gameAudio';
 import { useGameStore } from '../store/gameState';
-import { PLAYER_CAPSULE, CHARACTER_CONTROLLER } from '../game/physicsColliders';
+import {
+  PLAYER_CAPSULE,
+  CHARACTER_CONTROLLER,
+  PLAYER_MOTION,
+} from '../game/physicsColliders';
 import type { GearLevel, ArchetypeId } from '../game/character';
 import type { AvatarParts } from '../game/avatarParts';
 
@@ -194,7 +198,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
       const pads = navigator.getGamepads?.() || [];
       const gp = pads[0] || pads[1];
       if (gp) {
-        const dead = 0.22;
+        const dead = PLAYER_MOTION.gamepadDeadzone;
         const lx = Math.abs(gp.axes[0]) > dead ? gp.axes[0] : 0;
         const ly = Math.abs(gp.axes[1]) > dead ? gp.axes[1] : 0;
         const rx = Math.abs(gp.axes[2]) > dead ? gp.axes[2] : 0;
@@ -222,11 +226,14 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
       );
     }
 
-    const moveSpeed = (sprint || padSprint) && stamina > 0 ? 8 : 4;
-    const acceleration = 30;
-    const friction = 10;
-    const jumpForce = 8;
-    const gravity = -25;
+    const moveSpeed =
+      (sprint || padSprint) && stamina > 0
+        ? PLAYER_MOTION.sprintSpeed
+        : PLAYER_MOTION.walkSpeed;
+    const acceleration = PLAYER_MOTION.acceleration;
+    const friction = PLAYER_MOTION.friction;
+    const jumpForce = PLAYER_MOTION.jumpForce;
+    const gravity = PLAYER_MOTION.gravity;
 
     const inputVector = new THREE.Vector3(0, 0, 0);
 
@@ -269,9 +276,15 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
       Math.abs(padFwd) > 0.05 ||
       Math.abs(padRight) > 0.05;
     if ((sprint || padSprint) && moving && stamina > 0) {
-      nextStamina = Math.max(0, stamina - 30 * drainMod * delta);
+      nextStamina = Math.max(
+        0,
+        stamina - PLAYER_MOTION.staminaDrainPerSecond * drainMod * delta
+      );
     } else {
-      nextStamina = Math.min(100, stamina + 20 * delta);
+      nextStamina = Math.min(
+        100,
+        stamina + PLAYER_MOTION.staminaRecoverPerSecond * delta
+      );
     }
     if (nextStamina !== stamina) setStamina(nextStamina);
     if (staminaRef) staminaRef.current = nextStamina;
@@ -283,7 +296,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
       // Small downward bias keeps the controller pressed to the ground so
       // snap-to-ground / autostep engage on step descent instead of
       // micro-hops (grounded frames zero to -1, not 0 — see below).
-      newVelocity.y = -1;
+      newVelocity.y = PLAYER_MOTION.groundedBias;
     } else {
       newVelocity.y += gravity * delta;
     }
@@ -300,7 +313,9 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
     grounded.current = controller.computedGrounded();
     // Reset to the bias value (not 0) while grounded so the branch above
     // keeps pressing down next frame; airborne keeps accumulating gravity.
-    if (grounded.current && newVelocity.y < 0) newVelocity.y = -1;
+    if (grounded.current && newVelocity.y < 0) {
+      newVelocity.y = PLAYER_MOTION.groundedBias;
+    }
 
     const newPosition = outPos.current;
     newPosition.x += move.x;

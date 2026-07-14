@@ -29,15 +29,29 @@ export const PLAYER_CAPSULE = {
 
 /** Character-controller tuning shared by gameplay and tests. */
 export const CHARACTER_CONTROLLER = {
-  /** Gap Rapier keeps between the capsule and the world (~5cm). */
-  offset: 0.05,
-  /** Curb/step height the controller climbs automatically. */
-  autostepMaxHeight: 0.5,
-  autostepMinWidth: 0.2,
-  /** Stick-to-ground distance when walking down slopes/steps. */
-  snapToGroundDistance: 0.5,
+  /** Gap Rapier keeps between the capsule and the world (~4cm). */
+  offset: 0.04,
+  /** Climb curbs / low stairs without popping onto waist-high ledges. */
+  autostepMaxHeight: 0.4,
+  autostepMinWidth: 0.15,
+  /** Enough downhill stickiness for curbs without over-snapping off drops. */
+  snapToGroundDistance: 0.25,
   /** Max walkable slope (radians). */
-  maxSlopeClimbAngle: (60 * Math.PI) / 180,
+  maxSlopeClimbAngle: (55 * Math.PI) / 180,
+} as const;
+
+/** Shared on-foot locomotion tuning for MMOPlayer. */
+export const PLAYER_MOTION = {
+  walkSpeed: 4.2,
+  sprintSpeed: 8.4,
+  acceleration: 34,
+  friction: 12,
+  jumpForce: 8.5,
+  gravity: -25,
+  groundedBias: -1.25,
+  gamepadDeadzone: 0.18,
+  staminaDrainPerSecond: 30,
+  staminaRecoverPerSecond: 20,
 } as const;
 
 /** Static ground slab: top face exactly at y=0, wide enough for the r=100 world. */

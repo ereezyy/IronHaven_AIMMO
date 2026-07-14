@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   PLAYER_CAPSULE,
   CHARACTER_CONTROLLER,
+  PLAYER_MOTION,
   groundColliderSpec,
   buildingColliderSpecs,
 } from './physicsColliders';
@@ -22,7 +23,25 @@ describe('CHARACTER_CONTROLLER', () => {
     expect(CHARACTER_CONTROLLER.autostepMaxHeight).toBeLessThan(
       PLAYER_CAPSULE.centerY
     );
+    expect(CHARACTER_CONTROLLER.autostepMinWidth).toBeGreaterThan(0);
     expect(CHARACTER_CONTROLLER.maxSlopeClimbAngle).toBeLessThan(Math.PI / 2);
+    expect(CHARACTER_CONTROLLER.snapToGroundDistance).toBeGreaterThan(0);
+    expect(CHARACTER_CONTROLLER.snapToGroundDistance).toBeLessThan(0.5);
+  });
+});
+
+describe('PLAYER_MOTION', () => {
+  it('stays in the intended agile-on-foot range', () => {
+    expect(PLAYER_MOTION.sprintSpeed).toBeGreaterThan(PLAYER_MOTION.walkSpeed);
+    expect(PLAYER_MOTION.acceleration).toBeGreaterThan(0);
+    expect(PLAYER_MOTION.friction).toBeGreaterThan(0);
+    expect(PLAYER_MOTION.jumpForce).toBeGreaterThan(0);
+    expect(PLAYER_MOTION.gravity).toBeLessThan(0);
+    expect(PLAYER_MOTION.groundedBias).toBeLessThan(0);
+    expect(PLAYER_MOTION.gamepadDeadzone).toBeGreaterThan(0);
+    expect(PLAYER_MOTION.staminaRecoverPerSecond).toBeLessThan(
+      PLAYER_MOTION.staminaDrainPerSecond
+    );
   });
 });
 

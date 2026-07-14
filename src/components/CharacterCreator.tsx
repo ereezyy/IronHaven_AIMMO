@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { Suspense, useMemo, useRef, useState } from 'react';
+import { Canvas } from '@react-three/fiber';
 import {
   ARCHETYPES,
   TINT_PRESETS,
@@ -18,7 +19,7 @@ import {
   sanitizeAvatarParts,
 } from '../game/avatarParts';
 import { gameAudio } from '../lib/gameAudio';
-import ArchetypeSilhouette from './ArchetypeSilhouette';
+import CharacterModel from './CharacterModel';
 
 interface CharacterCreatorProps {
   onComplete: (build: CharacterBuild) => void;
@@ -31,6 +32,8 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onComplete }) => {
   const [build, setBuild] = useState<CharacterBuild>(
     () => existing || defaultBuild('')
   );
+  const previewSpeedRef = useRef(0);
+  const previewFlashRef = useRef(0);
 
   const spent = bonusSpent(build);
   const remaining = BONUS_POOL - spent;
@@ -78,13 +81,42 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onComplete }) => {
         <div className="grid md:grid-cols-2 gap-0">
           {/* Preview */}
           <div className="p-6 border-b md:border-b-0 md:border-r border-[#1a1c1f] flex flex-col items-center justify-center">
-            <div className="mb-4">
-              <ArchetypeSilhouette
-                archetype={build.archetype}
-                tint={build.appearance.tint}
-                accent={build.appearance.accent}
-                bodyScale={build.appearance.bodyScale}
-              />
+            <div className="mb-4 w-full h-[320px] border border-[#1a1c1f] bg-[radial-gradient(circle_at_50%_20%,#131720_0%,#090a0d_60%,#050507_100%)]">
+              <Canvas
+                camera={{ position: [0, 1.35, 3.35], fov: 35 }}
+                shadows
+                dpr={[1, 1.5]}
+              >
+                <ambientLight intensity={1.35} />
+                <hemisphereLight
+                  args={['#91a7ff', '#15161b', 0.55]}
+                  position={[0, 1, 0]}
+                />
+                <directionalLight
+                  position={[3, 6, 4]}
+                  intensity={2.25}
+                  castShadow
+                />
+                <Suspense fallback={null}>
+                  <group
+                    position={[0, -1.02, 0]}
+                    rotation={[0, Math.PI + 0.38, 0]}
+                  >
+                    <CharacterModel
+                      speedRef={previewSpeedRef}
+                      flashRef={previewFlashRef}
+                      tint={build.appearance.tint}
+                      accent={build.appearance.accent}
+                      accent2={build.appearance.accent2}
+                      skinTone={build.appearance.skinTone}
+                      gear={build.appearance.gear}
+                      archetype={build.archetype}
+                      bodyScale={build.appearance.bodyScale}
+                      parts={build.parts}
+                    />
+                  </group>
+                </Suspense>
+              </Canvas>
             </div>
             <div className="text-[11px] tracking-[0.3em] uppercase text-neutral-500">
               {arch.name}
@@ -316,12 +348,15 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onComplete }) => {
                     {partsForSlot(slot, build.archetype).map((p) => (
                       <button
                         key={p.id}
-                        onClick={() =>
+                        onClick={() => {
+                          if (build.parts[slot] !== p.id) {
+                            previewFlashRef.current = 1;
+                          }
                           setBuild((b) => ({
                             ...b,
                             parts: { ...b.parts, [slot]: p.id },
-                          }))
-                        }
+                          }));
+                        }}
                         className={`px-3 py-2 border text-[11px] tracking-[0.15em] uppercase transition-colors ${
                           build.parts[slot] === p.id
                             ? 'border-[#c03a30] bg-[#c03a30]/10 text-neutral-100'

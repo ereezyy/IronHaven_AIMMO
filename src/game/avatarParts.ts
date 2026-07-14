@@ -91,14 +91,18 @@ export function sanitizeAvatarParts(
 // prop upright against the spine.
 const WEAPON_GRIP: AvatarAttach = {
   bone: 'mixamorig:RightHand',
-  pos: [0, 0.07, 0.03],
+  // RightHand local +Y runs through the fingers; nudging slightly back into
+  // -Z seats the grip in the palm instead of floating outside the hand.
+  pos: [0, 0.045, -0.012],
   rot: [-Math.PI / 2, 0, 0],
   scale: 1,
 };
 
 const BACK_MOUNT: AvatarAttach = {
   bone: 'mixamorig:Spine2',
-  pos: [0, -0.05, -0.15],
+  // Spine2 sits high between the shoulders; a shallower back offset keeps the
+  // crate close to the torso instead of reading as a levitating cargo box.
+  pos: [0, -0.015, -0.11],
   rot: [Math.PI / 2, 0, 0],
   scale: 1,
 };
@@ -159,9 +163,14 @@ export const AVATAR_PART_REGISTRY: AvatarPartRegistry = {
     name: 'Field Crate',
     url: `${KIT}/crate-small.glb`,
     // ~0.55×0.23×0.8m crate shrunk so it reads as a pack, not cargo.
-    attach: { ...BACK_MOUNT, scale: 0.45 },
+    attach: { ...BACK_MOUNT, pos: [0, -0.005, -0.12], scale: 0.42 },
   },
 };
+
+/** Unique GLB urls used by the avatar parts registry; safe to preload once. */
+export const AVATAR_PART_URLS = Array.from(
+  new Set(Object.values(AVATAR_PART_REGISTRY).map((def) => def.url))
+);
 
 /** Registry entries for a slot, honoring archetype locks. */
 export function partsForSlot(
