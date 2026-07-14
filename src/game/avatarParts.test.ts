@@ -1,10 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import {
+  AVATAR_PART_REGISTRY,
   AVATAR_SLOTS,
   isAvatarSlot,
+  partsForSlot,
   sanitizeAvatarParts,
   type AvatarPartRegistry,
 } from './avatarParts';
+import { ARCHETYPES } from './character';
 
 const REG: AvatarPartRegistry = {
   hood_01: { id: 'hood_01', slot: 'head', name: 'Hood', url: '/m/h.glb' },
@@ -66,5 +69,65 @@ describe('sanitizeAvatarParts', () => {
     expect(sanitizeAvatarParts('junk', REG)).toEqual({});
     expect(sanitizeAvatarParts(7, REG)).toEqual({});
     expect(sanitizeAvatarParts([], REG)).toEqual({});
+  });
+});
+
+describe('AVATAR_PART_REGISTRY', () => {
+  it('keys match ids and every entry has a valid slot and kit url', () => {
+    for (const [key, def] of Object.entries(AVATAR_PART_REGISTRY)) {
+      expect(def.id).toBe(key);
+      expect(isAvatarSlot(def.slot)).toBe(true);
+      expect(def.url).toMatch(/^\/models\/parts\/blaster_kit\/.+\.glb$/);
+    }
+  });
+
+  it('the unrestricted starter loadout survives every archetype', () => {
+    const loadout = { weapon: 'weapon_blaster_a', back: 'back_field_crate' };
+    for (const a of ARCHETYPES) {
+      expect(sanitizeAvatarParts(loadout, AVATAR_PART_REGISTRY, a.id)).toEqual(
+        loadout
+      );
+    }
+  });
+
+  it('drops archetype-locked parts for the wrong archetype', () => {
+    expect(
+      sanitizeAvatarParts(
+        { weapon: 'weapon_blaster_d' },
+        AVATAR_PART_REGISTRY,
+        'runner'
+      )
+    ).toEqual({});
+    expect(
+      sanitizeAvatarParts(
+        { weapon: 'weapon_blaster_d' },
+        AVATAR_PART_REGISTRY,
+        'enforcer'
+      )
+    ).toEqual({ weapon: 'weapon_blaster_d' });
+  });
+});
+
+describe('partsForSlot', () => {
+  it('filters by slot and honors archetype locks', () => {
+    const runner = partsForSlot('weapon', 'runner').map((d) => d.id);
+    expect(runner).toContain('weapon_blaster_a');
+    expect(runner).toContain('weapon_blaster_h');
+    expect(runner).not.toContain('weapon_blaster_d');
+    expect(runner).not.toContain('weapon_blaster_p');
+
+    const enforcer = partsForSlot('weapon', 'enforcer').map((d) => d.id);
+    expect(enforcer).toContain('weapon_blaster_d');
+    expect(enforcer).toContain('weapon_blaster_e');
+
+    expect(partsForSlot('back', 'ghost').map((d) => d.id)).toEqual([
+      'back_field_crate',
+    ]);
+    expect(partsForSlot('head', 'runner')).toEqual([]);
+  });
+
+  it('returns all slot entries when no archetype is given', () => {
+    const all = partsForSlot('weapon');
+    expect(all.length).toBe(5);
   });
 });

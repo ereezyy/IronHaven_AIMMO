@@ -39,6 +39,14 @@ Source: [https://polyhaven.com](https://polyhaven.com) — public domain dedicat
 | `models/props/wooden_crate_01/`       | Wooden Crate 01       |
 | `models/props/trashbag/`              | Trashbag              |
 
+## Kenney (CC0)
+
+Source: [https://kenney.nl/assets/blaster-kit](https://kenney.nl/assets/blaster-kit) — Blaster Kit 2.1, public domain dedication (CC0 1.0).
+
+| Path                        | Asset                                        |
+| --------------------------- | -------------------------------------------- |
+| `models/parts/blaster_kit/` | Blaster GLBs + crate + shared colormap (CC0) |
+
 ## three.js examples (MIT)
 
 | File                 | Notes                                                                 |

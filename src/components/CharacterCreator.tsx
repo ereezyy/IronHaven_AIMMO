@@ -12,6 +12,11 @@ import {
   bonusSpent,
   loadBuild,
 } from '../game/character';
+import {
+  AVATAR_PART_REGISTRY,
+  partsForSlot,
+  sanitizeAvatarParts,
+} from '../game/avatarParts';
 import { gameAudio } from '../lib/gameAudio';
 import ArchetypeSilhouette from './ArchetypeSilhouette';
 
@@ -131,6 +136,12 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onComplete }) => {
                           ...b.appearance,
                           tint: a.defaultTint,
                         },
+                        // Drop equipped parts the new archetype can't use.
+                        parts: sanitizeAvatarParts(
+                          b.parts,
+                          AVATAR_PART_REGISTRY,
+                          a.id
+                        ),
                       }))
                     }
                     className={`w-full text-left px-3 py-2 border text-[11px] transition-colors ${
@@ -274,6 +285,55 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onComplete }) => {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div>
+              <div className="text-[10px] tracking-[0.28em] uppercase text-neutral-500 mb-2">
+                loadout
+              </div>
+              {(['weapon', 'back'] as const).map((slot) => (
+                <div key={slot} className="mb-2">
+                  <div className="text-[10px] tracking-[0.12em] uppercase text-neutral-600 mb-1">
+                    {slot}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() =>
+                        setBuild((b) => {
+                          const parts = { ...b.parts };
+                          delete parts[slot];
+                          return { ...b, parts };
+                        })
+                      }
+                      className={`px-3 py-2 border text-[11px] tracking-[0.15em] uppercase transition-colors ${
+                        !build.parts[slot]
+                          ? 'border-[#c03a30] bg-[#c03a30]/10 text-neutral-100'
+                          : 'border-[#1a1c1f] text-neutral-400 hover:border-[#333]'
+                      }`}
+                    >
+                      none
+                    </button>
+                    {partsForSlot(slot, build.archetype).map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() =>
+                          setBuild((b) => ({
+                            ...b,
+                            parts: { ...b.parts, [slot]: p.id },
+                          }))
+                        }
+                        className={`px-3 py-2 border text-[11px] tracking-[0.15em] uppercase transition-colors ${
+                          build.parts[slot] === p.id
+                            ? 'border-[#c03a30] bg-[#c03a30]/10 text-neutral-100'
+                            : 'border-[#1a1c1f] text-neutral-400 hover:border-[#333]'
+                        }`}
+                      >
+                        {p.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div>

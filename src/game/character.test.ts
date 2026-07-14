@@ -38,6 +38,10 @@ describe('character build', () => {
     expect(a.gear).toBe('none');
     expect(GEAR_LEVELS).toContain(a.gear);
   });
+
+  it('starts with no parts equipped', () => {
+    expect(defaultBuild('Z').parts).toEqual({});
+  });
 });
 
 describe('loadBuild appearance backfill', () => {
@@ -62,6 +66,30 @@ describe('loadBuild appearance backfill', () => {
     expect(loaded!.appearance.accent2).toBe(DEFAULT_APPEARANCE.accent2);
     expect(loaded!.appearance.skinTone).toBe(DEFAULT_APPEARANCE.skinTone);
     expect(loaded!.appearance.gear).toBe('none');
+    // Legacy saves predate parts entirely — backfilled to empty.
+    expect(loaded!.parts).toEqual({});
+
+    vi.unstubAllGlobals();
+  });
+
+  it('drops saved part ids the archetype cannot equip', () => {
+    const save = {
+      callsign: 'Locked',
+      archetype: 'runner',
+      appearance: { tint: '#111111', accent: '#222222', bodyScale: 1 },
+      bonuses: { combat: 0, stealth: 0, driving: 0, intimidation: 0 },
+      // Heavy Blaster is enforcer-only; crate is unrestricted.
+      parts: { weapon: 'weapon_blaster_d', back: 'back_field_crate' },
+    };
+    vi.stubGlobal('localStorage', {
+      getItem: () => JSON.stringify(save),
+      setItem: () => {},
+      removeItem: () => {},
+    });
+
+    const loaded = loadBuild();
+    expect(loaded).not.toBeNull();
+    expect(loaded!.parts).toEqual({ back: 'back_field_crate' });
 
     vi.unstubAllGlobals();
   });

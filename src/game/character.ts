@@ -1,5 +1,11 @@
 // Playable character definition — creator output + in-game appearance.
 
+import {
+  AVATAR_PART_REGISTRY,
+  sanitizeAvatarParts,
+  type AvatarParts,
+} from './avatarParts';
+
 export type ArchetypeId = 'runner' | 'enforcer' | 'ghost' | 'fixer';
 
 /** Procedural gear tier layered over the base model (no new art). */
@@ -25,6 +31,8 @@ export interface CharacterBuild {
     driving: number;
     intimidation: number;
   };
+  /** Equipped modular GLB parts, slot -> part id (Stage E). */
+  parts: AvatarParts;
 }
 
 export interface ArchetypeDef {
@@ -133,6 +141,7 @@ export function defaultBuild(callsign = 'Runner'): CharacterBuild {
     archetype: a.id,
     appearance: { ...DEFAULT_APPEARANCE, tint: a.defaultTint },
     bonuses: { combat: 0, stealth: 0, driving: 0, intimidation: 0 },
+    parts: {},
   };
 }
 
@@ -160,6 +169,13 @@ export function loadBuild(): CharacterBuild | null {
     // Backfill appearance keys added after this save was written, so older
     // localStorage builds keep loading without a migration step.
     parsed.appearance = { ...DEFAULT_APPEARANCE, ...parsed.appearance };
+    // Same idea for parts: missing → {}, unknown/illegal ids are dropped so
+    // stale saves can't reference art that no longer ships.
+    parsed.parts = sanitizeAvatarParts(
+      parsed.parts,
+      AVATAR_PART_REGISTRY,
+      parsed.archetype
+    );
     return parsed;
   } catch {
     return null;

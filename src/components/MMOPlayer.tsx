@@ -14,6 +14,7 @@ import { gameAudio } from '../lib/gameAudio';
 import { useGameStore } from '../store/gameState';
 import { PLAYER_CAPSULE, CHARACTER_CONTROLLER } from '../game/physicsColliders';
 import type { GearLevel, ArchetypeId } from '../game/character';
+import type { AvatarParts } from '../game/avatarParts';
 
 interface MMOPlayerProps {
   playerId: string;
@@ -28,6 +29,8 @@ interface MMOPlayerProps {
   gear?: GearLevel;
   archetype?: ArchetypeId;
   bodyScale?: number;
+  /** Equipped modular GLB parts (Stage E). */
+  parts?: AvatarParts;
   /** Hide mesh while driving a vehicle. */
   hiddenRef?: React.MutableRefObject<boolean>;
   /** When true, skip locomotion (vehicle owns position). */
@@ -50,6 +53,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
   gear = 'none',
   archetype,
   bodyScale = 1,
+  parts,
   hiddenRef,
   drivingRef,
   externalPosRef,
@@ -366,6 +370,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
             gear={gear}
             archetype={archetype}
             bodyScale={bodyScale}
+            parts={parts}
             deadRef={deadRef}
           />
         </group>

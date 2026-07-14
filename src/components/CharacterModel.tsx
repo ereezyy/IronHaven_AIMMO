@@ -5,6 +5,12 @@ import { SkeletonUtils } from 'three-stdlib';
 import * as THREE from 'three';
 import type { GearLevel, ArchetypeId } from '../game/character';
 import {
+  AVATAR_PART_REGISTRY,
+  type AvatarPartDef,
+  type AvatarParts,
+} from '../game/avatarParts';
+import AvatarPartAttachment from './AvatarPartAttachment';
+import {
   archetypeAttachments,
   Attachment,
   ColorRole,
@@ -42,6 +48,8 @@ interface CharacterModelProps {
   archetype?: ArchetypeId;
   /** Body scale from character creator. */
   bodyScale?: number;
+  /** Equipped modular GLB parts (Stage E), slot -> part id. */
+  parts?: AvatarParts;
   /** Optional ref that receives a "flash" trigger for hit feedback. */
   flashRef?: React.MutableRefObject<number>;
   /** When true, plays the procedural death collapse (Stage D). */
@@ -180,6 +188,7 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
   gear = 'none',
   archetype,
   bodyScale = 1,
+  parts,
   flashRef,
   deadRef,
 }) => {
@@ -346,6 +355,14 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
           colors={{ tint, accent, accent2, skin: skinTone }}
         />
       )}
+      {/* Bone-parented GLB parts; unknown ids (stale saves) are skipped. */}
+      {parts &&
+        Object.values(parts)
+          .map((id) => (id ? AVATAR_PART_REGISTRY[id] : undefined))
+          .filter((def): def is AvatarPartDef => !!def)
+          .map((def) => (
+            <AvatarPartAttachment key={def.id} root={clone} def={def} />
+          ))}
     </group>
   );
 };
