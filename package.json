@@ -21,7 +21,8 @@
     "pass-api": "node server/pass-api.mjs",
     "webhook:create": "node scripts/create-stripe-webhook.mjs",
     "deploy": "npx vercel deploy --prod --yes",
-    "payment-link:success": "node scripts/update-payment-link-success.mjs"
+    "payment-link:success": "node scripts/update-payment-link-success.mjs",
+    "media:pack": "node scripts/pack-media-kit.mjs"
   },
   "keywords": [
     "game",

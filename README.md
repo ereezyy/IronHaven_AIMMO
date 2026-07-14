@@ -20,6 +20,14 @@ _Enter a cyberpunk metropolis where AI shapes reality and every decision matters
 
 ---
 
+## 📣 Media & release kit
+
+Full press kit, launch copy, trailer scripts, brand guidelines, and key art:
+
+→ **[`media/`](./media/README.md)** — run `npm run media:pack` to zip for partners.
+
+**Play production:** https://ironhaven-aimmo.vercel.app
+
 ## 🌟 Overview
 
 **IronHaven AIMMO** is a cutting-edge browser-based MMO that combines the immersive world of cyberpunk with advanced AI-driven gameplay mechanics. Built with modern web technologies, it delivers a seamless 3D gaming experience directly in your browser.
