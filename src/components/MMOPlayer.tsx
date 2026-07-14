@@ -5,6 +5,11 @@ import * as THREE from 'three';
 import CharacterModel from './CharacterModel';
 import { gameAudio } from '../lib/gameAudio';
 import { useGameStore } from '../store/gameState';
+import {
+  buildBuildingColliders,
+  resolveCollision,
+} from '../game/worldCollision';
+import type { GearLevel } from '../game/character';
 
 interface MMOPlayerProps {
   playerId: string;
@@ -14,6 +19,9 @@ interface MMOPlayerProps {
   staminaRef?: React.MutableRefObject<number>;
   tint?: string;
   accent?: string;
+  accent2?: string;
+  skinTone?: string;
+  gear?: GearLevel;
   bodyScale?: number;
   /** Hide mesh while driving a vehicle. */
   hiddenRef?: React.MutableRefObject<boolean>;
@@ -30,6 +38,9 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
   staminaRef,
   tint = '#d4d5d8',
   accent = '#c03a30',
+  accent2 = '#2b2f36',
+  skinTone = '#e0b48c',
+  gear = 'none',
   bodyScale = 1,
   hiddenRef,
   drivingRef,
@@ -39,6 +50,8 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
   const playerRef = useRef<THREE.Group>(null);
   const flash = useRef(0);
   const speedRef = useRef(0);
+  // Static building AABBs derived once; stepped through each frame for push-out.
+  const collidersRef = useRef(buildBuildingColliders());
 
   const [position, setPosition] = useState(new THREE.Vector3(0, 1, 0));
   const [velocity, setVelocity] = useState(new THREE.Vector3(0, 0, 0));
@@ -105,7 +118,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
       return;
     }
 
-    if (playerRef.current) playerRef.current.visible = !(hiddenRef?.current);
+    if (playerRef.current) playerRef.current.visible = !hiddenRef?.current;
 
     // After exiting a vehicle, snap on-foot controller to world position.
     if (externalPosRef) {
@@ -157,8 +170,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
       );
     }
 
-    const moveSpeed =
-      (sprint || padSprint) && stamina > 0 ? 8 : 4;
+    const moveSpeed = (sprint || padSprint) && stamina > 0 ? 8 : 4;
     const acceleration = 30;
     const friction = 10;
     const jumpForce = 8;
@@ -234,6 +246,9 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
       setIsGrounded(false);
     }
 
+    // Horizontal push-out against buildings (XZ only; y already resolved).
+    resolveCollision(newPosition, 0.5, collidersRef.current);
+
     const worldRadius = 100;
     const distFromCenterSq =
       newPosition.x * newPosition.x + newPosition.z * newPosition.z;
@@ -272,6 +287,9 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
           flashRef={flash}
           tint={tint}
           accent={accent}
+          accent2={accent2}
+          skinTone={skinTone}
+          gear={gear}
           bodyScale={bodyScale}
         />
       </group>

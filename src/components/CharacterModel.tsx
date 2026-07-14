@@ -3,12 +3,16 @@ import { useFrame } from '@react-three/fiber';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import { SkeletonUtils } from 'three-stdlib';
 import * as THREE from 'three';
+import type { GearLevel } from '../game/character';
 
 const MODEL_URL = '/models/soldier.glb';
 
 // Blend thresholds (m/s): idle below WALK, run above RUN, walk in between.
 const WALK_SPEED = 0.3;
 const RUN_SPEED = 5;
+
+// The soldier.glb second material zone — recolored for the accent2 swatch.
+const VISOR_MAT = 'Vanguard_VisorMat';
 
 interface CharacterModelProps {
   /** Ref the parent updates each frame with the character's current speed (m/s). */
@@ -17,11 +21,70 @@ interface CharacterModelProps {
   tint?: string;
   /** Neon accent for hit emissive (character creator). */
   accent?: string;
+  /** Secondary trim color applied to the visor zone and procedural gear trim. */
+  accent2?: string;
+  /** Exposed neck/skin tone. */
+  skinTone?: string;
+  /** Procedural gear tier layered over the base model. */
+  gear?: GearLevel;
   /** Body scale from character creator. */
   bodyScale?: number;
   /** Optional ref that receives a "flash" trigger for hit feedback. */
   flashRef?: React.MutableRefObject<number>;
 }
+
+interface GearRig {
+  h: number;
+  headY: number;
+  neckY: number;
+  shoulderY: number;
+  shoulderX: number;
+  chestY: number;
+  chestZ: number;
+}
+
+/**
+ * Primitive-only armor layered over the base model. `light` adds shoulder
+ * pauldrons + a chest plate; `heavy` adds those plus a helmet dome. Trim uses
+ * the accent2 swatch so it reads as the same customization zone as the visor.
+ */
+const ProceduralGear: React.FC<{
+  gear: GearLevel;
+  accent2: string;
+  rig: GearRig;
+}> = ({ gear, accent2, rig }) => {
+  if (gear === 'none') return null;
+  const plate = new THREE.Color(accent2).multiplyScalar(0.6);
+  const s = rig.h;
+  return (
+    <group>
+      <mesh position={[-rig.shoulderX, rig.shoulderY, 0]} castShadow>
+        <sphereGeometry args={[s * 0.09, 12, 12]} />
+        <meshStandardMaterial color={plate} metalness={0.6} roughness={0.4} />
+      </mesh>
+      <mesh position={[rig.shoulderX, rig.shoulderY, 0]} castShadow>
+        <sphereGeometry args={[s * 0.09, 12, 12]} />
+        <meshStandardMaterial color={plate} metalness={0.6} roughness={0.4} />
+      </mesh>
+      <mesh position={[0, rig.chestY, rig.chestZ]} castShadow>
+        <boxGeometry args={[s * 0.22, s * 0.2, s * 0.08]} />
+        <meshStandardMaterial color={accent2} metalness={0.5} roughness={0.5} />
+      </mesh>
+      {gear === 'heavy' && (
+        <mesh position={[0, rig.headY, 0]} castShadow>
+          <sphereGeometry
+            args={[s * 0.08, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.6]}
+          />
+          <meshStandardMaterial
+            color={plate}
+            metalness={0.7}
+            roughness={0.35}
+          />
+        </mesh>
+      )}
+    </group>
+  );
+};
 
 /**
  * Rigged, animated humanoid (CC0-friendly three.js example Soldier).
@@ -32,6 +95,9 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
   speedRef,
   tint = '#d4d5d8',
   accent = '#c03a30',
+  accent2 = '#2b2f36',
+  skinTone = '#e0b48c',
+  gear = 'none',
   bodyScale = 1,
   flashRef,
 }) => {
@@ -44,6 +110,25 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
   const current = useRef<string>('Idle');
   const materials = useRef<THREE.MeshStandardMaterial[]>([]);
 
+  // Anchor points for procedural gear, derived once from the model's bounds.
+  // Horizontal offsets use height fractions (not the raw width) so a T/A-pose
+  // bind arm span never pushes shoulder plates out to the fingertips.
+  const rig = useMemo(() => {
+    const box = new THREE.Box3().setFromObject(clone);
+    const minY = box.min.y;
+    const maxY = box.max.y;
+    const h = Math.max(0.001, maxY - minY);
+    return {
+      h,
+      headY: maxY - h * 0.05,
+      neckY: minY + h * 0.82,
+      shoulderY: minY + h * 0.8,
+      shoulderX: h * 0.17,
+      chestY: minY + h * 0.66,
+      chestZ: h * 0.1,
+    };
+  }, [clone]);
+
   useEffect(() => {
     const mats: THREE.MeshStandardMaterial[] = [];
     clone.traverse((obj) => {
@@ -54,7 +139,13 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
         // Clone materials per instance so tint/flash don't leak across players.
         const src = mesh.material as THREE.MeshStandardMaterial;
         const mat = src.clone();
-        mat.color.multiply(new THREE.Color(tint));
+        // Visor is the second material zone → drive it from the accent2 swatch;
+        // the body zone keeps the multiplicative tint.
+        if (src.name === VISOR_MAT || mesh.name === 'vanguard_visor') {
+          mat.color.set(accent2);
+        } else {
+          mat.color.multiply(new THREE.Color(tint));
+        }
         mat.emissive = new THREE.Color(accent);
         mat.emissiveIntensity = 0;
         mesh.material = mat;
@@ -62,7 +153,7 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
       }
     });
     materials.current = mats;
-  }, [clone, tint, accent]);
+  }, [clone, tint, accent, accent2]);
 
   useEffect(() => {
     actions.Idle?.play();
@@ -102,6 +193,14 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
   return (
     <group ref={group} scale={bodyScale}>
       <primitive object={clone} />
+      {/* Exposed skin at the neck so skinTone reads on the base model. */}
+      <mesh position={[0, rig.neckY, 0]}>
+        <cylinderGeometry
+          args={[rig.h * 0.05, rig.h * 0.05, rig.h * 0.05, 10]}
+        />
+        <meshStandardMaterial color={skinTone} roughness={0.8} />
+      </mesh>
+      <ProceduralGear gear={gear} accent2={accent2} rig={rig} />
     </group>
   );
 };

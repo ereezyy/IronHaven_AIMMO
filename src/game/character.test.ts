@@ -1,10 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   defaultBuild,
   resolveSkills,
   bonusSpent,
   BONUS_POOL,
   ARCHETYPES,
+  DEFAULT_APPEARANCE,
+  GEAR_LEVELS,
+  loadBuild,
 } from './character';
 
 describe('character build', () => {
@@ -26,5 +29,40 @@ describe('character build', () => {
 
   it('has four archetypes', () => {
     expect(ARCHETYPES).toHaveLength(4);
+  });
+
+  it('seeds every appearance field on a fresh build', () => {
+    const a = defaultBuild('Y').appearance;
+    expect(a.accent2).toBe(DEFAULT_APPEARANCE.accent2);
+    expect(a.skinTone).toBe(DEFAULT_APPEARANCE.skinTone);
+    expect(a.gear).toBe('none');
+    expect(GEAR_LEVELS).toContain(a.gear);
+  });
+});
+
+describe('loadBuild appearance backfill', () => {
+  it('fills fields missing from a legacy save', () => {
+    // Simulate an older save with only the original appearance keys. Stub
+    // getItem directly since the test env's localStorage isn't fully backed.
+    const legacy = {
+      callsign: 'Legacy',
+      archetype: 'runner',
+      appearance: { tint: '#111111', accent: '#222222', bodyScale: 1 },
+      bonuses: { combat: 0, stealth: 0, driving: 0, intimidation: 0 },
+    };
+    vi.stubGlobal('localStorage', {
+      getItem: () => JSON.stringify(legacy),
+      setItem: () => {},
+      removeItem: () => {},
+    });
+
+    const loaded = loadBuild();
+    expect(loaded).not.toBeNull();
+    expect(loaded!.appearance.tint).toBe('#111111');
+    expect(loaded!.appearance.accent2).toBe(DEFAULT_APPEARANCE.accent2);
+    expect(loaded!.appearance.skinTone).toBe(DEFAULT_APPEARANCE.skinTone);
+    expect(loaded!.appearance.gear).toBe('none');
+
+    vi.unstubAllGlobals();
   });
 });

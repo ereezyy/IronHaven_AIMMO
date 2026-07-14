@@ -403,9 +403,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
   const [aiReady, setAiReady] = useState(() => llmClient.isConfigured());
   const [aiContract, setAiContract] = useState<StreetContract | null>(null);
   /** Contract waiting on accept/decline briefing. */
-  const [pendingBrief, setPendingBrief] = useState<StreetContract | null>(
-    null
-  );
+  const [pendingBrief, setPendingBrief] = useState<StreetContract | null>(null);
   const [aiContractLoading, setAiContractLoading] = useState(false);
   const [talkCount, setTalkCount] = useState(0);
   const [contractToast, setContractToast] = useState<string | null>(null);
@@ -413,7 +411,9 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
   const prevWanted = useRef(gameStore.playerStats.wanted);
   const npcBlipsRef = useRef<NpcBlip[]>([]);
   const contractPaid = useRef<string | null>(null);
-  const [nearestHarvest, setNearestHarvest] = useState<HarvestNode | null>(null);
+  const [nearestHarvest, setNearestHarvest] = useState<HarvestNode | null>(
+    null
+  );
   const [nearestVehicle, setNearestVehicle] = useState<VehicleSpawn | null>(
     null
   );
@@ -605,7 +605,11 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
     if (fishingRef.current !== isFishing) setIsFishing(fishingRef.current);
 
     // First boss proximity — one-shot cinematic (~22m of a world boss).
-    if (!bossApproachDone.current && districtDropDone.current && !cutsceneRef.current) {
+    if (
+      !bossApproachDone.current &&
+      districtDropDone.current &&
+      !cutsceneRef.current
+    ) {
       for (const b of WORLD_BOSSES) {
         const dx = b.x - position.x;
         const dz = b.z - position.z;
@@ -729,7 +733,8 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
   }, []);
 
   const declineBrief = () => {
-    if (pendingBrief) gameStore.addAction(`contract_decline_${pendingBrief.id}`);
+    if (pendingBrief)
+      gameStore.addAction(`contract_decline_${pendingBrief.id}`);
     setPendingBrief(null);
     gameAudio.play('ui', 0.1);
   };
@@ -792,10 +797,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       money: Math.max(0, ps.money + (eff.money || 0)),
       reputation: Math.max(0, ps.reputation + (eff.rep || 0)),
       wanted: Math.max(0, Math.min(5, ps.wanted + (eff.wanted || 0))),
-      health: Math.max(
-        0,
-        Math.min(100, ps.health + (eff.health || 0))
-      ),
+      health: Math.max(0, Math.min(100, ps.health + (eff.health || 0))),
     });
   };
 
@@ -916,22 +918,19 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
     return () => window.clearInterval(id);
   }, [tipsReady, hasTalked, talkCount, aiContract]);
 
-  const pushFeed = useCallback(
-    (text: string, tone?: KillFeedEntry['tone']) => {
-      setKillFeed((prev) =>
-        [
-          ...prev.slice(-12),
-          {
-            id: crypto.randomUUID(),
-            text,
-            at: Date.now(),
-            tone,
-          },
-        ].slice(-12)
-      );
-    },
-    []
-  );
+  const pushFeed = useCallback((text: string, tone?: KillFeedEntry['tone']) => {
+    setKillFeed((prev) =>
+      [
+        ...prev.slice(-12),
+        {
+          id: crypto.randomUUID(),
+          text,
+          at: Date.now(),
+          tone,
+        },
+      ].slice(-12)
+    );
+  }, []);
 
   // Kill feed when session kills tick.
   useEffect(() => {
@@ -973,10 +972,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       const zoneFlipped = Boolean(res.event);
       if (res.event) pushFeed(res.event, 'territory');
       if (res.standingDelta) {
-        s.adjustFactionStanding(
-          res.standingDelta.id,
-          res.standingDelta.delta
-        );
+        s.adjustFactionStanding(res.standingDelta.id, res.standingDelta.delta);
       }
 
       // Advance dynamic world-event machine off the same tick.
@@ -1006,7 +1002,10 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
         setActiveWorldEvent(trans.state.active);
       }
       if (trans.started) {
-        pushFeed(`${trans.started.title} · ${trans.started.blurb}`, trans.started.tone);
+        pushFeed(
+          `${trans.started.title} · ${trans.started.blurb}`,
+          trans.started.tone
+        );
         gameAudio.play('siren', 0.18);
       }
       if (trans.ended) {
@@ -1058,9 +1057,10 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
     lastZoneSplash.current = zoneLabel;
     setZoneSplash({
       title: zoneLabel,
-      sub: gameStore.pvpEnabled || zoneLabel.toLowerCase().includes('pvp')
-        ? 'open world · pvp live'
-        : 'open world · district',
+      sub:
+        gameStore.pvpEnabled || zoneLabel.toLowerCase().includes('pvp')
+          ? 'open world · pvp live'
+          : 'open world · district',
     });
   }, [zoneLabel, gameStore.pvpEnabled]);
 
@@ -1357,7 +1357,8 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       // High-end damage pipeline: weapon → combat skill → passives → buffs → crit
       const mods = st.getModifiers();
       let base = scaleDamage(weapon.damage, combat);
-      if (now < st.buffs.damageUntil) base = Math.round(base * st.buffs.damageMult);
+      if (now < st.buffs.damageUntil)
+        base = Math.round(base * st.buffs.damageMult);
       const nextHit = st.consumeNextHitMult();
       base = Math.round(base * nextHit);
       const { damage: rolled, crit } = applyCrit(base, mods);
@@ -1374,10 +1375,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
           (now < st.buffs.pvpBossUntil ? st.buffs.pvpBossMult : 1)
       );
       bossAttackApi.current?.(bossDmg, weapon.range);
-      huntAttackApi.current?.(
-        Math.round(dmg * mods.huntDamage),
-        weapon.range
-      );
+      huntAttackApi.current?.(Math.round(dmg * mods.huntDamage), weapon.range);
       gameAudio.play('hit', crit ? 0.35 : 0.22);
 
       // Open-world PvP
@@ -1531,6 +1529,9 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
               staminaRef={staminaRef}
               tint={gameStore.character.appearance.tint}
               accent={gameStore.character.appearance.accent}
+              accent2={gameStore.character.appearance.accent2}
+              skinTone={gameStore.character.appearance.skinTone}
+              gear={gameStore.character.appearance.gear}
               bodyScale={gameStore.character.appearance.bodyScale}
               drivingRef={drivingRef}
               externalPosRef={playerPosRef}
@@ -1685,15 +1686,9 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
           gameStore.playerStats.level ||
           levelFromXp(gameStore.playerStats.xp || 0).level
         }
-        experience={
-          levelFromXp(gameStore.playerStats.xp || 0).xpIntoLevel
-        }
-        maxExperience={
-          levelFromXp(gameStore.playerStats.xp || 0).xpForLevel
-        }
-        playersOnline={
-          otherPlayers.length > 0 ? otherPlayers.length + 1 : 1
-        }
+        experience={levelFromXp(gameStore.playerStats.xp || 0).xpIntoLevel}
+        maxExperience={levelFromXp(gameStore.playerStats.xp || 0).xpForLevel}
+        playersOnline={otherPlayers.length > 0 ? otherPlayers.length + 1 : 1}
         money={gameStore.playerStats.money}
         reputation={gameStore.playerStats.reputation}
         wanted={gameStore.playerStats.wanted}
@@ -2051,7 +2046,10 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
               <div className="mb-2 text-[10px] tracking-[0.12em] uppercase text-neutral-400">
                 {p.label} · {p.current}/{p.target || 0}
               </div>
-              <div className="h-[2px] w-full mb-2" style={{ background: '#1f1f22' }}>
+              <div
+                className="h-[2px] w-full mb-2"
+                style={{ background: '#1f1f22' }}
+              >
                 <div
                   className="h-full transition-all duration-300"
                   style={{ width: `${pct}%`, background: COLORS.accent }}
@@ -2158,9 +2156,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
           }}
           className="absolute top-[15.75rem] right-4 z-20 font-mono border px-3 py-2 text-left hover:brightness-110 transition w-[min(220px,40vw)]"
           style={{
-            borderColor: passIsLive(gameStore.pass)
-              ? COLORS.gold
-              : '#222428',
+            borderColor: passIsLive(gameStore.pass) ? COLORS.gold : '#222428',
             background: 'rgba(0,0,0,0.72)',
           }}
         >

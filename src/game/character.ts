@@ -2,9 +2,15 @@
 
 export type ArchetypeId = 'runner' | 'enforcer' | 'ghost' | 'fixer';
 
+/** Procedural gear tier layered over the base model (no new art). */
+export type GearLevel = 'none' | 'light' | 'heavy';
+
 export interface CharacterAppearance {
   tint: string;
   accent: string;
+  accent2: string; // secondary trim / visor color
+  skinTone: string; // exposed neck/face tone
+  gear: GearLevel; // procedural helmet / pauldron / chest tier
   bodyScale: number; // 0.9–1.1
 }
 
@@ -95,6 +101,29 @@ export const ACCENT_PRESETS = [
   '#e5e5e8',
 ];
 
+export const ACCENT2_PRESETS = [
+  '#2b2f36',
+  '#5a3a2a',
+  '#1f5a4a',
+  '#4a1f3a',
+] as const;
+export const SKIN_PRESETS = [
+  '#e0b48c',
+  '#c68642',
+  '#8d5524',
+  '#f1c9a5',
+] as const;
+export const GEAR_LEVELS: GearLevel[] = ['none', 'light', 'heavy'];
+
+export const DEFAULT_APPEARANCE: CharacterAppearance = {
+  tint: TINT_PRESETS[0],
+  accent: ACCENT_PRESETS[0],
+  accent2: ACCENT2_PRESETS[0],
+  skinTone: SKIN_PRESETS[0],
+  gear: 'none',
+  bodyScale: 1,
+};
+
 export const BONUS_POOL = 8;
 
 export function defaultBuild(callsign = 'Runner'): CharacterBuild {
@@ -102,17 +131,14 @@ export function defaultBuild(callsign = 'Runner'): CharacterBuild {
   return {
     callsign,
     archetype: a.id,
-    appearance: {
-      tint: a.defaultTint,
-      accent: '#c03a30',
-      bodyScale: 1,
-    },
+    appearance: { ...DEFAULT_APPEARANCE, tint: a.defaultTint },
     bonuses: { combat: 0, stealth: 0, driving: 0, intimidation: 0 },
   };
 }
 
 export function resolveSkills(build: CharacterBuild) {
-  const arch = ARCHETYPES.find((a) => a.id === build.archetype) || ARCHETYPES[0];
+  const arch =
+    ARCHETYPES.find((a) => a.id === build.archetype) || ARCHETYPES[0];
   return {
     combat: arch.baseSkills.combat + build.bonuses.combat,
     stealth: arch.baseSkills.stealth + build.bonuses.stealth,
@@ -130,7 +156,11 @@ export function loadBuild(): CharacterBuild | null {
   try {
     const raw = localStorage.getItem('ironhaven-character');
     if (!raw) return null;
-    return JSON.parse(raw) as CharacterBuild;
+    const parsed = JSON.parse(raw) as CharacterBuild;
+    // Backfill appearance keys added after this save was written, so older
+    // localStorage builds keep loading without a migration step.
+    parsed.appearance = { ...DEFAULT_APPEARANCE, ...parsed.appearance };
+    return parsed;
   } catch {
     return null;
   }

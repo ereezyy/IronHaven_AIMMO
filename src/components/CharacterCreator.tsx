@@ -3,6 +3,9 @@ import {
   ARCHETYPES,
   TINT_PRESETS,
   ACCENT_PRESETS,
+  ACCENT2_PRESETS,
+  SKIN_PRESETS,
+  GEAR_LEVELS,
   BONUS_POOL,
   CharacterBuild,
   defaultBuild,
@@ -10,17 +13,13 @@ import {
   loadBuild,
 } from '../game/character';
 import { gameAudio } from '../lib/gameAudio';
+import ArchetypeSilhouette from './ArchetypeSilhouette';
 
 interface CharacterCreatorProps {
   onComplete: (build: CharacterBuild) => void;
 }
 
-const SKILL_KEYS = [
-  'combat',
-  'stealth',
-  'driving',
-  'intimidation',
-] as const;
+const SKILL_KEYS = ['combat', 'stealth', 'driving', 'intimidation'] as const;
 
 const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onComplete }) => {
   const existing = loadBuild();
@@ -74,27 +73,12 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onComplete }) => {
         <div className="grid md:grid-cols-2 gap-0">
           {/* Preview */}
           <div className="p-6 border-b md:border-b-0 md:border-r border-[#1a1c1f] flex flex-col items-center justify-center">
-            <div
-              className="w-28 h-40 relative mb-4"
-              style={{
-                transform: `scale(${build.appearance.bodyScale})`,
-              }}
-            >
-              <div
-                className="absolute inset-x-6 top-0 h-10 rounded-full"
-                style={{ background: build.appearance.tint }}
-              />
-              <div
-                className="absolute inset-x-4 top-12 bottom-8 rounded-sm"
-                style={{ background: build.appearance.tint }}
-              />
-              <div
-                className="absolute inset-x-2 bottom-0 h-8"
-                style={{ background: build.appearance.tint, opacity: 0.85 }}
-              />
-              <div
-                className="absolute left-1/2 -translate-x-1/2 top-16 w-16 h-1"
-                style={{ background: build.appearance.accent }}
+            <div className="mb-4">
+              <ArchetypeSilhouette
+                archetype={build.archetype}
+                tint={build.appearance.tint}
+                accent={build.appearance.accent}
+                bodyScale={build.appearance.bodyScale}
               />
             </div>
             <div className="text-[11px] tracking-[0.3em] uppercase text-neutral-500">
@@ -212,6 +196,82 @@ const CharacterCreator: React.FC<CharacterCreatorProps> = ({ onComplete }) => {
                         build.appearance.accent === c ? '#fff' : '#333',
                     }}
                   />
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-[10px] tracking-[0.28em] uppercase text-neutral-500 mb-2">
+                trim (visor)
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {ACCENT2_PRESETS.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() =>
+                      setBuild((b) => ({
+                        ...b,
+                        appearance: { ...b.appearance, accent2: c },
+                      }))
+                    }
+                    className="w-7 h-7 border"
+                    style={{
+                      background: c,
+                      borderColor:
+                        build.appearance.accent2 === c ? '#fff' : '#333',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-[10px] tracking-[0.28em] uppercase text-neutral-500 mb-2">
+                skin tone
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {SKIN_PRESETS.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() =>
+                      setBuild((b) => ({
+                        ...b,
+                        appearance: { ...b.appearance, skinTone: c },
+                      }))
+                    }
+                    className="w-7 h-7 border"
+                    style={{
+                      background: c,
+                      borderColor:
+                        build.appearance.skinTone === c ? '#fff' : '#333',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-[10px] tracking-[0.28em] uppercase text-neutral-500 mb-2">
+                gear
+              </div>
+              <div className="flex gap-2">
+                {GEAR_LEVELS.map((g) => (
+                  <button
+                    key={g}
+                    onClick={() =>
+                      setBuild((b) => ({
+                        ...b,
+                        appearance: { ...b.appearance, gear: g },
+                      }))
+                    }
+                    className={`flex-1 px-3 py-2 border text-[11px] tracking-[0.15em] uppercase transition-colors ${
+                      build.appearance.gear === g
+                        ? 'border-[#c03a30] bg-[#c03a30]/10 text-neutral-100'
+                        : 'border-[#1a1c1f] text-neutral-400 hover:border-[#333]'
+                    }`}
+                  >
+                    {g}
+                  </button>
                 ))}
               </div>
             </div>
