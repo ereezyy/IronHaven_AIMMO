@@ -2,15 +2,15 @@
 
 ## Live production
 
-| Piece | URL / status |
-| --- | --- |
-| **Game** | https://ironhaven-aimmo.vercel.app |
-| Pass Payment Link | https://buy.stripe.com/3cI00i7VC9O70QFg6Paoc0X ($1.99/wk live) |
-| Success redirect | `https://ironhaven-aimmo.vercel.app/?pass=success` |
-| Pass status API | `GET /api/stripe-pass-status?playerId=…` |
-| Stripe webhook | `POST /api/stripe-pass-webhook` (registered live) |
-| Local play | http://127.0.0.1:5173 + `npm run pass-api` |
-| Supabase multiplayer | **DNS down** (`gqhiranldvmzuasdfjqz`) — game runs offline · ghosts |
+| Piece                | URL / status                                                                                       |
+| -------------------- | -------------------------------------------------------------------------------------------------- |
+| **Game**             | https://ironhaven-aimmo.vercel.app                                                                 |
+| Pass Payment Link    | https://buy.stripe.com/3cI00i7VC9O70QFg6Paoc0X ($1.99/wk live)                                     |
+| Success redirect     | `https://ironhaven-aimmo.vercel.app/?pass=success`                                                 |
+| Pass status API      | `GET /api/stripe-pass-status?playerId=…`                                                           |
+| Stripe webhook       | `POST /api/stripe-pass-webhook` (registered live)                                                  |
+| Local play           | http://127.0.0.1:5173 + `npm run pass-api`                                                         |
+| Supabase multiplayer | **ACTIVE_HEALTHY** (`gqhiranldvmzuasdfjqz`) restored 2026-07-14; schema + RLS applied, realtime on |
 
 ## Smoke verified
 
@@ -34,11 +34,11 @@ npm run payment-link:success -- https://ironhaven-aimmo.vercel.app/?pass=success
 
 ## Env (never commit)
 
-| File | Contents |
-| --- | --- |
-| `.env` | `VITE_*` client vars |
-| `.env.server` | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` |
-| Vercel project env | same + serverless secrets |
+| File               | Contents                                     |
+| ------------------ | -------------------------------------------- |
+| `.env`             | `VITE_*` client vars                         |
+| `.env.server`      | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` |
+| Vercel project env | same + serverless secrets                    |
 
 ## Playtest production Pass
 

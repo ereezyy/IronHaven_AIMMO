@@ -1,12 +1,10 @@
 import React, { useMemo } from 'react';
 import { useGameStore } from '../store/gameState';
-import {
-  isJobComplete,
-  type DailyJob,
-} from '../game/dailyBoard';
+import { isJobComplete, type DailyJob } from '../game/dailyBoard';
 import { gameAudio } from '../lib/gameAudio';
 import type { StreetContract } from '../lib/npcAi';
 import { contractProgress } from '../lib/npcAi';
+import { BEZEL_OUTER, BEZEL_INNER, EASE, HUD_KEYFRAMES } from '../game/uiTheme';
 
 interface QuestLogPanelProps {
   onClose: () => void;
@@ -50,7 +48,9 @@ const JobRow: React.FC<{
           </span>
         )}
       </div>
-      <p className="text-[10px] text-neutral-600 leading-relaxed">{job.blurb}</p>
+      <p className="text-[10px] text-neutral-600 leading-relaxed">
+        {job.blurb}
+      </p>
       <div className="h-[2px] w-full bg-[#141517]">
         <div
           className="h-full transition-all"
@@ -103,100 +103,113 @@ const QuestLogPanel: React.FC<QuestLogPanelProps> = ({
   void zonesHeld;
 
   return (
-    <div className="absolute inset-0 z-40 flex items-center justify-center font-mono bg-black/55 backdrop-blur-[2px]">
-      <div className="w-full max-w-lg mx-3 border border-[#222428] bg-[#08080a]/96 backdrop-blur-md max-h-[88vh] flex flex-col shadow-2xl">
-        <div className="flex justify-between items-center border-b border-[#1a1c1f] px-4 py-3">
-          <div>
-            <div className="text-[9px] tracking-[0.35em] uppercase text-neutral-600">
-              operations
+    <div
+      data-hud-anim
+      className="absolute inset-0 z-40 flex items-center justify-center font-mono bg-black/60 backdrop-blur-[3px]"
+      style={{ animation: `hudBackdropIn 0.3s ${EASE.out} both` }}
+    >
+      <style>{HUD_KEYFRAMES}</style>
+      <div
+        data-hud-anim
+        className={`${BEZEL_OUTER} w-full max-w-lg mx-3 max-h-[88vh] flex flex-col p-[3px]`}
+        style={{ animation: `hudShellIn 0.42s ${EASE.out} both` }}
+      >
+        <div className={`${BEZEL_INNER} flex flex-col min-h-0 flex-1`}>
+          <div className="flex justify-between items-center border-b border-[#141517] px-5 py-4">
+            <div className="space-y-1">
+              <div className="text-[9px] tracking-[0.38em] uppercase text-neutral-600">
+                operations
+              </div>
+              <div className="text-[15px] tracking-[0.2em] uppercase text-neutral-50">
+                Quest log
+              </div>
             </div>
-            <div className="text-[14px] tracking-[0.18em] uppercase text-neutral-100">
-              Quest log
-            </div>
+            <button
+              onClick={onClose}
+              className="text-[10px] tracking-[0.25em] uppercase text-neutral-500 hover:text-neutral-200 active:translate-y-[1px] transition-all"
+              style={{ transitionTimingFunction: EASE.out }}
+            >
+              esc · l
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="text-[10px] tracking-[0.25em] uppercase text-neutral-500 hover:text-neutral-200"
-          >
-            esc · l
-          </button>
-        </div>
 
-        <div className="overflow-y-auto p-3 space-y-4 flex-1">
-          {/* Active street contract */}
-          <section>
-            <div className="text-[9px] tracking-[0.3em] uppercase text-neutral-600 mb-2">
-              active contract · j for new
-            </div>
-            {activeContract && contractProg ? (
-              <div className="border border-[#c03a30]/40 bg-[#c03a30]/08 px-3 py-2.5">
-                <div className="text-[12px] uppercase tracking-[0.08em] text-neutral-100">
-                  {activeContract.title}
-                </div>
-                <p className="text-[10px] text-neutral-500 mt-1 leading-relaxed">
-                  {activeContract.description}
-                </p>
-                <div className="mt-2 text-[10px] text-neutral-400">
-                  {contractProg.label} · {contractProg.current}/
-                  {contractProg.target || 0} · ${activeContract.reward}
-                </div>
-                <div className="h-[2px] w-full bg-[#1a1c1f] mt-2">
-                  <div
-                    className="h-full"
-                    style={{
-                      width: `${
-                        contractProg.target
-                          ? Math.min(
-                              100,
-                              (contractProg.current / contractProg.target) * 100
-                            )
-                          : contractProg.done
-                            ? 100
-                            : 0
-                      }%`,
-                      background: '#c03a30',
-                    }}
-                  />
-                </div>
+          <div className="overflow-y-auto p-3 space-y-4 flex-1">
+            {/* Active street contract */}
+            <section>
+              <div className="text-[9px] tracking-[0.3em] uppercase text-neutral-600 mb-2">
+                active contract · j for new
               </div>
-            ) : (
-              <div className="text-[11px] text-neutral-600 border border-[#141517] px-3 py-3">
-                No active job. Press J for a street briefing.
-              </div>
-            )}
-          </section>
+              {activeContract && contractProg ? (
+                <div className="border border-[#c03a30]/40 bg-[#c03a30]/08 px-3 py-2.5">
+                  <div className="text-[12px] uppercase tracking-[0.08em] text-neutral-100">
+                    {activeContract.title}
+                  </div>
+                  <p className="text-[10px] text-neutral-500 mt-1 leading-relaxed">
+                    {activeContract.description}
+                  </p>
+                  <div className="mt-2 text-[10px] text-neutral-400">
+                    {contractProg.label} · {contractProg.current}/
+                    {contractProg.target || 0} · ${activeContract.reward}
+                  </div>
+                  <div className="h-[2px] w-full bg-[#1a1c1f] mt-2">
+                    <div
+                      className="h-full"
+                      style={{
+                        width: `${
+                          contractProg.target
+                            ? Math.min(
+                                100,
+                                (contractProg.current / contractProg.target) *
+                                  100
+                              )
+                            : contractProg.done
+                              ? 100
+                              : 0
+                        }%`,
+                        background: '#c03a30',
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="text-[11px] text-neutral-600 border border-[#141517] px-3 py-3">
+                  No active job. Press J for a street briefing.
+                </div>
+              )}
+            </section>
 
-          {/* Daily board */}
-          <section className="space-y-2">
-            <div className="text-[9px] tracking-[0.3em] uppercase text-neutral-600">
-              daily board · {board.dayKey}
-            </div>
-            {board.dailies.map((j) => (
+            {/* Daily board */}
+            <section className="space-y-2">
+              <div className="text-[9px] tracking-[0.3em] uppercase text-neutral-600">
+                daily board · {board.dayKey}
+              </div>
+              {board.dailies.map((j) => (
+                <JobRow
+                  key={j.id}
+                  job={j}
+                  tag="daily"
+                  onClaim={() => {
+                    const r = claimDaily(j.id);
+                    gameAudio.play(r.ok ? 'market' : 'ui', 0.2);
+                  }}
+                />
+              ))}
+            </section>
+
+            <section className="space-y-2">
+              <div className="text-[9px] tracking-[0.3em] uppercase text-neutral-600">
+                weekly · {board.weekKey}
+              </div>
               <JobRow
-                key={j.id}
-                job={j}
-                tag="daily"
+                job={board.weekly}
+                tag="weekly"
                 onClaim={() => {
-                  const r = claimDaily(j.id);
+                  const r = claimDaily(board.weekly.id);
                   gameAudio.play(r.ok ? 'market' : 'ui', 0.2);
                 }}
               />
-            ))}
-          </section>
-
-          <section className="space-y-2">
-            <div className="text-[9px] tracking-[0.3em] uppercase text-neutral-600">
-              weekly · {board.weekKey}
-            </div>
-            <JobRow
-              job={board.weekly}
-              tag="weekly"
-              onClaim={() => {
-                const r = claimDaily(board.weekly.id);
-                gameAudio.play(r.ok ? 'market' : 'ui', 0.2);
-              }}
-            />
-          </section>
+            </section>
+          </div>
         </div>
       </div>
     </div>

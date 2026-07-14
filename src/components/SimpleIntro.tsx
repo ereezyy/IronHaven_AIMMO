@@ -43,21 +43,44 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
   return (
     <div
       onClick={onComplete}
-      className="fixed inset-0 cursor-pointer"
+      className="fixed inset-0 cursor-pointer overflow-hidden"
       style={{
-        background: '#0b0b0c',
+        background: '#050507',
         color: '#e6e6e6',
         fontFamily:
           'ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace',
-        backgroundImage:
-          'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),' +
-          'linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)',
-        backgroundSize: '64px 64px',
       }}
     >
+      {/* Dramatic generated city background */}
+      <div
+        className="absolute inset-0 opacity-55"
+        style={{
+          backgroundImage: `url(/assets/ironhaven_city_intro.png)`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center 38%',
+          filter: 'contrast(1.12) brightness(0.62) saturate(0.88)',
+        }}
+      />
+
+      {/* Heavy vignette + film grain / scanlines */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(ellipse at center, transparent 12%, rgba(0,0,0,0.62) 58%, rgba(0,0,0,0.92) 100%)',
+        }}
+      />
+      <div
+        className="absolute inset-0 opacity-[0.07] pointer-events-none"
+        style={{
+          backgroundImage:
+            'repeating-linear-gradient(0deg, transparent, transparent 2px, #111 2px, #111 3.5px)',
+        }}
+      />
+
       {/* Title band */}
       <div
-        className="absolute inset-x-0 top-0 px-10 pt-8 flex items-baseline justify-between text-[11px] tracking-[0.3em] uppercase"
+        className="absolute inset-x-0 top-0 px-10 pt-8 flex items-baseline justify-between text-[11px] tracking-[0.3em] uppercase z-10"
         style={{ color: '#6b6b70' }}
       >
         <span>IRONHAVEN / cold boot</span>
@@ -66,26 +89,26 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
         </span>
       </div>
 
-      {/* Wordmark */}
-      <div className="absolute left-10 right-10" style={{ top: '14vh' }}>
+      {/* Wordmark + premium generated title art */}
+      <div className="absolute left-10 right-10 z-10" style={{ top: '9vh' }}>
         <div
-          className="text-[11px] tracking-[0.4em] uppercase mb-4"
+          className="text-[11px] tracking-[0.4em] uppercase mb-2.5"
           style={{ color: '#8a3b34' }}
         >
           ironhaven · aimmo · build 2087
         </div>
-        <h1
-          className="font-bold leading-[0.85] tracking-[-0.04em]"
-          style={{
-            fontFamily: '"Inter Tight", Inter, system-ui, sans-serif',
-            fontSize: 'clamp(80px, 13vw, 220px)',
-            color: '#f4f4f5',
-          }}
-        >
-          IRON<span style={{ color: '#c03a30' }}>.</span>HAVEN
-        </h1>
+
         <div
-          className="mt-3 text-[13px] tracking-[0.2em] uppercase"
+          className="h-[82px] md:h-[104px] bg-contain bg-no-repeat mb-1"
+          style={{
+            backgroundImage: `url(/assets/ironhaven_title.png)`,
+            backgroundPosition: 'left center',
+            filter: 'contrast(1.08) brightness(1.05)',
+          }}
+        />
+
+        <div
+          className="mt-1 text-[13px] tracking-[0.2em] uppercase"
           style={{ color: '#9ca3af' }}
         >
           a cyberpunk mmo · ai-directed · webgl
@@ -94,11 +117,11 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
 
       {/* Boot console */}
       <div
-        className="absolute left-10 right-10"
-        style={{ bottom: '14vh', minHeight: '180px' }}
+        className="absolute left-10 right-10 z-10"
+        style={{ bottom: '12vh', minHeight: '170px' }}
       >
         <div
-          className="border-l-2 pl-5 text-[13px] leading-[1.75]"
+          className="border-l-2 pl-5 text-[13px] leading-[1.7]"
           style={{ borderColor: '#c03a30' }}
         >
           {visibleLines.map((l) => (
@@ -126,9 +149,9 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
       </div>
 
       {/* Progress bar */}
-      <div className="absolute inset-x-10 bottom-8">
+      <div className="absolute inset-x-10 bottom-7 z-10">
         <div
-          className="flex items-center justify-between text-[11px] tracking-[0.3em] uppercase mb-2"
+          className="flex items-center justify-between text-[11px] tracking-[0.3em] uppercase mb-1.5"
           style={{ color: '#6b6b70' }}
         >
           <span>compositing</span>
@@ -157,19 +180,19 @@ function CornerTicks() {
   return (
     <>
       <div
-        className="absolute top-6 left-6 w-6 h-6 border-t border-l"
+        className="absolute top-6 left-6 w-6 h-6 border-t border-l z-10"
         style={{ borderColor: c }}
       />
       <div
-        className="absolute top-6 right-6 w-6 h-6 border-t border-r"
+        className="absolute top-6 right-6 w-6 h-6 border-t border-r z-10"
         style={{ borderColor: c }}
       />
       <div
-        className="absolute bottom-6 left-6 w-6 h-6 border-b border-l"
+        className="absolute bottom-6 left-6 w-6 h-6 border-b border-l z-10"
         style={{ borderColor: c }}
       />
       <div
-        className="absolute bottom-6 right-6 w-6 h-6 border-b border-r"
+        className="absolute bottom-6 right-6 w-6 h-6 border-b border-r z-10"
         style={{ borderColor: c }}
       />
     </>
