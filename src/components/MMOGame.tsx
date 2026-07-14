@@ -52,6 +52,7 @@ import LocationTitle from './LocationTitle';
 import MissionBriefing from './MissionBriefing';
 import QuestLogPanel from './QuestLogPanel';
 import LeaderboardPanel from './LeaderboardPanel';
+import WorldEventBanner from './WorldEventBanner';
 import ControlsCard from './ControlsCard';
 import KillFeed, { type KillFeedEntry } from './KillFeed';
 import InteractPrompt from './InteractPrompt';
@@ -89,6 +90,14 @@ import {
   hasSeenControlsCard,
 } from '../game/onboarding';
 import { tickTerritory } from '../game/territory';
+import {
+  emptyWorldEventState,
+  advance as advanceWorldEvents,
+  eventRewardMult,
+  type WorldEventState,
+  type ActiveWorldEvent,
+  WORLD_EVENTS,
+} from '../game/worldEvents';
 import { STARTER_WEAPON_ID } from './BlackMarket';
 import type { AttackFn } from './NPCManager';
 import { gameAudio } from '../lib/gameAudio';
@@ -442,6 +451,10 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
   const questOpenRef = useRef(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const leaderboardOpenRef = useRef(false);
+  // Dynamic world events (turf war, boss raid, heat wave, gold rush).
+  const worldEventRef = useRef<WorldEventState>(emptyWorldEventState());
+  const [activeWorldEvent, setActiveWorldEvent] =
+    useState<ActiveWorldEvent | null>(null);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [killFeed, setKillFeed] = useState<KillFeedEntry[]>([]);
   const [helpDismissed, setHelpDismissed] = useState(false);
@@ -925,6 +938,15 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
     const k = gameStore.sessionStats.totalKills;
     if (k > prevKills.current && k > 0) {
       pushFeed(`+kill · total ${k}`, 'kill');
+      // Bonus XP while a world event is live.
+      const mult = eventRewardMult(worldEventRef.current, Date.now());
+      if (mult > 1) {
+        const bonus = Math.round(10 * (mult - 1));
+        if (bonus > 0) {
+          useGameStore.getState().gainXp('contract', bonus);
+          pushFeed(`event bonus · +${bonus} xp (x${mult})`, 'info');
+        }
+      }
     }
   }, [gameStore.sessionStats.totalKills, pushFeed]);
 
@@ -948,12 +970,47 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
         dt
       );
       if (res.state !== s.territory) s.setTerritory(res.state);
+      const zoneFlipped = Boolean(res.event);
       if (res.event) pushFeed(res.event, 'territory');
       if (res.standingDelta) {
         s.adjustFactionStanding(
           res.standingDelta.id,
           res.standingDelta.delta
         );
+      }
+
+      // Advance dynamic world-event machine off the same tick.
+      const control = res.state.control;
+      const counts: Record<string, number> = {};
+      let dominant = s.factionId;
+      let best = 0;
+      for (const owner of Object.values(control)) {
+        if (!owner || owner === 'null') continue;
+        counts[owner] = (counts[owner] || 0) + 1;
+        if (counts[owner] > best) {
+          best = counts[owner];
+          dominant = owner;
+        }
+      }
+      const trans = advanceWorldEvents(worldEventRef.current, {
+        now,
+        totalKills: s.sessionStats.totalKills,
+        pvpKills: s.sessionStats.pvpKills,
+        bossKills: s.sessionStats.bossKills,
+        moneyEarned: s.sessionStats.totalMoneyEarned,
+        zoneFlipped,
+        dominantFaction: dominant,
+      });
+      if (trans.state !== worldEventRef.current) {
+        worldEventRef.current = trans.state;
+        setActiveWorldEvent(trans.state.active);
+      }
+      if (trans.started) {
+        pushFeed(`${trans.started.title} · ${trans.started.blurb}`, trans.started.tone);
+        gameAudio.play('siren', 0.18);
+      }
+      if (trans.ended) {
+        pushFeed(`${trans.ended.title} ended`, 'info');
       }
     }, 250);
     return () => window.clearInterval(id);
@@ -1855,6 +1912,23 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       })()}
 
       <KillFeed entries={killFeed} />
+
+      {activeWorldEvent && (
+        <WorldEventBanner
+          event={WORLD_EVENTS[activeWorldEvent.kind]}
+          startedAt={activeWorldEvent.startedAt}
+          endsAt={activeWorldEvent.endsAt}
+          hidden={
+            skillsOpen ||
+            passOpen ||
+            questOpen ||
+            leaderboardOpen ||
+            socialOpen ||
+            economyOpen ||
+            Boolean(activeCutscene)
+          }
+        />
+      )}
 
       {skillsOpen && (
         <SkillTreePanel
