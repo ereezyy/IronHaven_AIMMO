@@ -46,6 +46,9 @@ export interface NearbyPlayer {
   stamina: number;
   level: number;
   isInCombat: boolean;
+  // Raw avatar wire blob — sanitized by the consumer (game layer), so
+  // persistence stays dumb about game types.
+  avatar?: unknown;
 }
 
 class PersistenceService {
@@ -309,6 +312,7 @@ class PersistenceService {
     stamina: number;
     level: number;
     isInCombat: boolean;
+    avatar?: unknown;
   }): Promise<boolean> {
     if (this.offlineMode) return false;
 
@@ -327,6 +331,7 @@ class PersistenceService {
         stamina: playerData.stamina,
         level: playerData.level,
         is_in_combat: playerData.isInCombat,
+        avatar: playerData.avatar ?? null,
         last_seen: new Date().toISOString(),
       });
 
@@ -353,6 +358,7 @@ class PersistenceService {
       stamina: row.stamina,
       level: row.level,
       isInCombat: row.is_in_combat,
+      avatar: row.avatar,
     };
   }
 

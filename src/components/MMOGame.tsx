@@ -126,7 +126,11 @@ import HarvestNodes from './HarvestNodes';
 import VehicleLayer, { type VehicleState } from './VehicleLayer';
 import type { HarvestNode } from '../game/economy';
 import type { VehicleSpawn } from '../game/vehicles';
-import type { CharacterBuild } from '../game/character';
+import {
+  sanitizeAvatarWire,
+  type AvatarWire,
+  type CharacterBuild,
+} from '../game/character';
 import SocialPanel from './SocialPanel';
 import ShopLayer, { ShopUI } from './ShopLayer';
 import type { WorldShop } from '../game/shops';
@@ -150,6 +154,7 @@ interface OtherPlayer {
   factionId?: string;
   pvp?: boolean;
   clubTag?: string;
+  avatar?: AvatarWire | null;
 }
 
 // Loss aversion: dying drops a quarter of your cash on the street. Heat (the
@@ -377,9 +382,24 @@ const RemotePlayer: React.FC<{ player: OtherPlayer }> = ({ player }) => {
         </div>
       </Html>
 
-      {/* Animated character, tinted cooler so remotes read apart from you. */}
+      {/* Animated character wearing the synced avatar; the cooler fallback
+          tint only covers legacy rows written before avatar sync shipped. */}
       <group position={[0, -1, 0]} rotation={[0, Math.PI, 0]}>
-        <CharacterModel speedRef={speedRef} tint="#9fb2c8" />
+        {player.avatar ? (
+          <CharacterModel
+            speedRef={speedRef}
+            tint={player.avatar.appearance.tint}
+            accent={player.avatar.appearance.accent}
+            accent2={player.avatar.appearance.accent2}
+            skinTone={player.avatar.appearance.skinTone}
+            gear={player.avatar.appearance.gear}
+            archetype={player.avatar.archetype}
+            bodyScale={player.avatar.appearance.bodyScale}
+            parts={player.avatar.parts}
+          />
+        ) : (
+          <CharacterModel speedRef={speedRef} tint="#9fb2c8" />
+        )}
       </group>
     </group>
   );
@@ -547,6 +567,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       rotation: number;
       health: number;
       level: number;
+      avatar?: unknown;
     }): OtherPlayer => ({
       id: p.id,
       username: p.username,
@@ -555,6 +576,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       health: p.health,
       level: p.level,
       lastSeen: Date.now(),
+      avatar: sanitizeAvatarWire(p.avatar),
     });
 
     // Seed the roster once, then stream live row changes (sub-100ms) instead
@@ -625,6 +647,13 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       stamina: staminaRef.current,
       level: s.playerStats.level || levelFromXp(s.playerStats.xp || 0).level,
       isInCombat: inCombat,
+      // Cosmetic loadout rides on the presence row so remotes render the
+      // real character instead of a placeholder.
+      avatar: {
+        archetype: s.character.archetype,
+        appearance: s.character.appearance,
+        parts: s.character.parts,
+      },
     });
 
     // Zone label + fishing cast progress poll.

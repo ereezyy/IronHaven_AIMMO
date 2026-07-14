@@ -187,6 +187,8 @@ export interface Database {
           level: number;
           is_in_combat: boolean;
           last_seen: string;
+          // Cosmetic avatar blob (AvatarWire shape); null on legacy rows.
+          avatar: unknown | null;
         };
         Insert: Omit<
           Database['public']['Tables']['multiplayer_players']['Row'],

@@ -8,6 +8,7 @@ import {
   DEFAULT_APPEARANCE,
   GEAR_LEVELS,
   loadBuild,
+  sanitizeAvatarWire,
 } from './character';
 
 describe('character build', () => {
@@ -92,5 +93,62 @@ describe('loadBuild appearance backfill', () => {
     expect(loaded!.parts).toEqual({ back: 'back_field_crate' });
 
     vi.unstubAllGlobals();
+  });
+});
+
+describe('sanitizeAvatarWire', () => {
+  it('returns null for non-object input', () => {
+    expect(sanitizeAvatarWire(null)).toBeNull();
+    expect(sanitizeAvatarWire(undefined)).toBeNull();
+    expect(sanitizeAvatarWire('ghost')).toBeNull();
+    expect(sanitizeAvatarWire(42)).toBeNull();
+  });
+
+  it('round-trips a fully valid wire blob', () => {
+    const wire = {
+      archetype: 'ghost',
+      appearance: {
+        tint: '#112233',
+        accent: '#22d3ee',
+        accent2: '#1f5a4a',
+        skinTone: '#c68642',
+        gear: 'heavy',
+        bodyScale: 0.95,
+      },
+      // Long Rifle is ghost-legal; crate is unrestricted.
+      parts: { weapon: 'weapon_blaster_e', back: 'back_field_crate' },
+    };
+    const out = sanitizeAvatarWire(wire);
+    expect(out).not.toBeNull();
+    expect(out!.archetype).toBe('ghost');
+    expect(out!.appearance).toEqual(wire.appearance);
+    expect(out!.parts).toEqual(wire.parts);
+  });
+
+  it('falls back field-by-field on hostile values', () => {
+    const out = sanitizeAvatarWire({
+      archetype: 'godmode',
+      appearance: {
+        tint: 'javascript:alert(1)',
+        gear: 'mega',
+        bodyScale: 5,
+      },
+    });
+    expect(out).not.toBeNull();
+    expect(out!.archetype).toBe(ARCHETYPES[0].id);
+    expect(out!.appearance.tint).toBe(DEFAULT_APPEARANCE.tint);
+    expect(out!.appearance.gear).toBe(DEFAULT_APPEARANCE.gear);
+    expect(out!.appearance.bodyScale).toBe(1.1);
+  });
+
+  it('drops parts the wire archetype cannot equip', () => {
+    const out = sanitizeAvatarWire({
+      archetype: 'runner',
+      appearance: {},
+      // Heavy Blaster is enforcer-only; crate is unrestricted.
+      parts: { weapon: 'weapon_blaster_d', back: 'back_field_crate' },
+    });
+    expect(out).not.toBeNull();
+    expect(out!.parts).toEqual({ back: 'back_field_crate' });
   });
 });

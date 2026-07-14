@@ -190,3 +190,48 @@ export function saveBuild(build: CharacterBuild): void {
     /* ignore */
   }
 }
+
+/**
+ * Cosmetic subset of CharacterBuild synced to other clients as one jsonb
+ * blob on the multiplayer presence row (no callsign or bonuses).
+ */
+export interface AvatarWire {
+  archetype: ArchetypeId;
+  appearance: CharacterAppearance;
+  parts: AvatarParts;
+}
+
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+
+/**
+ * Validate an avatar blob from another client's row. Any client can upsert
+ * its own row, so every field is checked; bad values fall back to defaults
+ * rather than throwing. Returns null only for non-object input.
+ */
+export function sanitizeAvatarWire(v: unknown): AvatarWire | null {
+  if (typeof v !== 'object' || v === null) return null;
+  const raw = v as Record<string, unknown>;
+  const archetype = ARCHETYPES.some((a) => a.id === raw.archetype)
+    ? (raw.archetype as ArchetypeId)
+    : ARCHETYPES[0].id;
+  const appearance: CharacterAppearance = { ...DEFAULT_APPEARANCE };
+  const app: Record<string, unknown> =
+    typeof raw.appearance === 'object' && raw.appearance !== null
+      ? (raw.appearance as Record<string, unknown>)
+      : {};
+  for (const key of ['tint', 'accent', 'accent2', 'skinTone'] as const) {
+    const c = app[key];
+    if (typeof c === 'string' && HEX_COLOR.test(c)) appearance[key] = c;
+  }
+  if (GEAR_LEVELS.includes(app.gear as GearLevel)) {
+    appearance.gear = app.gear as GearLevel;
+  }
+  if (typeof app.bodyScale === 'number' && Number.isFinite(app.bodyScale)) {
+    appearance.bodyScale = Math.min(1.1, Math.max(0.9, app.bodyScale));
+  }
+  return {
+    archetype,
+    appearance,
+    parts: sanitizeAvatarParts(raw.parts, AVATAR_PART_REGISTRY, archetype),
+  };
+}
