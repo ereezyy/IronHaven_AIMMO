@@ -1,14 +1,18 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useKeyboardControls } from '@react-three/drei';
 import * as THREE from 'three';
+import {
+  RigidBody,
+  CapsuleCollider,
+  useRapier,
+  type RapierRigidBody,
+} from '@react-three/rapier';
+import type { KinematicCharacterController } from '@dimforge/rapier3d-compat';
 import CharacterModel from './CharacterModel';
 import { gameAudio } from '../lib/gameAudio';
 import { useGameStore } from '../store/gameState';
-import {
-  buildBuildingColliders,
-  resolveCollision,
-} from '../game/worldCollision';
+import { PLAYER_CAPSULE, CHARACTER_CONTROLLER } from '../game/physicsColliders';
 import type { GearLevel, ArchetypeId } from '../game/character';
 
 interface MMOPlayerProps {
@@ -48,20 +52,44 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
   drivingRef,
   externalPosRef,
 }) => {
-  const { camera, gl } = useThree();
-  const playerRef = useRef<THREE.Group>(null);
+  const { gl } = useThree();
+  const { world } = useRapier();
+  const bodyRef = useRef<RapierRigidBody>(null);
+  const controllerRef = useRef<KinematicCharacterController | null>(null);
+  const visualRef = useRef<THREE.Group>(null);
   const flash = useRef(0);
   const speedRef = useRef(0);
-  // Static building AABBs derived once; stepped through each frame for push-out.
-  const collidersRef = useRef(buildBuildingColliders());
 
-  const [position, setPosition] = useState(new THREE.Vector3(0, 1, 0));
-  const [velocity, setVelocity] = useState(new THREE.Vector3(0, 0, 0));
-  const [rotation, setRotation] = useState(0);
-  const [isGrounded, setIsGrounded] = useState(true);
+  // Per-frame mutable physics state — refs, not React state, so the hot
+  // loop never re-renders. Rapier's kinematic controller owns collision;
+  // we own acceleration/friction/gravity so the game feel is unchanged.
+  const velocity = useRef(new THREE.Vector3(0, 0, 0));
+  const grounded = useRef(true);
+  const desired = useRef(new THREE.Vector3());
+  const outPos = useRef(new THREE.Vector3(0, PLAYER_CAPSULE.centerY, 0));
+
   const [stamina, setStamina] = useState(100);
 
   const [, get] = useKeyboardControls();
+
+  // One character controller per mounted player; configured for street
+  // furniture (autostep), slopes and downhill ground snapping.
+  useEffect(() => {
+    const ctrl = world.createCharacterController(CHARACTER_CONTROLLER.offset);
+    ctrl.setApplyImpulsesToDynamicBodies(false);
+    ctrl.enableAutostep(
+      CHARACTER_CONTROLLER.autostepMaxHeight,
+      CHARACTER_CONTROLLER.autostepMinWidth,
+      true
+    );
+    ctrl.enableSnapToGround(CHARACTER_CONTROLLER.snapToGroundDistance);
+    ctrl.setMaxSlopeClimbAngle(CHARACTER_CONTROLLER.maxSlopeClimbAngle);
+    controllerRef.current = ctrl;
+    return () => {
+      controllerRef.current = null;
+      world.removeCharacterController(ctrl);
+    };
+  }, [world]);
 
   React.useEffect(() => {
     if (!flashApi) return;
@@ -111,23 +139,31 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
   }, [gl]);
 
   useFrame((state, delta) => {
+    const body = bodyRef.current;
+    const controller = controllerRef.current;
+    if (!body || !controller) return;
+
     if (drivingRef?.current) {
       // Vehicle owns locomotion; hide on-foot mesh and mirror camera target.
-      if (playerRef.current) {
-        playerRef.current.visible = false;
+      if (visualRef.current) {
+        visualRef.current.visible = false;
       }
       speedRef.current = 0;
       return;
     }
 
-    if (playerRef.current) playerRef.current.visible = !hiddenRef?.current;
+    if (visualRef.current) visualRef.current.visible = !hiddenRef?.current;
+
+    const t = body.translation();
+    outPos.current.set(t.x, t.y, t.z);
 
     // After exiting a vehicle, snap on-foot controller to world position.
     if (externalPosRef) {
       const e = externalPosRef.current;
-      if (position.distanceToSquared(e) > 6) {
-        setPosition(e.clone());
-        setVelocity(new THREE.Vector3(0, 0, 0));
+      if (outPos.current.distanceToSquared(e) > 6) {
+        body.setTranslation({ x: e.x, y: e.y, z: e.z }, true);
+        outPos.current.copy(e);
+        velocity.current.set(0, 0, 0);
       }
     }
 
@@ -192,7 +228,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
       inputVector.applyAxisAngle(new THREE.Vector3(0, 1, 0), mouseX.current);
     }
 
-    const newVelocity = velocity.clone();
+    const newVelocity = velocity.current;
 
     newVelocity.x += inputVector.x * acceleration * delta;
     newVelocity.z += inputVector.z * acceleration * delta;
@@ -226,30 +262,36 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
     if (nextStamina !== stamina) setStamina(nextStamina);
     if (staminaRef) staminaRef.current = nextStamina;
 
-    if ((jump || padJump) && isGrounded) {
+    if ((jump || padJump) && grounded.current) {
       newVelocity.y = jumpForce;
-      setIsGrounded(false);
-    }
-
-    if (!isGrounded) {
+      grounded.current = false;
+    } else if (grounded.current) {
+      // Small downward bias keeps the controller pressed to the ground so
+      // snap-to-ground / autostep engage on step descent instead of
+      // micro-hops (grounded frames zero to -1, not 0 — see below).
+      newVelocity.y = -1;
+    } else {
       newVelocity.y += gravity * delta;
     }
 
-    const newPosition = position.clone();
-    newPosition.x += newVelocity.x * delta;
-    newPosition.y += newVelocity.y * delta;
-    newPosition.z += newVelocity.z * delta;
+    // Ask Rapier's kinematic controller how far the capsule can actually
+    // move: it slides along walls, climbs steps, respects slopes and snaps
+    // to the ground, using the fixed cuboids from StaticWorldColliders.
+    if (body.numColliders() === 0) return;
+    desired.current
+      .set(newVelocity.x, newVelocity.y, newVelocity.z)
+      .multiplyScalar(delta);
+    controller.computeColliderMovement(body.collider(0), desired.current);
+    const move = controller.computedMovement();
+    grounded.current = controller.computedGrounded();
+    // Reset to the bias value (not 0) while grounded so the branch above
+    // keeps pressing down next frame; airborne keeps accumulating gravity.
+    if (grounded.current && newVelocity.y < 0) newVelocity.y = -1;
 
-    if (newPosition.y <= 1) {
-      newPosition.y = 1;
-      newVelocity.y = 0;
-      setIsGrounded(true);
-    } else {
-      setIsGrounded(false);
-    }
-
-    // Horizontal push-out against buildings (XZ only; y already resolved).
-    resolveCollision(newPosition, 0.5, collidersRef.current);
+    const newPosition = outPos.current;
+    newPosition.x += move.x;
+    newPosition.y += move.y;
+    newPosition.z += move.z;
 
     const worldRadius = 100;
     const distFromCenterSq =
@@ -263,9 +305,17 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
       newVelocity.z = 0;
     }
 
-    setPosition(newPosition);
-    setVelocity(newVelocity);
-    setRotation(mouseX.current);
+    body.setNextKinematicTranslation({
+      x: newPosition.x,
+      y: newPosition.y,
+      z: newPosition.z,
+    });
+
+    // The RigidBody applies the translation after the physics step; keep the
+    // facing on the visual group so the capsule itself never rotates.
+    if (visualRef.current) {
+      visualRef.current.rotation.y = mouseX.current;
+    }
 
     // Feed the animation blender the horizontal ground speed.
     speedRef.current = Math.sqrt(
@@ -273,44 +323,57 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
     );
 
     // Procedural footsteps — free Web Audio, rate-limited inside gameAudio.
-    if (isGrounded) gameAudio.footstep(speedRef.current);
+    if (grounded.current) gameAudio.footstep(speedRef.current);
 
     onUpdate(newPosition, mouseX.current);
   });
 
   return (
-    <group ref={playerRef} position={position} rotation={[0, rotation, 0]}>
-      {/* Rigged animated character; feet sit 1 unit below the physics
-          center (capsule-era convention kept so collisions/camera match).
-          The Soldier mesh faces +Z, our forward is -Z, hence the flip. */}
-      <group position={[0, -1, 0]} rotation={[0, Math.PI, 0]}>
-        <CharacterModel
-          speedRef={speedRef}
-          flashRef={flash}
-          tint={tint}
-          accent={accent}
-          accent2={accent2}
-          skinTone={skinTone}
-          gear={gear}
-          archetype={archetype}
-          bodyScale={bodyScale}
+    <RigidBody
+      ref={bodyRef}
+      type="kinematicPosition"
+      colliders={false}
+      enabledRotations={[false, false, false]}
+      // Spawn with the controller's offset of ground clearance so the
+      // capsule doesn't start in exact contact and pop up on frame one.
+      position={[0, PLAYER_CAPSULE.centerY + CHARACTER_CONTROLLER.offset, 0]}
+    >
+      <CapsuleCollider
+        args={[PLAYER_CAPSULE.halfHeight, PLAYER_CAPSULE.radius]}
+      />
+      <group ref={visualRef}>
+        {/* Rigged animated character; feet sit 1 unit below the physics
+            center (capsule bottom = body center - 1, same convention as the
+            old manual loop). Soldier faces +Z, forward is -Z, hence flip. */}
+        <group position={[0, -1, 0]} rotation={[0, Math.PI, 0]}>
+          <CharacterModel
+            speedRef={speedRef}
+            flashRef={flash}
+            tint={tint}
+            accent={accent}
+            accent2={accent2}
+            skinTone={skinTone}
+            gear={gear}
+            archetype={archetype}
+            bodyScale={bodyScale}
+          />
+        </group>
+
+        {stamina < 100 && (
+          <mesh position={[0, 2.5, 0]}>
+            <planeGeometry args={[1, 0.1]} />
+            <meshBasicMaterial color="#c03a30" transparent opacity={0.7} />
+          </mesh>
+        )}
+
+        <pointLight
+          position={[0, 1, 0]}
+          intensity={0.4}
+          distance={5}
+          color="#c03a30"
         />
       </group>
-
-      {stamina < 100 && (
-        <mesh position={[0, 2.5, 0]}>
-          <planeGeometry args={[1, 0.1]} />
-          <meshBasicMaterial color="#c03a30" transparent opacity={0.7} />
-        </mesh>
-      )}
-
-      <pointLight
-        position={[0, 1, 0]}
-        intensity={0.4}
-        distance={5}
-        color="#c03a30"
-      />
-    </group>
+    </RigidBody>
   );
 };
 

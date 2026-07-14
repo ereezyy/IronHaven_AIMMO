@@ -24,6 +24,7 @@ import {
   Noise,
 } from '@react-three/postprocessing';
 import { KernelSize, BlendFunction } from 'postprocessing';
+import { Physics, CuboidCollider } from '@react-three/rapier';
 import * as THREE from 'three';
 import { useGameStore } from '../store/gameState';
 import { persistenceService } from '../lib/persistence';
@@ -39,6 +40,10 @@ import BlackMarket from './BlackMarket';
 import AtmosphereOverlay from './AtmosphereOverlay';
 import { Npc } from '../game/npc';
 import { DialogueOption } from '../game/dialogue';
+import {
+  buildingColliderSpecs,
+  groundColliderSpec,
+} from '../game/physicsColliders';
 import {
   attackCooldownMs,
   buildStreetObjectives,
@@ -203,6 +208,26 @@ const LoadingScreen: React.FC = () => {
         {Math.round(progress)}% · streaming district assets
       </div>
     </div>
+  );
+};
+
+// Fixed Rapier colliders for the static world: one ground slab plus one
+// cuboid per city building. Standalone colliders (no RigidBody parent) are
+// fixed, so this is pure setup cost — nothing here ever steps.
+const StaticWorldColliders: React.FC = () => {
+  const buildings = React.useMemo(() => buildingColliderSpecs(), []);
+  const ground = React.useMemo(() => groundColliderSpec(), []);
+  return (
+    <>
+      <CuboidCollider args={ground.halfExtents} position={ground.position} />
+      {buildings.map((b, i) => (
+        <CuboidCollider
+          key={`bcol-${i}`}
+          args={b.halfExtents}
+          position={b.position}
+        />
+      ))}
+    </>
   );
 };
 
@@ -1521,22 +1546,28 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
                 patrol drones. */}
             <AmbientVFX playerPosRef={playerPosRef} />
 
-            <MMOPlayer
-              key={spawnKey}
-              playerId={playerId}
-              onUpdate={handlePlayerUpdate}
-              flashApi={playerFlashApi}
-              staminaRef={staminaRef}
-              tint={gameStore.character.appearance.tint}
-              accent={gameStore.character.appearance.accent}
-              accent2={gameStore.character.appearance.accent2}
-              skinTone={gameStore.character.appearance.skinTone}
-              gear={gameStore.character.appearance.gear}
-              archetype={gameStore.character.archetype}
-              bodyScale={gameStore.character.appearance.bodyScale}
-              drivingRef={drivingRef}
-              externalPosRef={playerPosRef}
-            />
+            {/* Rapier world: kinematic player capsule vs fixed ground +
+                building cuboids. timeStep="vary" keeps physics in lockstep
+                with useFrame so onUpdate/broadcast cadence is unchanged. */}
+            <Physics timeStep="vary" gravity={[0, -25, 0]} colliders={false}>
+              <StaticWorldColliders />
+              <MMOPlayer
+                key={spawnKey}
+                playerId={playerId}
+                onUpdate={handlePlayerUpdate}
+                flashApi={playerFlashApi}
+                staminaRef={staminaRef}
+                tint={gameStore.character.appearance.tint}
+                accent={gameStore.character.appearance.accent}
+                accent2={gameStore.character.appearance.accent2}
+                skinTone={gameStore.character.appearance.skinTone}
+                gear={gameStore.character.appearance.gear}
+                archetype={gameStore.character.archetype}
+                bodyScale={gameStore.character.appearance.bodyScale}
+                drivingRef={drivingRef}
+                externalPosRef={playerPosRef}
+              />
+            </Physics>
 
             <NPCManager
               playerPosRef={playerPosRef}
