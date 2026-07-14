@@ -3,7 +3,12 @@ import { useFrame } from '@react-three/fiber';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import { SkeletonUtils } from 'three-stdlib';
 import * as THREE from 'three';
-import type { GearLevel } from '../game/character';
+import type { GearLevel, ArchetypeId } from '../game/character';
+import {
+  archetypeAttachments,
+  Attachment,
+  ColorRole,
+} from '../game/archetypeVisuals';
 
 const MODEL_URL = '/models/soldier.glb';
 
@@ -27,6 +32,8 @@ interface CharacterModelProps {
   skinTone?: string;
   /** Procedural gear tier layered over the base model. */
   gear?: GearLevel;
+  /** Archetype whose procedural silhouette (scarf/plate/hood/coat) is drawn. */
+  archetype?: ArchetypeId;
   /** Body scale from character creator. */
   bodyScale?: number;
   /** Optional ref that receives a "flash" trigger for hit feedback. */
@@ -35,6 +42,7 @@ interface CharacterModelProps {
 
 interface GearRig {
   h: number;
+  minY: number;
   headY: number;
   neckY: number;
   shoulderY: number;
@@ -42,6 +50,70 @@ interface GearRig {
   chestY: number;
   chestZ: number;
 }
+
+/** Colors resolved from the creator swatches, keyed by attachment ColorRole. */
+type AttachmentColors = Record<ColorRole, string>;
+
+/**
+ * Per-archetype procedural silhouette (runner scarf/satchel, enforcer
+ * plate/pauldron, ghost hood/visor, fixer coat/case). Recipe fractions are
+ * resolved to world units against the measured rig: y is a floor-fraction
+ * (minY + frac*h); x/z and all sizes are height-fractions. Data lives in
+ * archetypeVisuals.ts so it stays pure and unit-tested.
+ */
+const ArchetypeAttachments: React.FC<{
+  archetype: ArchetypeId;
+  rig: GearRig;
+  colors: AttachmentColors;
+}> = ({ archetype, rig, colors }) => {
+  const parts = archetypeAttachments(archetype);
+  if (parts.length === 0) return null;
+  const h = rig.h;
+  const geom = (a: Attachment) => {
+    if (a.kind === 'sphere') {
+      return (
+        <sphereGeometry
+          args={[
+            a.size[0] * h,
+            16,
+            12,
+            0,
+            Math.PI * 2,
+            0,
+            a.thetaLength ?? Math.PI,
+          ]}
+        />
+      );
+    }
+    if (a.kind === 'cylinder') {
+      return (
+        <cylinderGeometry
+          args={[a.size[0] * h, a.size[1] * h, a.size[2] * h, 12]}
+        />
+      );
+    }
+    return <boxGeometry args={[a.size[0] * h, a.size[1] * h, a.size[2] * h]} />;
+  };
+  return (
+    <group>
+      {parts.map((a, i) => (
+        <mesh
+          key={`${a.kind}-${i}`}
+          position={[a.pos[0] * h, rig.minY + a.pos[1] * h, a.pos[2] * h]}
+          rotation={a.rot ?? [0, 0, 0]}
+          castShadow
+        >
+          {geom(a)}
+          <meshStandardMaterial
+            color={colors[a.color]}
+            metalness={a.metalness ?? 0.3}
+            roughness={a.roughness ?? 0.6}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+};
 
 /**
  * Primitive-only armor layered over the base model. `light` adds shoulder
@@ -98,6 +170,7 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
   accent2 = '#2b2f36',
   skinTone = '#e0b48c',
   gear = 'none',
+  archetype,
   bodyScale = 1,
   flashRef,
 }) => {
@@ -120,6 +193,7 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
     const h = Math.max(0.001, maxY - minY);
     return {
       h,
+      minY,
       headY: maxY - h * 0.05,
       neckY: minY + h * 0.82,
       shoulderY: minY + h * 0.8,
@@ -201,6 +275,13 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
         <meshStandardMaterial color={skinTone} roughness={0.8} />
       </mesh>
       <ProceduralGear gear={gear} accent2={accent2} rig={rig} />
+      {archetype && (
+        <ArchetypeAttachments
+          archetype={archetype}
+          rig={rig}
+          colors={{ tint, accent, accent2, skin: skinTone }}
+        />
+      )}
     </group>
   );
 };

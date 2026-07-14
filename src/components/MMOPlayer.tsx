@@ -9,7 +9,7 @@ import {
   buildBuildingColliders,
   resolveCollision,
 } from '../game/worldCollision';
-import type { GearLevel } from '../game/character';
+import type { GearLevel, ArchetypeId } from '../game/character';
 
 interface MMOPlayerProps {
   playerId: string;
@@ -22,6 +22,7 @@ interface MMOPlayerProps {
   accent2?: string;
   skinTone?: string;
   gear?: GearLevel;
+  archetype?: ArchetypeId;
   bodyScale?: number;
   /** Hide mesh while driving a vehicle. */
   hiddenRef?: React.MutableRefObject<boolean>;
@@ -41,6 +42,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
   accent2 = '#2b2f36',
   skinTone = '#e0b48c',
   gear = 'none',
+  archetype,
   bodyScale = 1,
   hiddenRef,
   drivingRef,
@@ -290,6 +292,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
           accent2={accent2}
           skinTone={skinTone}
           gear={gear}
+          archetype={archetype}
           bodyScale={bodyScale}
         />
       </group>

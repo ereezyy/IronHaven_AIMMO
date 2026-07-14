@@ -1532,6 +1532,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
               accent2={gameStore.character.appearance.accent2}
               skinTone={gameStore.character.appearance.skinTone}
               gear={gameStore.character.appearance.gear}
+              archetype={gameStore.character.archetype}
               bodyScale={gameStore.character.appearance.bodyScale}
               drivingRef={drivingRef}
               externalPosRef={playerPosRef}
