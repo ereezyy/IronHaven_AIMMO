@@ -9,6 +9,12 @@ import {
   Attachment,
   ColorRole,
 } from '../game/archetypeVisuals';
+import {
+  HIT_FLINCH,
+  flinchStrength,
+  collapseProgress,
+  collapsePose,
+} from '../game/hitReaction';
 
 const MODEL_URL = '/models/soldier.glb';
 
@@ -38,6 +44,8 @@ interface CharacterModelProps {
   bodyScale?: number;
   /** Optional ref that receives a "flash" trigger for hit feedback. */
   flashRef?: React.MutableRefObject<number>;
+  /** When true, plays the procedural death collapse (Stage D). */
+  deadRef?: React.MutableRefObject<boolean>;
 }
 
 interface GearRig {
@@ -173,6 +181,7 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
   archetype,
   bodyScale = 1,
   flashRef,
+  deadRef,
 }) => {
   const group = useRef<THREE.Group>(null);
   const { scene, animations } = useGLTF(MODEL_URL);
@@ -182,6 +191,25 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
   const { actions, mixer } = useAnimations(animations, group);
   const current = useRef<string>('Idle');
   const materials = useRef<THREE.MeshStandardMaterial[]>([]);
+  // Seconds since death started; -1 while alive (collapse not running).
+  const deathClock = useRef(-1);
+
+  // Flinch targets resolved once per clone; missing bones are skipped so a
+  // future rig swap can never crash the frame loop. GLTFLoader sanitizes
+  // node names (strips ':'), so look up the sanitized spelling first.
+  const flinchBones = useMemo(() => {
+    const found: { bone: THREE.Bone; amplitude: [number, number, number] }[] =
+      [];
+    for (const f of HIT_FLINCH) {
+      const obj =
+        clone.getObjectByName(f.bone.replace(/:/g, '')) ??
+        clone.getObjectByName(f.bone);
+      if (obj && (obj as THREE.Bone).isBone) {
+        found.push({ bone: obj as THREE.Bone, amplitude: f.amplitude });
+      }
+    }
+    return found;
+  }, [clone]);
 
   // Anchor points for procedural gear, derived once from the model's bounds.
   // Horizontal offsets use height fractions (not the raw width) so a T/A-pose
@@ -260,6 +288,42 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
       flashRef.current = Math.max(0, flashRef.current - delta * 4);
       for (const mat of materials.current) {
         mat.emissiveIntensity = flashRef.current;
+      }
+    }
+
+    // Additive hit flinch: the mixer (registered by useAnimations before this
+    // callback) has already posed the skeleton this frame, so nudging bone
+    // rotations here layers recoil on top of Idle/Walk/Run. Skipped while
+    // dead — a frozen mixer stops rewriting poses, so nudges would accumulate.
+    const flinch = deadRef?.current
+      ? 0
+      : flinchStrength(flashRef?.current ?? 0);
+    if (flinch > 0.001) {
+      for (const { bone, amplitude } of flinchBones) {
+        bone.rotation.x += amplitude[0] * flinch;
+        bone.rotation.y += amplitude[1] * flinch;
+        bone.rotation.z += amplitude[2] * flinch;
+      }
+    }
+
+    // Death collapse: pitch the whole model around the feet while the
+    // animation freezes. Respawn remounts the player (spawnKey), so the
+    // reset branch only matters if health is restored without a remount.
+    const g = group.current;
+    if (deadRef?.current) {
+      deathClock.current =
+        deathClock.current < 0 ? 0 : deathClock.current + delta;
+      const pose = collapsePose(collapseProgress(deathClock.current));
+      if (g) {
+        g.rotation.x = pose.pitch;
+        g.position.y = -pose.sink * rig.h;
+      }
+      mixer.timeScale *= pose.mixerScale;
+    } else if (deathClock.current >= 0) {
+      deathClock.current = -1;
+      if (g) {
+        g.rotation.x = 0;
+        g.position.y = 0;
       }
     }
   });

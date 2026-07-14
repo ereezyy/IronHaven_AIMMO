@@ -420,6 +420,9 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
   const [deathPenalty, setDeathPenalty] = useState(0);
   const deathHandled = useRef(false);
   const isDead = gameStore.playerStats.health <= 0;
+  // Ref mirror of isDead so the R3F frame loops read it without re-render.
+  const deadRef = useRef(isDead);
+  deadRef.current = isDead;
   const staminaRef = useRef(100);
   const [hasTalked, setHasTalked] = useState(false);
   const rewardedObjectives = useRef<Set<string>>(new Set());
@@ -1566,6 +1569,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
                 bodyScale={gameStore.character.appearance.bodyScale}
                 drivingRef={drivingRef}
                 externalPosRef={playerPosRef}
+                deadRef={deadRef}
               />
             </Physics>
 

@@ -34,6 +34,8 @@ interface MMOPlayerProps {
   drivingRef?: React.MutableRefObject<boolean>;
   /** Snap back after vehicle exit / respawn. */
   externalPosRef?: React.MutableRefObject<THREE.Vector3>;
+  /** When true, locomotion stops and the model plays the death collapse. */
+  deadRef?: React.MutableRefObject<boolean>;
 }
 
 const MMOPlayer: React.FC<MMOPlayerProps> = ({
@@ -51,6 +53,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
   hiddenRef,
   drivingRef,
   externalPosRef,
+  deadRef,
 }) => {
   const { gl } = useThree();
   const { world } = useRapier();
@@ -153,6 +156,13 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
     }
 
     if (visualRef.current) visualRef.current.visible = !hiddenRef?.current;
+
+    // Dead: freeze locomotion so the collapse plays in place. CharacterModel
+    // owns the visual; respawn remounts this component via spawnKey.
+    if (deadRef?.current) {
+      speedRef.current = 0;
+      return;
+    }
 
     const t = body.translation();
     outPos.current.set(t.x, t.y, t.z);
@@ -356,6 +366,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
             gear={gear}
             archetype={archetype}
             bodyScale={bodyScale}
+            deadRef={deadRef}
           />
         </group>
 
