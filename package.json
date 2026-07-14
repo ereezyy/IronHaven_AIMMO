@@ -16,7 +16,12 @@
     "clean": "rm -rf dist node_modules/.vite",
     "start": "npm run dev",
     "prepare": "husky",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "setup:prod": "node scripts/setup-production-env.mjs",
+    "pass-api": "node server/pass-api.mjs",
+    "webhook:create": "node scripts/create-stripe-webhook.mjs",
+    "deploy": "npx vercel deploy --prod --yes",
+    "payment-link:success": "node scripts/update-payment-link-success.mjs"
   },
   "keywords": [
     "game",

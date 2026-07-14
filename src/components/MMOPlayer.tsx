@@ -3,17 +3,37 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useKeyboardControls } from '@react-three/drei';
 import * as THREE from 'three';
 import CharacterModel from './CharacterModel';
+import { gameAudio } from '../lib/gameAudio';
+import { useGameStore } from '../store/gameState';
 
 interface MMOPlayerProps {
   playerId: string;
   onUpdate: (position: THREE.Vector3, rotation: number) => void;
   flashApi?: React.MutableRefObject<(() => void) | null>;
+  /** Live stamina written every frame for the HUD (no React re-render). */
+  staminaRef?: React.MutableRefObject<number>;
+  tint?: string;
+  accent?: string;
+  bodyScale?: number;
+  /** Hide mesh while driving a vehicle. */
+  hiddenRef?: React.MutableRefObject<boolean>;
+  /** When true, skip locomotion (vehicle owns position). */
+  drivingRef?: React.MutableRefObject<boolean>;
+  /** Snap back after vehicle exit / respawn. */
+  externalPosRef?: React.MutableRefObject<THREE.Vector3>;
 }
 
 const MMOPlayer: React.FC<MMOPlayerProps> = ({
   playerId,
   onUpdate,
   flashApi,
+  staminaRef,
+  tint = '#d4d5d8',
+  accent = '#c03a30',
+  bodyScale = 1,
+  hiddenRef,
+  drivingRef,
+  externalPosRef,
 }) => {
   const { camera, gl } = useThree();
   const playerRef = useRef<THREE.Group>(null);
@@ -76,9 +96,69 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
   }, [gl]);
 
   useFrame((state, delta) => {
+    if (drivingRef?.current) {
+      // Vehicle owns locomotion; hide on-foot mesh and mirror camera target.
+      if (playerRef.current) {
+        playerRef.current.visible = false;
+      }
+      speedRef.current = 0;
+      return;
+    }
+
+    if (playerRef.current) playerRef.current.visible = !(hiddenRef?.current);
+
+    // After exiting a vehicle, snap on-foot controller to world position.
+    if (externalPosRef) {
+      const e = externalPosRef.current;
+      if (position.distanceToSquared(e) > 6) {
+        setPosition(e.clone());
+        setVelocity(new THREE.Vector3(0, 0, 0));
+      }
+    }
+
     const { forward, backward, left, right, jump, sprint } = get();
 
-    const moveSpeed = sprint && stamina > 0 ? 8 : 4;
+    // Soft gamepad support (first connected pad).
+    let padFwd = 0;
+    let padRight = 0;
+    let padJump = false;
+    let padSprint = false;
+    let lookDx = 0;
+    let lookDy = 0;
+    try {
+      const pads = navigator.getGamepads?.() || [];
+      const gp = pads[0] || pads[1];
+      if (gp) {
+        const dead = 0.22;
+        const lx = Math.abs(gp.axes[0]) > dead ? gp.axes[0] : 0;
+        const ly = Math.abs(gp.axes[1]) > dead ? gp.axes[1] : 0;
+        const rx = Math.abs(gp.axes[2]) > dead ? gp.axes[2] : 0;
+        const ry = Math.abs(gp.axes[3]) > dead ? gp.axes[3] : 0;
+        padRight = lx;
+        padFwd = -ly;
+        lookDx = -rx * 0.04;
+        lookDy = -ry * 0.03;
+        padJump = gp.buttons[0]?.pressed || false;
+        padSprint =
+          gp.buttons[6]?.pressed ||
+          gp.buttons[7]?.pressed ||
+          gp.buttons[10]?.pressed ||
+          false;
+      }
+    } catch {
+      /* ignore */
+    }
+
+    if (lookDx || lookDy) {
+      mouseX.current += lookDx;
+      mouseY.current = Math.max(
+        -Math.PI / 2,
+        Math.min(Math.PI / 2, mouseY.current + lookDy)
+      );
+    }
+
+    const moveSpeed =
+      (sprint || padSprint) && stamina > 0 ? 8 : 4;
     const acceleration = 30;
     const friction = 10;
     const jumpForce = 8;
@@ -90,6 +170,8 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
     if (backward) inputVector.z += 1;
     if (left) inputVector.x -= 1;
     if (right) inputVector.x += 1;
+    inputVector.x += padRight;
+    inputVector.z -= padFwd;
 
     if (inputVector.length() > 0) {
       inputVector.normalize();
@@ -113,13 +195,24 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
       newVelocity.z *= scale;
     }
 
-    if (sprint && (forward || backward || left || right) && stamina > 0) {
-      setStamina((prev) => Math.max(0, prev - 30 * delta));
+    let nextStamina = stamina;
+    const drainMod = useGameStore.getState().getModifiers().staminaDrain;
+    const moving =
+      forward ||
+      backward ||
+      left ||
+      right ||
+      Math.abs(padFwd) > 0.05 ||
+      Math.abs(padRight) > 0.05;
+    if ((sprint || padSprint) && moving && stamina > 0) {
+      nextStamina = Math.max(0, stamina - 30 * drainMod * delta);
     } else {
-      setStamina((prev) => Math.min(100, prev + 20 * delta));
+      nextStamina = Math.min(100, stamina + 20 * delta);
     }
+    if (nextStamina !== stamina) setStamina(nextStamina);
+    if (staminaRef) staminaRef.current = nextStamina;
 
-    if (jump && isGrounded) {
+    if ((jump || padJump) && isGrounded) {
       newVelocity.y = jumpForce;
       setIsGrounded(false);
     }
@@ -162,6 +255,9 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
       newVelocity.x * newVelocity.x + newVelocity.z * newVelocity.z
     );
 
+    // Procedural footsteps — free Web Audio, rate-limited inside gameAudio.
+    if (isGrounded) gameAudio.footstep(speedRef.current);
+
     onUpdate(newPosition, mouseX.current);
   });
 
@@ -171,7 +267,13 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
           center (capsule-era convention kept so collisions/camera match).
           The Soldier mesh faces +Z, our forward is -Z, hence the flip. */}
       <group position={[0, -1, 0]} rotation={[0, Math.PI, 0]}>
-        <CharacterModel speedRef={speedRef} flashRef={flash} />
+        <CharacterModel
+          speedRef={speedRef}
+          flashRef={flash}
+          tint={tint}
+          accent={accent}
+          bodyScale={bodyScale}
+        />
       </group>
 
       {stamina < 100 && (

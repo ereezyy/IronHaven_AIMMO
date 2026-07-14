@@ -12,16 +12,28 @@ export interface Weapon {
   ammo: number;
   maxAmmo: number;
   reloadTime: number; // seconds
-  weaponType: 'pistol' | 'rifle' | 'shotgun' | 'sniper' | 'energy';
+  weaponType: 'melee' | 'pistol' | 'rifle' | 'shotgun' | 'sniper' | 'energy';
   rarity: 'common' | 'rare' | 'epic' | 'legendary';
 }
 
 export const weapons: Weapon[] = [
   {
+    id: 'fists',
+    name: 'Fists',
+    damage: 14,
+    range: 2.6,
+    fireRate: 2.6,
+    ammo: 0,
+    maxAmmo: 0,
+    reloadTime: 0,
+    weaponType: 'melee',
+    rarity: 'common',
+  },
+  {
     id: 'cyber_pistol',
     name: 'Cyber Pistol',
     damage: 25,
-    range: 15,
+    range: 4.5,
     fireRate: 3,
     ammo: 12,
     maxAmmo: 12,

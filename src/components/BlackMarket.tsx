@@ -6,12 +6,16 @@ interface BlackMarketProps {
   onClose: () => void;
 }
 
+// Per-rarity street prices. Fists are free (starter); common guns cost cash
+// so the armory loop actually matters instead of free loot on spawn.
 export const WEAPON_PRICE: Record<string, number> = {
-  common: 0,
+  common: 500,
   rare: 1500,
   epic: 4000,
   legendary: 9000,
 };
+
+export const STARTER_WEAPON_ID = 'fists';
 
 export const UPGRADE_STEP = 5;
 export const MAX_SKILL_LEVEL = 50;
@@ -50,8 +54,8 @@ const BlackMarket: React.FC<BlackMarketProps> = ({ onClose }) => {
     });
   };
 
-  const owns = (id: string, rarity: string) =>
-    WEAPON_PRICE[rarity] === 0 || inventory.includes(id);
+  const owns = (id: string, _rarity: string) =>
+    id === STARTER_WEAPON_ID || inventory.includes(id);
 
   const acquire = (id: string, rarity: string) => {
     if (owns(id, rarity)) {
@@ -66,7 +70,7 @@ const BlackMarket: React.FC<BlackMarketProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="absolute inset-0 z-30 flex items-center justify-center font-mono">
+    <div className="absolute inset-0 z-40 flex items-center justify-center font-mono bg-black/55 backdrop-blur-[2px]">
       <div className="w-full max-w-2xl mx-4 border border-[#222428] bg-black/90 backdrop-blur-sm">
         <div className="flex items-center justify-between border-b border-[#1a1c1f] px-5 py-3">
           <span className="text-[11px] tracking-[0.28em] uppercase text-neutral-200">

@@ -31,6 +31,42 @@ export interface AIConfiguration {
 
 export const AI_PROVIDERS: AIProvider[] = [
   {
+    id: 'xai',
+    name: 'xAI Grok',
+    description:
+      'Grok models from xAI — the brain of Iron Haven NPCs and street contracts',
+    requiresApiKey: true,
+    website: 'https://console.x.ai',
+    setupInstructions:
+      'Create an API key at console.x.ai, or set VITE_XAI_API_KEY in .env',
+    models: [
+      {
+        id: 'grok-3-mini',
+        name: 'Grok 3 Mini',
+        description: 'Fast street dialogue and mission generation',
+        type: 'chat',
+        maxTokens: 131072,
+        costLevel: 'low',
+      },
+      {
+        id: 'grok-3',
+        name: 'Grok 3',
+        description: 'Full Grok — richer NPCs and story arcs',
+        type: 'chat',
+        maxTokens: 131072,
+        costLevel: 'medium',
+      },
+      {
+        id: 'grok-2-1212',
+        name: 'Grok 2',
+        description: 'Previous-gen Grok, solid dialogue',
+        type: 'chat',
+        maxTokens: 32768,
+        costLevel: 'low',
+      },
+    ],
+  },
+  {
     id: 'huggingface',
     name: 'Hugging Face',
     description: 'Open-source AI models with free tier',
@@ -177,32 +213,68 @@ export const AI_PROVIDERS: AIProvider[] = [
   },
 ];
 
+function envApiKey(): string {
+  try {
+    const env = import.meta.env as Record<string, string | undefined>;
+    return (
+      env.VITE_XAI_API_KEY?.trim() ||
+      env.VITE_GROK_API_KEY?.trim() ||
+      env.VITE_OPENAI_API_KEY?.trim() ||
+      ''
+    );
+  } catch {
+    return '';
+  }
+}
+
 export class AIConfigManager {
   private static readonly STORAGE_KEY = 'ironhaven-ai-config';
   private static sessionApiKey: string = '';
+  private static envSeeded = false;
   private static readonly DEFAULT_CONFIG: AIConfiguration = {
-    providerId: 'huggingface',
-    modelId: 'gpt2',
+    providerId: 'xai',
+    modelId: 'grok-3-mini',
     apiKey: '',
+    customEndpoint: 'https://api.x.ai/v1/chat/completions',
     parameters: {
-      temperature: 0.8,
-      maxTokens: 100,
+      temperature: 0.85,
+      maxTokens: 120,
       topP: 0.9,
     },
   };
 
-  static getConfiguration(): AIConfiguration {
-    try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
-      if (stored) {
-        const config = JSON.parse(stored);
-        // Inject session API key back into config
-        return { ...this.DEFAULT_CONFIG, ...config, apiKey: this.sessionApiKey };
-      }
-    } catch (error) {
-      console.warn('Failed to load AI configuration:', error);
+  /** Pull API key from env once per session if the player has not typed one. */
+  private static ensureEnvKey(): void {
+    if (this.envSeeded) return;
+    this.envSeeded = true;
+    if (!this.sessionApiKey) {
+      const fromEnv = envApiKey();
+      if (fromEnv) this.sessionApiKey = fromEnv;
     }
-    return { ...this.DEFAULT_CONFIG, apiKey: this.sessionApiKey };
+  }
+
+  static getConfiguration(): AIConfiguration {
+    this.ensureEnvKey();
+    try {
+      if (typeof localStorage !== 'undefined' && localStorage?.getItem) {
+        const stored = localStorage.getItem(this.STORAGE_KEY);
+        if (stored) {
+          const config = JSON.parse(stored);
+          // Inject session API key back into config
+          return {
+            ...this.DEFAULT_CONFIG,
+            ...config,
+            apiKey: this.sessionApiKey || envApiKey(),
+          };
+        }
+      }
+    } catch {
+      // Node / restricted environments: fall through to defaults.
+    }
+    return {
+      ...this.DEFAULT_CONFIG,
+      apiKey: this.sessionApiKey || envApiKey(),
+    };
   }
 
   static saveConfiguration(config: AIConfiguration): void {
@@ -215,10 +287,17 @@ export class AIConfigManager {
       const { apiKey, ...persistentConfig } = config;
 
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(persistentConfig));
-      console.log('AI configuration saved successfully (API key held in memory only)');
+      console.log(
+        'AI configuration saved successfully (API key held in memory only)'
+      );
     } catch (error) {
       console.error('Failed to save AI configuration:', error);
     }
+  }
+
+  static isGrokReady(): boolean {
+    const cfg = this.getConfiguration();
+    return cfg.providerId === 'xai' && Boolean(cfg.apiKey?.trim());
   }
 
   static getProvider(providerId: string): AIProvider | undefined {
@@ -258,8 +337,8 @@ export class AIConfigManager {
       errors.push('Temperature must be between 0 and 2');
     }
 
-    if (config.parameters.maxTokens < 1 || config.parameters.maxTokens > 4096) {
-      errors.push('Max tokens must be between 1 and 4096');
+    if (config.parameters.maxTokens < 1 || config.parameters.maxTokens > 8192) {
+      errors.push('Max tokens must be between 1 and 8192');
     }
 
     return { valid: errors.length === 0, errors };

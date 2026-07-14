@@ -15,12 +15,23 @@ import {
   MELEE_RANGE,
 } from '../game/npc';
 
+export type AttackFn = (damage: number, range?: number) => void;
+
+export interface NpcBlip {
+  x: number;
+  z: number;
+  hostile: boolean;
+  type: string;
+}
+
 interface NPCManagerProps {
   count?: number;
   seed?: number;
   playerPosRef: React.MutableRefObject<THREE.Vector3>;
   onNearest: (npc: Npc | null) => void;
-  attackApi: React.MutableRefObject<((damage: number) => void) | null>;
+  attackApi: React.MutableRefObject<AttackFn | null>;
+  /** Live minimap blips — written every frame, no React re-renders. */
+  blipsRef?: React.MutableRefObject<NpcBlip[]>;
 }
 
 const NPCManager: React.FC<NPCManagerProps> = ({
@@ -29,6 +40,7 @@ const NPCManager: React.FC<NPCManagerProps> = ({
   playerPosRef,
   onNearest,
   attackApi,
+  blipsRef,
 }) => {
   const npcs = useMemo(() => createNpcs(count, seed), [count, seed]);
   const groups = useRef<(THREE.Group | null)[]>([]);
@@ -98,9 +110,25 @@ const NPCManager: React.FC<NPCManagerProps> = ({
         money += e.money || 0;
         if (e.npc.type === 'police') {
           wanted += 2;
+          // Also bumps totalKills + awards npc_kill XP.
           s.incrementPoliceKillCount();
-        } else if (e.npc.type === 'civilian') {
-          wanted += 1;
+        } else {
+          useGameStore.setState((st) => ({
+            sessionStats: {
+              ...st.sessionStats,
+              totalKills: st.sessionStats.totalKills + 1,
+            },
+          }));
+          const xpAmt =
+            e.npc.type === 'boss'
+              ? 90
+              : e.npc.type === 'hitman'
+                ? 60
+                : e.npc.type === 'gangster'
+                  ? 40
+                  : 28;
+          s.gainXp('npc_kill', xpAmt);
+          if (e.npc.type === 'civilian') wanted += 1;
         }
         s.addAction(`killed_${e.npc.type}`);
       }
@@ -115,10 +143,12 @@ const NPCManager: React.FC<NPCManagerProps> = ({
   };
 
   useEffect(() => {
-    attackApi.current = (damage: number) => {
+    attackApi.current = (damage: number, range?: number) => {
       const p = playerPosRef.current;
+      const reach = range && range > 0 ? range : MELEE_RANGE;
       let target: Npc | null = null;
-      let bestSq = MELEE_RANGE * MELEE_RANGE * 2.2;
+      // Slight grace beyond weapon range so hits feel fair at the edge.
+      let bestSq = reach * reach * 1.15;
       for (const npc of npcs) {
         if (npc.mood === 'dead') continue;
         const dx = npc.x - p.x;
@@ -203,6 +233,21 @@ const NPCManager: React.FC<NPCManagerProps> = ({
     }
 
     applyEvents(events);
+
+    // Feed the HUD minimap without scheduling React renders.
+    if (blipsRef) {
+      const blips: NpcBlip[] = [];
+      for (const npc of npcs) {
+        if (npc.mood === 'dead') continue;
+        blips.push({
+          x: npc.x,
+          z: npc.z,
+          hostile: npc.mood === 'hostile',
+          type: npc.type,
+        });
+      }
+      blipsRef.current = blips;
+    }
 
     // Advance the ink-splatter pool — gravity, integrate, retire expired points.
     const pos = particlePos;

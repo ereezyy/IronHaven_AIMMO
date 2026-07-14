@@ -24,13 +24,14 @@ const player = (over: Partial<PlayerSnapshot> = {}): PlayerSnapshot => ({
 
 // Mirrors how the overlay folds an option's effect into player stats.
 function apply(
-  base: { money: number; rep: number; wanted: number },
+  base: { money: number; rep: number; wanted: number; health: number },
   e?: DialogueEffect
 ) {
   return {
     money: base.money + (e?.money ?? 0),
     rep: base.rep + (e?.rep ?? 0),
     wanted: base.wanted + (e?.wanted ?? 0),
+    health: Math.max(0, Math.min(100, base.health + (e?.health ?? 0))),
   };
 }
 
@@ -91,11 +92,16 @@ describe('dialogue branching', () => {
 });
 
 describe('dialogue effects', () => {
-  it('dealer stim costs money but builds rep', () => {
-    const start = { money: 500, rep: 0, wanted: 0 };
+  it('dealer stim costs money, builds rep, and heals', () => {
+    const start = { money: 500, rep: 0, wanted: 0, health: 40 };
     const buy = npcDialogue(npcOf('dealer'), player()).options[0];
-    expect(buy.effect).toEqual({ money: -120, rep: 3 });
-    expect(apply(start, buy.effect)).toEqual({ money: 380, rep: 3, wanted: 0 });
+    expect(buy.effect).toEqual({ money: -120, rep: 3, health: 40 });
+    expect(apply(start, buy.effect)).toEqual({
+      money: 380,
+      rep: 3,
+      wanted: 0,
+      health: 80,
+    });
   });
 
   it('dealer shakedown gains money, rep, and heat', () => {
@@ -112,7 +118,7 @@ describe('dialogue effects', () => {
   });
 
   it('police bribe lowers wanted at a cost', () => {
-    const start = { money: 200, rep: 0, wanted: 3 };
+    const start = { money: 200, rep: 0, wanted: 3, health: 100 };
     const bribe = npcDialogue(npcOf('police'), player({ wanted: 3 }))
       .options[0];
     expect(bribe.effect).toEqual({ money: -150, wanted: -1 });
@@ -120,6 +126,7 @@ describe('dialogue effects', () => {
       money: 50,
       rep: 0,
       wanted: 2,
+      health: 100,
     });
   });
 

@@ -39,6 +39,90 @@ import BlackMarket from './BlackMarket';
 import AtmosphereOverlay from './AtmosphereOverlay';
 import { Npc } from '../game/npc';
 import { DialogueOption } from '../game/dialogue';
+import {
+  attackCooldownMs,
+  buildStreetObjectives,
+  scaleDamage,
+} from '../game/objectives';
+import { applyCrit } from '../game/skills';
+import SkillTreePanel from './SkillTreePanel';
+import PassPanel from './PassPanel';
+import CutscenePlayer from './CutscenePlayer';
+import LocationTitle from './LocationTitle';
+import MissionBriefing from './MissionBriefing';
+import QuestLogPanel from './QuestLogPanel';
+import ControlsCard from './ControlsCard';
+import KillFeed, { type KillFeedEntry } from './KillFeed';
+import InteractPrompt from './InteractPrompt';
+import GhostLayer from './GhostLayer';
+import GuidedTips from './GuidedTips';
+import { ACTIVE_ABILITIES, type ActiveAbilityId } from '../game/skills';
+import { COLORS } from '../game/uiTheme';
+import {
+  loadGuidedTipsState,
+  currentTip,
+  markTipComplete,
+  dismissGuidedTips,
+  autoCompleteFromSignals,
+  type GuidedTipsState,
+  type TipId,
+} from '../game/guidedTips';
+import {
+  formatPassRemaining,
+  isPassActive as passIsLive,
+} from '../game/subscription';
+import {
+  DISTRICT_DROP_CUTSCENE,
+  FIRST_BLOOD_CUTSCENE,
+  BOSS_APPROACH_CUTSCENE,
+  PASS_WELCOME_CUTSCENE,
+  levelUpCutscene,
+  deathCutscene,
+  factionJoinCutscene,
+  type CutsceneScript,
+} from '../game/cutscenes';
+import type { FactionId } from '../game/factions';
+import {
+  hasSeenDistrictDrop,
+  markDistrictDropSeen,
+  hasSeenControlsCard,
+} from '../game/onboarding';
+import { tickTerritory } from '../game/territory';
+import { STARTER_WEAPON_ID } from './BlackMarket';
+import type { AttackFn } from './NPCManager';
+import { gameAudio } from '../lib/gameAudio';
+import {
+  aiConfigured,
+  aiStreetContract,
+  contractProgress,
+  type StreetContract,
+} from '../lib/npcAi';
+import { llmClient } from '../lib/llmClient';
+import {
+  SUPABASE_CONFIGURED,
+  supabase,
+  isSupabaseRuntimeOffline,
+} from '../lib/supabase';
+import AIConfigPanel from './AIConfigPanel';
+import { weapons } from './WeaponSystem';
+import type { NpcBlip } from './NPCManager';
+import EconomyPanel from './EconomyPanel';
+import HarvestNodes from './HarvestNodes';
+import VehicleLayer, { type VehicleState } from './VehicleLayer';
+import type { HarvestNode } from '../game/economy';
+import type { VehicleSpawn } from '../game/vehicles';
+import type { CharacterBuild } from '../game/character';
+import SocialPanel from './SocialPanel';
+import ShopLayer, { ShopUI } from './ShopLayer';
+import type { WorldShop } from '../game/shops';
+import FishingLayer from './FishingLayer';
+import type { FishSpot } from '../game/fishing';
+import BossLayer, { type BossAttackFn } from './BossLayer';
+import HuntLayer, { type HuntAttackFn } from './HuntLayer';
+import { zoneAt, allowsPvp } from '../game/zones';
+import { getFaction } from '../game/factions';
+import { levelFromXp } from '../game/progression';
+import { WORLD_BOSSES } from '../game/bosses';
 
 interface OtherPlayer {
   id: string;
@@ -48,6 +132,9 @@ interface OtherPlayer {
   health: number;
   level: number;
   lastSeen: number;
+  factionId?: string;
+  pvp?: boolean;
+  clubTag?: string;
 }
 
 // Loss aversion: dying drops a quarter of your cash on the street. Heat (the
@@ -219,9 +306,21 @@ const RemotePlayer: React.FC<{ player: OtherPlayer }> = ({ player }) => {
               textShadow: '0 1px 3px rgba(0,0,0,0.9)',
             }}
           >
-            {player.username}
+            {player.clubTag ? `[${player.clubTag}] ` : ''}
+            <span
+              style={{
+                color: player.factionId
+                  ? getFaction(player.factionId as FactionId).color
+                  : '#e5e5e8',
+              }}
+            >
+              {player.username}
+            </span>
             <span style={{ color: '#8a8d93' }}> · </span>
             <span style={{ color: '#c9a15a' }}>lv {player.level}</span>
+            {player.pvp ? (
+              <span style={{ color: '#c03a30' }}> · PvP</span>
+            ) : null}
           </div>
           <div
             style={{
@@ -251,7 +350,12 @@ const RemotePlayer: React.FC<{ player: OtherPlayer }> = ({ player }) => {
   );
 };
 
-const MMOGame: React.FC = () => {
+interface MMOGameProps {
+  initialCallsign?: string;
+  initialBuild?: CharacterBuild;
+}
+
+const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
   const gameStore = useGameStore();
   const [otherPlayers, setOtherPlayers] = useState<OtherPlayer[]>([]);
   const [playerId] = useState(() => `player_${crypto.randomUUID()}`);
@@ -266,11 +370,13 @@ const MMOGame: React.FC = () => {
   const [nearestNpc, setNearestNpc] = useState<Npc | null>(null);
   const [dialogueNpc, setDialogueNpc] = useState<Npc | null>(null);
   const [marketOpen, setMarketOpen] = useState(false);
+  const [economyOpen, setEconomyOpen] = useState(false);
   const [spawnKey, setSpawnKey] = useState(0);
   const nearestRef = useRef<Npc | null>(null);
   const dialogueOpenRef = useRef(false);
   const marketOpenRef = useRef(false);
-  const attackApi = useRef<((damage: number) => void) | null>(null);
+  const economyOpenRef = useRef(false);
+  const attackApi = useRef<AttackFn | null>(null);
   const playerFlashApi = useRef<(() => void) | null>(null);
   const cameraShake = useRef(0);
   const prevHealth = useRef(gameStore.playerStats.health);
@@ -279,9 +385,115 @@ const MMOGame: React.FC = () => {
   const [deathPenalty, setDeathPenalty] = useState(0);
   const deathHandled = useRef(false);
   const isDead = gameStore.playerStats.health <= 0;
+  const staminaRef = useRef(100);
+  const [hasTalked, setHasTalked] = useState(false);
+  const rewardedObjectives = useRef<Set<string>>(new Set());
+  const [aiPanelOpen, setAiPanelOpen] = useState(false);
+  const [muted, setMuted] = useState(false);
+  const [aiReady, setAiReady] = useState(() => llmClient.isConfigured());
+  const [aiContract, setAiContract] = useState<StreetContract | null>(null);
+  /** Contract waiting on accept/decline briefing. */
+  const [pendingBrief, setPendingBrief] = useState<StreetContract | null>(
+    null
+  );
+  const [aiContractLoading, setAiContractLoading] = useState(false);
+  const [talkCount, setTalkCount] = useState(0);
+  const [contractToast, setContractToast] = useState<string | null>(null);
+  const prevKills = useRef(gameStore.sessionStats.totalKills);
+  const prevWanted = useRef(gameStore.playerStats.wanted);
+  const npcBlipsRef = useRef<NpcBlip[]>([]);
+  const contractPaid = useRef<string | null>(null);
+  const [nearestHarvest, setNearestHarvest] = useState<HarvestNode | null>(null);
+  const [nearestVehicle, setNearestVehicle] = useState<VehicleSpawn | null>(
+    null
+  );
+  const nearestHarvestRef = useRef<HarvestNode | null>(null);
+  const nearestVehicleRef = useRef<VehicleSpawn | null>(null);
+  const harvestApi = useRef<(() => boolean) | null>(null);
+  const vehicleEnterApi = useRef<(() => boolean) | null>(null);
+  const vehicleExitApi = useRef<(() => void) | null>(null);
+  const vehicleState = useRef<VehicleState>({ id: null, driving: false });
+  const drivingRef = useRef(false);
+  const [isDriving, setIsDriving] = useState(false);
+  const [socialOpen, setSocialOpen] = useState(false);
+  const socialOpenRef = useRef(false);
+  const [nearestShop, setNearestShop] = useState<WorldShop | null>(null);
+  const nearestShopRef = useRef<WorldShop | null>(null);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [nearestFish, setNearestFish] = useState<FishSpot | null>(null);
+  const nearestFishRef = useRef<FishSpot | null>(null);
+  const castApi = useRef<(() => void) | null>(null);
+  const fishingRef = useRef(false);
+  const [isFishing, setIsFishing] = useState(false);
+  const bossAttackApi = useRef<BossAttackFn | null>(null);
+  const huntAttackApi = useRef<HuntAttackFn | null>(null);
+  const pvpChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(
+    null
+  );
+  const [zoneLabel, setZoneLabel] = useState('Open Streets');
+  const [levelUpFlash, setLevelUpFlash] = useState<number | null>(null);
+  const prevLevel = useRef(gameStore.playerStats.level);
+  const [skillsOpen, setSkillsOpen] = useState(false);
+  const skillsOpenRef = useRef(false);
+  const [passOpen, setPassOpen] = useState(false);
+  const passOpenRef = useRef(false);
+  const [questOpen, setQuestOpen] = useState(false);
+  const questOpenRef = useRef(false);
+  const [controlsOpen, setControlsOpen] = useState(false);
+  const [killFeed, setKillFeed] = useState<KillFeedEntry[]>([]);
+  const [helpDismissed, setHelpDismissed] = useState(false);
+  const [tipsState, setTipsState] = useState<GuidedTipsState>(() =>
+    loadGuidedTipsState()
+  );
+  const [tipsReady, setTipsReady] = useState(false);
+  const spawnOrigin = useRef(new THREE.Vector3(0, 1, 0));
+  const movedFarRef = useRef(false);
+  const tookJobRef = useRef(false);
+  const openedQuestRef = useRef(false);
+  const openedSkillsRef = useRef(false);
+  const lastTerritoryTick = useRef(0);
+  /** Active full-screen cutscene (null = none). */
+  const [activeCutscene, setActiveCutscene] = useState<CutsceneScript | null>(
+    null
+  );
+  const cutsceneRef = useRef(false);
+  const districtDropDone = useRef(hasSeenDistrictDrop());
+  const firstBloodDone = useRef(false);
+  const bossApproachDone = useRef(false);
+  const prevPassActive = useRef(false);
+  const [zoneSplash, setZoneSplash] = useState<{
+    title: string;
+    sub: string;
+  } | null>(null);
+  const lastZoneSplash = useRef('');
+  const [abilityFlash, setAbilityFlash] = useState<string | null>(null);
+  const [lastCrit, setLastCrit] = useState(false);
+
+  // Unlock procedural audio after the first gesture (autoplay policy).
+  useEffect(() => {
+    const unlock = () => {
+      void gameAudio.unlock();
+    };
+    window.addEventListener('pointerdown', unlock, { once: true });
+    window.addEventListener('keydown', unlock, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, []);
 
   useEffect(() => {
-    gameStore.initializePlayer(`Player_${playerId.slice(-4)}`);
+    if (initialBuild) {
+      gameStore.applyCharacter(initialBuild);
+    }
+    const name =
+      initialBuild?.callsign ||
+      initialCallsign ||
+      (typeof localStorage !== 'undefined'
+        ? localStorage.getItem('ironhaven-username') || undefined
+        : undefined);
+    if (name) gameStore.setUsername(name);
+    gameStore.initializePlayer(name || `Runner_${playerId.slice(-4)}`);
 
     let cancelled = false;
     const toOther = (p: {
@@ -358,18 +570,65 @@ const MMOGame: React.FC = () => {
     lastBroadcastPos.current.copy(position);
     lastCombat.current = inCombat;
 
+    const s = useGameStore.getState();
     persistenceService.updateMultiplayerPlayer({
       id: playerId,
-      username: gameStore.playerId || 'Player',
+      username: s.username || 'Runner',
       position: [position.x, position.y, position.z],
       rotation,
       velocity: [0, 0, 0],
-      health: gameStore.playerStats.health,
-      stamina: 100,
-      level: 1,
+      health: s.playerStats.health,
+      stamina: staminaRef.current,
+      level: s.playerStats.level || levelFromXp(s.playerStats.xp || 0).level,
       isInCombat: inCombat,
     });
+
+    // Zone label + fishing cast progress poll.
+    const z = zoneAt(position.x, position.z);
+    if (z.label !== zoneLabel) setZoneLabel(z.label);
+    if (fishingRef.current !== isFishing) setIsFishing(fishingRef.current);
+
+    // First boss proximity — one-shot cinematic (~22m of a world boss).
+    if (!bossApproachDone.current && districtDropDone.current && !cutsceneRef.current) {
+      for (const b of WORLD_BOSSES) {
+        const dx = b.x - position.x;
+        const dz = b.z - position.z;
+        if (dx * dx + dz * dz < 22 * 22) {
+          bossApproachDone.current = true;
+          cutsceneRef.current = true;
+          setActiveCutscene(BOSS_APPROACH_CUTSCENE);
+          if (document.pointerLockElement) document.exitPointerLock();
+          break;
+        }
+      }
+    }
   };
+
+  // PvP hit channel — open-world player damage.
+  useEffect(() => {
+    if (!SUPABASE_CONFIGURED) return;
+    const ch = supabase.channel('ironhaven-pvp');
+    ch.on('broadcast', { event: 'pvp-hit' }, ({ payload }) => {
+      const hit = payload as {
+        targetId: string;
+        damage: number;
+        from: string;
+      };
+      if (hit.targetId !== playerId && hit.targetId !== gameStore.playerId)
+        return;
+      const s = useGameStore.getState();
+      s.updateStats({
+        health: Math.max(0, s.playerStats.health - (hit.damage || 10)),
+      });
+      gameAudio.play('hit', 0.45);
+      s.addAction(`pvp_hit_by_${hit.from}`);
+    }).subscribe();
+    pvpChannelRef.current = ch;
+    return () => {
+      ch.unsubscribe();
+      pvpChannelRef.current = null;
+    };
+  }, [playerId, gameStore.playerId]);
 
   const handlePlayerUpdate = (position: THREE.Vector3, rotation: number) => {
     playerPosRef.current.copy(position);
@@ -391,6 +650,7 @@ const MMOGame: React.FC = () => {
   const openDialogue = (npc: Npc) => {
     dialogueOpenRef.current = true;
     setDialogueNpc(npc);
+    gameAudio.play('talk', 0.2);
     if (document.pointerLockElement) document.exitPointerLock();
   };
 
@@ -402,6 +662,7 @@ const MMOGame: React.FC = () => {
   const openMarket = () => {
     marketOpenRef.current = true;
     setMarketOpen(true);
+    gameAudio.play('market', 0.2);
     if (document.pointerLockElement) document.exitPointerLock();
   };
 
@@ -410,14 +671,115 @@ const MMOGame: React.FC = () => {
     setMarketOpen(false);
   };
 
+  const requestAiContract = async () => {
+    if (aiContractLoading || pendingBrief || cutsceneRef.current) return;
+    setAiContractLoading(true);
+    const s = useGameStore.getState();
+    const snap = {
+      x: playerPosRef.current.x,
+      z: playerPosRef.current.z,
+      wanted: s.playerStats.wanted,
+      reputation: s.playerStats.reputation,
+      kills: s.sessionStats.totalKills,
+    };
+    const contract = await aiStreetContract(
+      snap,
+      s.playerStats.money,
+      talkCount
+    );
+    contractPaid.current = null;
+    setAiContractLoading(false);
+    // Dossier first — only goes live on Accept.
+    setPendingBrief(contract);
+    if (document.pointerLockElement) document.exitPointerLock();
+    gameAudio.play('ui', 0.15);
+  };
+
+  const acceptBrief = () => {
+    if (!pendingBrief) return;
+    setAiContract(pendingBrief);
+    setPendingBrief(null);
+    tookJobRef.current = true;
+    gameAudio.play('market', 0.3);
+    gameStore.addAction(`contract_accept_${pendingBrief.id}`);
+  };
+
+  const completeTip = useCallback((id: TipId) => {
+    setTipsState((s) => markTipComplete(s, id));
+  }, []);
+
+  const skipTipTour = useCallback(() => {
+    setTipsState((s) => dismissGuidedTips(s));
+  }, []);
+
+  const declineBrief = () => {
+    if (pendingBrief) gameStore.addAction(`contract_decline_${pendingBrief.id}`);
+    setPendingBrief(null);
+    gameAudio.play('ui', 0.1);
+  };
+
+  const handleFactionJoined = (id: FactionId) => {
+    const script = factionJoinCutscene(id);
+    if (!script || cutsceneRef.current) return;
+    cutsceneRef.current = true;
+    setActiveCutscene(script);
+    if (document.pointerLockElement) document.exitPointerLock();
+  };
+
+  // Complete Grok/street contracts when mechanical goals are met.
+  useEffect(() => {
+    if (!aiContract || contractPaid.current === aiContract.id) return;
+    const prog = contractProgress(aiContract, {
+      kills: gameStore.sessionStats.totalKills,
+      money: gameStore.playerStats.money,
+      talks: talkCount,
+      reputation: gameStore.playerStats.reputation,
+      wanted: gameStore.playerStats.wanted,
+    });
+    if (!prog.done) return;
+    contractPaid.current = aiContract.id;
+    const reward = aiContract.reward;
+    const title = aiContract.title;
+    gameStore.updateStats({
+      money: gameStore.playerStats.money + reward,
+      reputation: gameStore.playerStats.reputation + 5,
+    });
+    gameStore.gainXp('contract');
+    gameStore.addAction(`contract_done_${aiContract.id}`);
+    gameAudio.play('market', 0.35);
+    setContractToast(`+$${reward} · ${title}`);
+    setAiContract(null);
+    const t = window.setTimeout(() => setContractToast(null), 4000);
+    return () => window.clearTimeout(t);
+  }, [
+    aiContract,
+    talkCount,
+    gameStore.sessionStats.totalKills,
+    gameStore.playerStats.money,
+    gameStore.playerStats.reputation,
+    gameStore.playerStats.wanted,
+    gameStore,
+  ]);
+
   const handleChoose = (option: DialogueOption) => {
+    if (!hasTalked) setHasTalked(true);
+    setTalkCount((n) => n + 1);
+    gameStore.addAction('talked');
+    gameStore.noteBoardEvent('talk');
+    gameStore.gainXp('talk');
     const eff = option.effect;
     if (!eff) return;
     const ps = gameStore.playerStats;
+    // Block purchases the player can't afford (overlay also greys them out).
+    if (eff.money && eff.money < 0 && ps.money + eff.money < 0) return;
     gameStore.updateStats({
-      money: ps.money + (eff.money || 0),
+      money: Math.max(0, ps.money + (eff.money || 0)),
       reputation: Math.max(0, ps.reputation + (eff.rep || 0)),
       wanted: Math.max(0, Math.min(5, ps.wanted + (eff.wanted || 0))),
+      health: Math.max(
+        0,
+        Math.min(100, ps.health + (eff.health || 0))
+      ),
     });
   };
 
@@ -438,6 +800,7 @@ const MMOGame: React.FC = () => {
       playerFlashApi.current?.();
       cameraShake.current = Math.min(1, cameraShake.current + 0.7);
       setHitVignette(true);
+      gameAudio.play('hit', 0.4);
       if (vignetteTimer.current) window.clearTimeout(vignetteTimer.current);
       vignetteTimer.current = window.setTimeout(
         () => setHitVignette(false),
@@ -445,6 +808,208 @@ const MMOGame: React.FC = () => {
       );
     }
   }, [gameStore.playerStats.health]);
+
+  // Kill stinger when session kill count ticks up.
+  useEffect(() => {
+    const k = gameStore.sessionStats.totalKills;
+    if (k > prevKills.current) gameAudio.play('kill', 0.45);
+    prevKills.current = k;
+  }, [gameStore.sessionStats.totalKills]);
+
+  // Level-up cinematic (after district drop).
+  useEffect(() => {
+    const lv = gameStore.playerStats.level;
+    if (lv > prevLevel.current) {
+      setLevelUpFlash(lv);
+      gameAudio.play('market', 0.4);
+      if (districtDropDone.current && !cutsceneRef.current) {
+        cutsceneRef.current = true;
+        setActiveCutscene(levelUpCutscene(lv));
+      }
+      const t = window.setTimeout(() => setLevelUpFlash(null), 3500);
+      prevLevel.current = lv;
+      return () => window.clearTimeout(t);
+    }
+    prevLevel.current = lv;
+  }, [gameStore.playerStats.level]);
+
+  // District drop cinematic once on first enter (skipped if already seen).
+  useEffect(() => {
+    if (districtDropDone.current) {
+      if (!hasSeenControlsCard()) {
+        const t = window.setTimeout(() => setControlsOpen(true), 600);
+        return () => window.clearTimeout(t);
+      }
+      // Controls already seen — enable coach after a short beat.
+      const t = window.setTimeout(() => setTipsReady(true), 800);
+      return () => window.clearTimeout(t);
+    }
+    const t = window.setTimeout(() => {
+      if (districtDropDone.current) return;
+      districtDropDone.current = true;
+      markDistrictDropSeen();
+      cutsceneRef.current = true;
+      setActiveCutscene(DISTRICT_DROP_CUTSCENE);
+      if (document.pointerLockElement) document.exitPointerLock();
+    }, 900);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  // Enable guided tips after controls card closes (or if already dismissed).
+  useEffect(() => {
+    if (controlsOpen) return;
+    if (!districtDropDone.current) return;
+    if (activeCutscene) return;
+    if (hasSeenControlsCard() || tipsReady) {
+      const t = window.setTimeout(() => setTipsReady(true), 400);
+      return () => window.clearTimeout(t);
+    }
+  }, [controlsOpen, activeCutscene, tipsReady]);
+
+  // Poll world signals to auto-complete coach tips.
+  useEffect(() => {
+    if (!tipsReady) return;
+    const id = window.setInterval(() => {
+      const pos = playerPosRef.current;
+      if (!movedFarRef.current) {
+        const d = pos.distanceToSquared(spawnOrigin.current);
+        if (d > 36) movedFarRef.current = true; // ~6m
+      }
+      const harvested =
+        (useGameStore.getState().boardCounters.harvests || 0) > 0;
+      setTipsState((prev) => {
+        if (prev.dismissed || prev.finished) return prev;
+        const next = autoCompleteFromSignals(prev, {
+          pointerLocked: Boolean(document.pointerLockElement),
+          movedFar: movedFarRef.current,
+          talked: hasTalked || talkCount > 0,
+          harvested,
+          tookJob: tookJobRef.current || Boolean(aiContract),
+          openedQuest: openedQuestRef.current,
+          openedSkills: openedSkillsRef.current,
+        });
+        if (
+          next.completed.length === prev.completed.length &&
+          next.finished === prev.finished
+        ) {
+          return prev;
+        }
+        return next;
+      });
+    }, 400);
+    return () => window.clearInterval(id);
+  }, [tipsReady, hasTalked, talkCount, aiContract]);
+
+  const pushFeed = useCallback(
+    (text: string, tone?: KillFeedEntry['tone']) => {
+      setKillFeed((prev) =>
+        [
+          ...prev.slice(-12),
+          {
+            id: crypto.randomUUID(),
+            text,
+            at: Date.now(),
+            tone,
+          },
+        ].slice(-12)
+      );
+    },
+    []
+  );
+
+  // Kill feed when session kills tick.
+  useEffect(() => {
+    const k = gameStore.sessionStats.totalKills;
+    if (k > prevKills.current && k > 0) {
+      pushFeed(`+kill · total ${k}`, 'kill');
+    }
+  }, [gameStore.sessionStats.totalKills, pushFeed]);
+
+  // Territory capture tick ~4Hz
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const now = Date.now();
+      if (now - lastTerritoryTick.current < 200) return;
+      const dt = Math.min(
+        0.5,
+        (now - (lastTerritoryTick.current || now - 250)) / 1000
+      );
+      lastTerritoryTick.current = now;
+      const s = useGameStore.getState();
+      if (s.playerStats.health <= 0) return;
+      const res = tickTerritory(
+        s.territory,
+        s.factionId,
+        playerPosRef.current.x,
+        playerPosRef.current.z,
+        dt
+      );
+      if (res.state !== s.territory) s.setTerritory(res.state);
+      if (res.event) pushFeed(res.event, 'territory');
+      if (res.standingDelta) {
+        s.adjustFactionStanding(
+          res.standingDelta.id,
+          res.standingDelta.delta
+        );
+      }
+    }, 250);
+    return () => window.clearInterval(id);
+  }, [pushFeed]);
+
+  // Periodic board sync (money earned etc.)
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      useGameStore.getState().noteBoardEvent('money');
+    }, 4000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  // First blood one-shot.
+  useEffect(() => {
+    const k = gameStore.sessionStats.totalKills;
+    if (k > 0 && !firstBloodDone.current && districtDropDone.current) {
+      firstBloodDone.current = true;
+      if (!cutsceneRef.current) {
+        cutsceneRef.current = true;
+        setActiveCutscene(FIRST_BLOOD_CUTSCENE);
+        if (document.pointerLockElement) document.exitPointerLock();
+      }
+    }
+  }, [gameStore.sessionStats.totalKills]);
+
+  // Pass welcome when subscription flips on.
+  useEffect(() => {
+    const on = passIsLive(gameStore.pass);
+    if (on && !prevPassActive.current && districtDropDone.current) {
+      if (!cutsceneRef.current) {
+        cutsceneRef.current = true;
+        setActiveCutscene(PASS_WELCOME_CUTSCENE);
+        if (document.pointerLockElement) document.exitPointerLock();
+      }
+    }
+    prevPassActive.current = on;
+  }, [gameStore.pass]);
+
+  // Zone enter splash titles (after district drop cinematic).
+  useEffect(() => {
+    if (!districtDropDone.current) return;
+    if (!zoneLabel || zoneLabel === lastZoneSplash.current) return;
+    if (cutsceneRef.current) return;
+    lastZoneSplash.current = zoneLabel;
+    setZoneSplash({
+      title: zoneLabel,
+      sub: gameStore.pvpEnabled || zoneLabel.toLowerCase().includes('pvp')
+        ? 'open world · pvp live'
+        : 'open world · district',
+    });
+  }, [zoneLabel, gameStore.pvpEnabled]);
+
+  // Siren pulse when heat escalates.
+  useEffect(() => {
+    const w = gameStore.playerStats.wanted;
+    if (w > prevWanted.current) gameAudio.play('siren', 0.25);
+    prevWanted.current = w;
+  }, [gameStore.playerStats.wanted]);
 
   // Apply the death money-penalty exactly once per death (loss aversion).
   useEffect(() => {
@@ -454,49 +1019,341 @@ const MMOGame: React.FC = () => {
     }
     if (deathHandled.current) return;
     deathHandled.current = true;
+    gameAudio.play('death', 0.5);
     const s = useGameStore.getState();
     const lost = Math.round(s.playerStats.money * DEATH_LOSS_FRACTION);
     setDeathPenalty(lost);
     if (lost > 0) s.updateStats({ money: s.playerStats.money - lost });
+    if (!cutsceneRef.current) {
+      cutsceneRef.current = true;
+      setActiveCutscene(deathCutscene(lost));
+      if (document.pointerLockElement) document.exitPointerLock();
+    }
   }, [isDead]);
 
-  // Heat cools off: with no fresh crimes, the wanted level decays one notch at a
-  // time, turning "wanted" into a managed stake instead of a permanent sentence.
+  // Heat cools off — skill "Ghost Walk" accelerates decay.
   useEffect(() => {
     const id = window.setInterval(() => {
       const s = useGameStore.getState();
       const w = s.playerStats.wanted;
-      if (w > 0 && s.playerStats.health > 0) s.updateStats({ wanted: w - 1 });
+      if (w > 0 && s.playerStats.health > 0) {
+        const decay = s.getModifiers().wantedDecay;
+        // Base 1 star / 30s; higher decay rolls chance for extra star.
+        let drop = 1;
+        if (decay > 1.2 && Math.random() < decay - 1) drop = 2;
+        s.updateStats({ wanted: Math.max(0, w - drop) });
+      }
     }, 30000);
     return () => window.clearInterval(id);
   }, []);
 
+  // One-shot cash when a street contract first completes (never during render).
+  useEffect(() => {
+    const s = useGameStore.getState();
+    const hasWeapon =
+      s.currentWeaponId !== STARTER_WEAPON_ID || s.inventory.length > 0;
+    const street = buildStreetObjectives({
+      talked: hasTalked,
+      kills: s.sessionStats.totalKills,
+      money: s.playerStats.money,
+      reputation: s.playerStats.reputation,
+      hasWeapon,
+      combatSkill: s.playerStats.skills.combat,
+    });
+    let bonus = 0;
+    for (const o of street) {
+      if (o.done && !rewardedObjectives.current.has(o.id) && o.reward > 0) {
+        rewardedObjectives.current.add(o.id);
+        bonus += o.reward;
+        s.addAction(`contract_${o.id}`);
+      }
+    }
+    if (bonus > 0) {
+      s.updateStats({ money: s.playerStats.money + bonus });
+    }
+  }, [
+    hasTalked,
+    gameStore.sessionStats.totalKills,
+    gameStore.playerStats.money,
+    gameStore.playerStats.reputation,
+    gameStore.playerStats.skills.combat,
+    gameStore.currentWeaponId,
+    gameStore.inventory,
+  ]);
+
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
+        return;
+      const blocked =
+        dialogueOpenRef.current ||
+        marketOpenRef.current ||
+        economyOpenRef.current ||
+        socialOpenRef.current ||
+        skillsOpenRef.current ||
+        passOpenRef.current ||
+        questOpenRef.current ||
+        cutsceneRef.current ||
+        Boolean(pendingBrief) ||
+        controlsOpen ||
+        shopOpen;
+
+      if (e.code === 'KeyL') {
+        setQuestOpen((v) => {
+          const next = !v;
+          questOpenRef.current = next;
+          if (next) openedQuestRef.current = true;
+          if (!v && document.pointerLockElement) document.exitPointerLock();
+          return next;
+        });
+        gameAudio.play('ui', 0.12);
+        return;
+      }
+
+      if (e.code === 'KeyK') {
+        setSkillsOpen((v) => {
+          const next = !v;
+          skillsOpenRef.current = next;
+          if (next) openedSkillsRef.current = true;
+          if (!v && document.pointerLockElement) document.exitPointerLock();
+          return next;
+        });
+        gameAudio.play('ui', 0.15);
+        return;
+      }
+
+      // Iron Haven Pass ($1.99/wk)
+      if (e.code === 'KeyO') {
+        setPassOpen((v) => {
+          passOpenRef.current = !v;
+          if (!v && document.pointerLockElement) document.exitPointerLock();
+          return !v;
+        });
+        gameAudio.play('ui', 0.15);
+        return;
+      }
+
+      // Ability hotbar 5–8
+      if (
+        !blocked &&
+        (e.code === 'Digit5' ||
+          e.code === 'Digit6' ||
+          e.code === 'Digit7' ||
+          e.code === 'Digit8')
+      ) {
+        const slot = parseInt(e.code.replace('Digit', ''), 10) - 5;
+        const id = useGameStore.getState().abilityBar[slot];
+        if (id) {
+          const res = useGameStore.getState().castAbility(id);
+          if (res.ok) {
+            gameAudio.play('market', 0.25);
+            setAbilityFlash(ACTIVE_ABILITIES[id].name);
+            window.setTimeout(() => setAbilityFlash(null), 1200);
+          } else {
+            gameAudio.play('ui', 0.08);
+          }
+        }
+        return;
+      }
+
+      if (e.code === 'Tab') {
+        e.preventDefault();
+        setEconomyOpen((v) => {
+          economyOpenRef.current = !v;
+          if (!v && document.pointerLockElement) document.exitPointerLock();
+          return !v;
+        });
+        gameAudio.play('ui', 0.12);
+        return;
+      }
       if (e.code === 'KeyB' && !dialogueOpenRef.current) {
         if (marketOpenRef.current) closeMarket();
         else openMarket();
-      } else if (
-        e.code === 'KeyE' &&
-        nearestRef.current &&
-        !dialogueOpenRef.current &&
-        !marketOpenRef.current
-      ) {
-        openDialogue(nearestRef.current);
+      } else if (e.code === 'KeyG') {
+        setAiPanelOpen((v) => !v);
+        if (document.pointerLockElement) document.exitPointerLock();
+      } else if (e.code === 'KeyU') {
+        setSocialOpen((v) => {
+          socialOpenRef.current = !v;
+          if (!v && document.pointerLockElement) document.exitPointerLock();
+          return !v;
+        });
+      } else if (e.code === 'KeyP' && !e.ctrlKey) {
+        const s = useGameStore.getState();
+        s.setPvpEnabled(!s.pvpEnabled);
+        gameAudio.play('siren', 0.12);
+      } else if (e.code === 'KeyM' && !e.ctrlKey && !e.metaKey) {
+        setMuted(gameAudio.toggleMute());
+      } else if (e.code === 'KeyJ') {
+        void requestAiContract();
+      } else if (e.code === 'KeyR' && !blocked) {
+        harvestApi.current?.();
+      } else if (e.code === 'KeyC' && !blocked) {
+        castApi.current?.();
+      } else if (e.code === 'KeyH' && !blocked) {
+        if (useGameStore.getState().useStim()) gameAudio.play('talk', 0.2);
+      } else if (e.code === 'KeyF' && !blocked) {
+        if (drivingRef.current) vehicleExitApi.current?.();
+        else vehicleEnterApi.current?.();
+      } else if (e.code === 'KeyE' && !blocked) {
+        if (nearestRef.current) openDialogue(nearestRef.current);
+        else if (nearestShopRef.current) {
+          setShopOpen(true);
+          if (document.pointerLockElement) document.exitPointerLock();
+          gameAudio.play('market', 0.15);
+        }
       } else if (e.code === 'Escape' && dialogueOpenRef.current) {
         closeDialogue();
       } else if (e.code === 'Escape' && marketOpenRef.current) {
         closeMarket();
+      } else if (e.code === 'Escape' && shopOpen) {
+        setShopOpen(false);
+      } else if (e.code === 'Escape' && economyOpenRef.current) {
+        economyOpenRef.current = false;
+        setEconomyOpen(false);
+      } else if (e.code === 'Escape' && socialOpenRef.current) {
+        socialOpenRef.current = false;
+        setSocialOpen(false);
+      } else if (e.code === 'Escape' && skillsOpenRef.current) {
+        skillsOpenRef.current = false;
+        setSkillsOpen(false);
+      } else if (e.code === 'Escape' && passOpenRef.current) {
+        passOpenRef.current = false;
+        setPassOpen(false);
+      } else if (e.code === 'Escape' && questOpenRef.current) {
+        questOpenRef.current = false;
+        setQuestOpen(false);
+      } else if (e.code === 'Escape' && controlsOpen) {
+        setControlsOpen(false);
+      } else if (e.code === 'Escape' && aiPanelOpen) {
+        setAiPanelOpen(false);
+      } else if (
+        isDead &&
+        !activeCutscene &&
+        (e.code === 'Enter' || e.code === 'Space')
+      ) {
+        respawn();
+      } else if (e.code.startsWith('Digit') && !blocked) {
+        const slot = parseInt(e.code.replace('Digit', ''), 10);
+        if (slot >= 1 && slot <= 4) {
+          const s = useGameStore.getState();
+          const owned = [
+            'fists',
+            ...s.inventory.filter((id) => weapons.some((w) => w.id === id)),
+          ];
+          const loadout = Array.from(new Set(owned));
+          const pick = loadout[slot - 1];
+          if (pick) {
+            s.setCurrentWeaponId(pick);
+            gameAudio.play('ui', 0.12);
+          }
+        }
       }
     };
 
     const handleMouseDown = () => {
-      if (dialogueOpenRef.current || marketOpenRef.current) return;
+      if (
+        dialogueOpenRef.current ||
+        marketOpenRef.current ||
+        economyOpenRef.current ||
+        socialOpenRef.current ||
+        skillsOpenRef.current ||
+        passOpenRef.current ||
+        questOpenRef.current ||
+        cutsceneRef.current ||
+        controlsOpen ||
+        shopOpen ||
+        aiPanelOpen ||
+        drivingRef.current
+      )
+        return;
       if (!document.pointerLockElement) return;
+      if (useGameStore.getState().playerStats.health <= 0) return;
+      const st = useGameStore.getState();
+      const weapon = st.getCurrentWeapon();
+      const combat = st.playerStats.skills.combat;
       const now = Date.now();
-      if (now - lastAttack.current < 380) return;
+      if (now - lastAttack.current < attackCooldownMs(weapon.fireRate)) return;
       lastAttack.current = now;
-      attackApi.current?.(gameStore.getCurrentWeapon().damage);
+
+      // High-end damage pipeline: weapon → combat skill → passives → buffs → crit
+      const mods = st.getModifiers();
+      let base = scaleDamage(weapon.damage, combat);
+      if (now < st.buffs.damageUntil) base = Math.round(base * st.buffs.damageMult);
+      const nextHit = st.consumeNextHitMult();
+      base = Math.round(base * nextHit);
+      const { damage: rolled, crit } = applyCrit(base, mods);
+      setLastCrit(crit);
+      if (crit) window.setTimeout(() => setLastCrit(false), 400);
+
+      let dmg = rolled;
+      attackApi.current?.(dmg, weapon.range);
+
+      // Boss / hunt with specialized multipliers
+      let bossDmg = Math.round(
+        dmg *
+          mods.bossDamage *
+          (now < st.buffs.pvpBossUntil ? st.buffs.pvpBossMult : 1)
+      );
+      bossAttackApi.current?.(bossDmg, weapon.range);
+      huntAttackApi.current?.(
+        Math.round(dmg * mods.huntDamage),
+        weapon.range
+      );
+      gameAudio.play('hit', crit ? 0.35 : 0.22);
+
+      // Open-world PvP
+      const pos = playerPosRef.current;
+      const zone = zoneAt(pos.x, pos.z);
+      if (allowsPvp(zone, st.pvpEnabled)) {
+        let best: OtherPlayer | null = null;
+        let bestSq = weapon.range * weapon.range * 1.4;
+        for (const o of otherPlayers) {
+          if (o.health <= 0) continue;
+          if (zone.kind === 'pve' && !o.pvp && !st.pvpEnabled) continue;
+          const dx = o.position[0] - pos.x;
+          const dz = o.position[2] - pos.z;
+          const d = dx * dx + dz * dz;
+          if (d < bestSq) {
+            bestSq = d;
+            best = o;
+          }
+        }
+        if (best && pvpChannelRef.current) {
+          const pvpDmg = Math.round(
+            dmg *
+              mods.pvpDamage *
+              (now < st.buffs.pvpBossUntil ? st.buffs.pvpBossMult : 1)
+          );
+          pvpChannelRef.current.send({
+            type: 'broadcast',
+            event: 'pvp-hit',
+            payload: {
+              targetId: best.id,
+              damage: pvpDmg,
+              from: st.username,
+            },
+          });
+          setOtherPlayers((prev) =>
+            prev.map((o) =>
+              o.id === best!.id
+                ? { ...o, health: Math.max(0, o.health - pvpDmg) }
+                : o
+            )
+          );
+          if (best.health - pvpDmg <= 0) {
+            st.registerPvpKill();
+            st.updateStats({
+              money: st.playerStats.money + 150,
+              reputation: st.playerStats.reputation + 3,
+            });
+            gameAudio.play('kill', 0.4);
+          }
+        }
+      }
     };
 
     window.addEventListener('keydown', handleKey);
@@ -505,7 +1362,7 @@ const MMOGame: React.FC = () => {
       window.removeEventListener('keydown', handleKey);
       window.removeEventListener('mousedown', handleMouseDown);
     };
-  }, [gameStore]);
+  }, [aiPanelOpen, shopOpen, otherPlayers]);
 
   return (
     <div className="w-full h-screen bg-black relative">
@@ -596,17 +1453,70 @@ const MMOGame: React.FC = () => {
               playerId={playerId}
               onUpdate={handlePlayerUpdate}
               flashApi={playerFlashApi}
+              staminaRef={staminaRef}
+              tint={gameStore.character.appearance.tint}
+              accent={gameStore.character.appearance.accent}
+              bodyScale={gameStore.character.appearance.bodyScale}
+              drivingRef={drivingRef}
+              externalPosRef={playerPosRef}
             />
 
             <NPCManager
               playerPosRef={playerPosRef}
               onNearest={handleNearest}
               attackApi={attackApi}
+              blipsRef={npcBlipsRef}
+            />
+
+            <HarvestNodes
+              playerPosRef={playerPosRef}
+              nearestRef={nearestHarvestRef}
+              onNearest={setNearestHarvest}
+              harvestApi={harvestApi}
+            />
+
+            <VehicleLayer
+              playerPosRef={playerPosRef}
+              playerRotRef={playerRotRef}
+              vehicleState={vehicleState}
+              nearestVehicleRef={nearestVehicleRef}
+              onNearest={setNearestVehicle}
+              enterApi={vehicleEnterApi}
+              exitApi={vehicleExitApi}
+              drivingRef={drivingRef}
+              onDriverUpdate={handlePlayerUpdate}
+              onDrivingChange={setIsDriving}
+            />
+
+            <ShopLayer
+              playerPosRef={playerPosRef}
+              nearestRef={nearestShopRef}
+              onNearest={setNearestShop}
+            />
+
+            <FishingLayer
+              playerPosRef={playerPosRef}
+              nearestRef={nearestFishRef}
+              onNearest={setNearestFish}
+              castApi={castApi}
+              fishingRef={fishingRef}
+            />
+
+            <BossLayer
+              playerPosRef={playerPosRef}
+              bossAttackApi={bossAttackApi}
+            />
+
+            <HuntLayer
+              playerPosRef={playerPosRef}
+              huntAttackApi={huntAttackApi}
             />
 
             {otherPlayers.map((player) => (
               <RemotePlayer key={player.id} player={player} />
             ))}
+
+            {otherPlayers.length === 0 && <GhostLayer />}
 
             <ThirdPersonCamera
               targetRef={playerPosRef}
@@ -659,33 +1569,187 @@ const MMOGame: React.FC = () => {
 
       <AtmosphereOverlay />
 
+      {/* Live systems strip */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 font-mono flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border border-[#222428] bg-black/70 backdrop-blur-sm px-4 py-1.5 text-[10px] tracking-[0.18em] uppercase max-w-[90vw]">
+        <span className="text-neutral-400">
+          {gameStore.club ? `[${gameStore.club.tag}] ` : ''}
+          {gameStore.username || 'Runner'}
+        </span>
+        <span style={{ color: getFaction(gameStore.factionId).color }}>
+          {getFaction(gameStore.factionId).name}
+        </span>
+        <span className="text-neutral-500">{zoneLabel}</span>
+        <span style={{ color: gameStore.pvpEnabled ? '#c03a30' : '#5a5d62' }}>
+          {gameStore.pvpEnabled ? 'pvp armed' : 'pvp off'}
+        </span>
+        <span style={{ color: aiReady ? '#c03a30' : '#5a5d62' }}>
+          {aiReady ? 'grok' : 'scripted'}
+        </span>
+        <span
+          style={{
+            color:
+              SUPABASE_CONFIGURED && !isSupabaseRuntimeOffline()
+                ? '#3f7d4e'
+                : '#5a5d62',
+          }}
+        >
+          {SUPABASE_CONFIGURED && !isSupabaseRuntimeOffline()
+            ? `${otherPlayers.length + 1} online`
+            : otherPlayers.length > 0
+              ? `${otherPlayers.length + 1} online · local`
+              : 'offline · ghosts'}
+        </span>
+        {muted && <span className="text-neutral-500">muted</span>}
+      </div>
+
       <MMOHUD
         health={gameStore.playerStats.health}
-        stamina={100}
+        stamina={staminaRef.current}
         mana={100}
-        level={1}
-        experience={0}
-        maxExperience={100}
-        playersOnline={otherPlayers.length + 1}
+        level={
+          gameStore.playerStats.level ||
+          levelFromXp(gameStore.playerStats.xp || 0).level
+        }
+        experience={
+          levelFromXp(gameStore.playerStats.xp || 0).xpIntoLevel
+        }
+        maxExperience={
+          levelFromXp(gameStore.playerStats.xp || 0).xpForLevel
+        }
+        playersOnline={
+          otherPlayers.length > 0 ? otherPlayers.length + 1 : 1
+        }
         money={gameStore.playerStats.money}
         reputation={gameStore.playerStats.reputation}
         wanted={gameStore.playerStats.wanted}
         kills={gameStore.sessionStats.totalKills}
+        weaponName={gameStore.getCurrentWeapon().name}
+        weaponDamage={scaleDamage(
+          gameStore.getCurrentWeapon().damage,
+          gameStore.playerStats.skills.combat
+        )}
+        objectives={[
+          ...buildStreetObjectives({
+            talked: hasTalked,
+            kills: gameStore.sessionStats.totalKills,
+            money: gameStore.playerStats.money,
+            reputation: gameStore.playerStats.reputation,
+            hasWeapon:
+              gameStore.currentWeaponId !== STARTER_WEAPON_ID ||
+              gameStore.inventory.length > 0,
+            combatSkill: gameStore.playerStats.skills.combat,
+          }),
+          ...(aiContract
+            ? [
+                (() => {
+                  const p = contractProgress(aiContract, {
+                    kills: gameStore.sessionStats.totalKills,
+                    money: gameStore.playerStats.money,
+                    talks: talkCount,
+                    reputation: gameStore.playerStats.reputation,
+                    wanted: gameStore.playerStats.wanted,
+                  });
+                  const tally =
+                    aiContract.goal.kind === 'clear_heat'
+                      ? p.done
+                        ? 'clear'
+                        : `heat ${p.current}`
+                      : `${p.current}/${p.target}`;
+                  return {
+                    id: aiContract.id,
+                    label: `${aiContract.title}: ${p.label} (${tally}) · $${aiContract.reward}`,
+                    done: p.done,
+                  };
+                })(),
+              ]
+            : []),
+        ]}
         playerPosRef={playerPosRef}
         playerRotRef={playerRotRef}
         otherPlayers={otherPlayers}
+        staminaRef={staminaRef}
+        npcBlipsRef={npcBlipsRef}
       />
 
-      <MMOChat />
+      <MMOChat
+        username={gameStore.username}
+        playerId={gameStore.playerId || playerId}
+        playerPosRef={playerPosRef}
+        nearbyPlayers={otherPlayers.map((p) => ({
+          id: p.id,
+          username: p.username,
+          position: p.position,
+        }))}
+      />
 
-      {nearestNpc && !dialogueNpc && !isDead && (
-        <div className="absolute bottom-32 left-1/2 -translate-x-1/2 font-mono border border-[#222428] bg-black/70 backdrop-blur-sm px-5 py-2 text-center">
-          <span className="text-[11px] tracking-[0.18em] uppercase text-neutral-300">
-            press <span style={{ color: '#c03a30' }}>e</span> to talk ·{' '}
-            {nearestNpc.name}
-          </span>
-        </div>
-      )}
+      {/* Single prompt stack — clears hotbar / chat collision. */}
+      {!dialogueNpc &&
+        !shopOpen &&
+        !marketOpen &&
+        !isDead &&
+        !activeCutscene &&
+        !controlsOpen && (
+          <InteractPrompt
+            items={[
+              ...(isDriving
+                ? [
+                    {
+                      id: 'drive',
+                      keyLabel: 'f',
+                      text: 'exit vehicle',
+                    },
+                  ]
+                : []),
+              ...(!isDriving && nearestNpc
+                ? [
+                    {
+                      id: 'npc',
+                      keyLabel: 'e',
+                      text: `talk · ${nearestNpc.name}`,
+                    },
+                  ]
+                : []),
+              ...(!isDriving && nearestShop
+                ? [
+                    {
+                      id: 'shop',
+                      keyLabel: 'e',
+                      text: `shop · ${nearestShop.name}`,
+                    },
+                  ]
+                : []),
+              ...(!isDriving && nearestHarvest
+                ? [
+                    {
+                      id: 'harvest',
+                      keyLabel: 'r',
+                      text: `harvest · ${nearestHarvest.label}`,
+                    },
+                  ]
+                : []),
+              ...(!isDriving && nearestVehicle
+                ? [
+                    {
+                      id: 'vehicle',
+                      keyLabel: 'f',
+                      text: `enter · ${nearestVehicle.label}`,
+                    },
+                  ]
+                : []),
+              ...(!isDriving && nearestFish
+                ? [
+                    {
+                      id: 'fish',
+                      keyLabel: 'c',
+                      text: isFishing
+                        ? 'fishing…'
+                        : `cast · ${nearestFish.label}`,
+                    },
+                  ]
+                : []),
+            ].slice(0, 3)}
+          />
+        )}
 
       {dialogueNpc && (
         <DialogueOverlay
@@ -697,12 +1761,247 @@ const MMOGame: React.FC = () => {
             reputation: gameStore.playerStats.reputation,
             kills: gameStore.playerStats.policeKillCount,
           }}
+          money={gameStore.playerStats.money}
           onChoose={handleChoose}
           onClose={closeDialogue}
         />
       )}
 
       {marketOpen && !isDead && <BlackMarket onClose={closeMarket} />}
+
+      {economyOpen && !isDead && (
+        <EconomyPanel
+          onClose={() => {
+            economyOpenRef.current = false;
+            setEconomyOpen(false);
+          }}
+        />
+      )}
+
+      {socialOpen && (
+        <SocialPanel
+          onClose={() => {
+            socialOpenRef.current = false;
+            setSocialOpen(false);
+          }}
+          onFactionJoined={handleFactionJoined}
+        />
+      )}
+
+      {questOpen && (
+        <QuestLogPanel
+          activeContract={aiContract}
+          talkCount={talkCount}
+          onClose={() => {
+            questOpenRef.current = false;
+            setQuestOpen(false);
+          }}
+        />
+      )}
+
+      {controlsOpen && (
+        <ControlsCard
+          onClose={() => {
+            setControlsOpen(false);
+            setTipsReady(true);
+          }}
+        />
+      )}
+
+      {(() => {
+        const tip = currentTip(tipsState);
+        if (!tip || !tipsReady) return null;
+        const hideCoach =
+          Boolean(activeCutscene) ||
+          controlsOpen ||
+          skillsOpen ||
+          passOpen ||
+          questOpen ||
+          socialOpen ||
+          economyOpen ||
+          marketOpen ||
+          shopOpen ||
+          Boolean(dialogueNpc) ||
+          Boolean(pendingBrief) ||
+          isDead;
+        return (
+          <GuidedTips
+            tip={tip}
+            state={tipsState}
+            onComplete={completeTip}
+            onSkipTour={skipTipTour}
+            hidden={hideCoach}
+          />
+        );
+      })()}
+
+      <KillFeed entries={killFeed} />
+
+      {skillsOpen && (
+        <SkillTreePanel
+          onClose={() => {
+            skillsOpenRef.current = false;
+            setSkillsOpen(false);
+          }}
+        />
+      )}
+
+      {passOpen && (
+        <PassPanel
+          onClose={() => {
+            passOpenRef.current = false;
+            setPassOpen(false);
+          }}
+        />
+      )}
+
+      {pendingBrief && (
+        <MissionBriefing
+          contract={pendingBrief}
+          onAccept={acceptBrief}
+          onDecline={declineBrief}
+          accent={
+            gameStore.factionId !== 'null'
+              ? getFaction(gameStore.factionId).color
+              : '#c03a30'
+          }
+          sourceLabel={
+            gameStore.factionId !== 'null'
+              ? getFaction(gameStore.factionId).name
+              : 'street handler'
+          }
+        />
+      )}
+
+      {activeCutscene && (
+        <CutscenePlayer
+          script={activeCutscene}
+          callsign={gameStore.username}
+          compact
+          zIndex={55}
+          onComplete={() => {
+            const was = activeCutscene.id;
+            cutsceneRef.current = false;
+            setActiveCutscene(null);
+            if (was === 'district_drop') {
+              setZoneSplash({
+                title: zoneLabel || 'Open Streets',
+                sub: 'district online',
+              });
+              if (!hasSeenControlsCard()) setControlsOpen(true);
+              else setTipsReady(true);
+            }
+            if (was === 'faction_join' && gameStore.factionId !== 'null') {
+              const f = getFaction(gameStore.factionId);
+              setZoneSplash({
+                title: f.name,
+                sub: 'allegiance locked',
+              });
+              pushFeed(`joined ${f.name}`, 'territory');
+            }
+          }}
+        />
+      )}
+
+      {zoneSplash && !activeCutscene && (
+        <LocationTitle
+          title={zoneSplash.title}
+          subtitle={zoneSplash.sub}
+          onDone={() => setZoneSplash(null)}
+        />
+      )}
+
+      {shopOpen && nearestShop && (
+        <ShopUI shop={nearestShop} onClose={() => setShopOpen(false)} />
+      )}
+
+      <AIConfigPanel
+        isOpen={aiPanelOpen}
+        onClose={() => setAiPanelOpen(false)}
+        onConfigChange={() => setAiReady(llmClient.isConfigured())}
+      />
+
+      {aiContract &&
+        !activeCutscene &&
+        (() => {
+          const p = contractProgress(aiContract, {
+            kills: gameStore.sessionStats.totalKills,
+            money: gameStore.playerStats.money,
+            talks: talkCount,
+            reputation: gameStore.playerStats.reputation,
+            wanted: gameStore.playerStats.wanted,
+          });
+          const pct =
+            p.target > 0
+              ? Math.min(100, Math.round((p.current / p.target) * 100))
+              : p.done
+                ? 100
+                : 0;
+          return (
+            <div className="absolute bottom-[13.5rem] right-4 z-20 w-64 max-w-[40vw] font-mono border border-[#222428] bg-black/80 backdrop-blur-sm p-3 text-[11px] text-neutral-300">
+              <div className="text-[10px] tracking-[0.28em] uppercase text-[#c03a30] mb-1">
+                {aiConfigured() ? 'grok' : 'street'} job ·{' '}
+                {aiContract.difficulty}
+              </div>
+              <div className="text-neutral-100 tracking-[0.08em] uppercase mb-1">
+                {aiContract.title}
+              </div>
+              <div className="mb-2 text-[10px] tracking-[0.12em] uppercase text-neutral-400">
+                {p.label} · {p.current}/{p.target || 0}
+              </div>
+              <div className="h-[2px] w-full mb-2" style={{ background: '#1f1f22' }}>
+                <div
+                  className="h-full transition-all duration-300"
+                  style={{ width: `${pct}%`, background: COLORS.accent }}
+                />
+              </div>
+              <div className="flex justify-between text-[10px] tracking-[0.15em] uppercase text-neutral-500">
+                <span>${aiContract.reward}</span>
+                <button
+                  onClick={() => setAiContract(null)}
+                  className="hover:text-neutral-200"
+                >
+                  abandon
+                </button>
+              </div>
+            </div>
+          );
+        })()}
+
+      {aiContractLoading && (
+        <div className="absolute bottom-[13.5rem] right-4 z-20 font-mono border border-[#222428] bg-black/80 px-4 py-2 text-[10px] tracking-[0.25em] uppercase text-neutral-500">
+          writing job…
+        </div>
+      )}
+
+      {contractToast && (
+        <div className="absolute top-[22%] left-1/2 -translate-x-1/2 z-[28] font-mono border border-[#c03a30] bg-black/90 px-6 py-3 text-[12px] tracking-[0.22em] uppercase text-neutral-100">
+          contract complete · {contractToast}
+        </div>
+      )}
+
+      {gameStore.xpToast && Date.now() - gameStore.xpToast.at < 2200 && (
+        <div className="absolute top-28 left-4 z-[28] font-mono border border-[#c9a15a] bg-black/85 px-4 py-2 text-[11px] tracking-[0.2em] uppercase text-[#c9a15a]">
+          +{gameStore.xpToast.amount} xp · {gameStore.xpToast.source}
+        </div>
+      )}
+
+      {levelUpFlash != null && (
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 z-40 font-mono border border-[#c03a30] bg-black/90 px-8 py-4 text-center">
+          <div className="text-[10px] tracking-[0.4em] uppercase text-neutral-500">
+            iron haven
+          </div>
+          <div
+            className="mt-1 text-2xl tracking-[0.25em] uppercase"
+            style={{ color: '#c03a30' }}
+          >
+            level {levelUpFlash}
+          </div>
+          <div className="mt-1 text-[10px] tracking-[0.2em] uppercase text-neutral-400">
+            +skill points · press k · max vitality up
+          </div>
+        </div>
+      )}
 
       <div
         className="pointer-events-none absolute inset-0 z-30 transition-opacity duration-200"
@@ -713,14 +2012,19 @@ const MMOGame: React.FC = () => {
         }}
       />
 
-      {isDead && (
-        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/85 font-mono">
+      {isDead && !activeCutscene && (
+        <div
+          className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/85 font-mono"
+          onKeyDown={(e) => {
+            if (e.code === 'Enter' || e.code === 'Space') respawn();
+          }}
+        >
           <div className="text-[12px] tracking-[0.4em] uppercase text-neutral-500">
             iron haven
           </div>
           <div
             className="mt-3 text-4xl tracking-[0.3em] uppercase"
-            style={{ color: '#c03a30' }}
+            style={{ color: COLORS.accent }}
           >
             wasted
           </div>
@@ -731,23 +2035,150 @@ const MMOGame: React.FC = () => {
             </div>
           )}
           <button
+            autoFocus
             onClick={respawn}
             className="mt-8 border border-[#222428] px-8 py-3 text-[11px] tracking-[0.28em] uppercase text-neutral-200 hover:bg-[#15171a] transition-colors"
           >
-            respawn
+            respawn · enter
           </button>
         </div>
       )}
 
-      <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 font-mono border border-[#222428] bg-black/60 backdrop-blur-sm px-6 py-2.5 text-center">
-        <div className="text-[11px] tracking-[0.18em] uppercase text-neutral-300">
-          wasd move · space jump · shift sprint · mouse look
-        </div>
-        <div className="mt-1 text-[10px] tracking-[0.28em] uppercase text-neutral-500">
-          scroll to zoom · esc to unlock ·{' '}
-          <span style={{ color: '#c03a30' }}>b</span> black market
-        </div>
+      {/* Pass strip — under minimap (minimap owns top-right). */}
+      {!activeCutscene && (
+        <button
+          type="button"
+          onClick={() => {
+            passOpenRef.current = true;
+            setPassOpen(true);
+            if (document.pointerLockElement) document.exitPointerLock();
+            gameAudio.play('ui', 0.12);
+          }}
+          className="absolute top-[15.75rem] right-4 z-20 font-mono border px-3 py-2 text-left hover:brightness-110 transition w-[min(220px,40vw)]"
+          style={{
+            borderColor: passIsLive(gameStore.pass)
+              ? COLORS.gold
+              : '#222428',
+            background: 'rgba(0,0,0,0.72)',
+          }}
+        >
+          <div
+            className="text-[9px] tracking-[0.3em] uppercase"
+            style={{
+              color: passIsLive(gameStore.pass) ? COLORS.gold : '#5a5d62',
+            }}
+          >
+            {passIsLive(gameStore.pass) ? 'pass · vip' : 'iron haven pass'}
+          </div>
+          <div className="text-[10px] tracking-[0.12em] uppercase text-neutral-400 mt-0.5">
+            {passIsLive(gameStore.pass)
+              ? `${formatPassRemaining(gameStore.pass)} left · o`
+              : '$1.99/wk · o'}
+          </div>
+        </button>
+      )}
+
+      {/* Compact help — auto-hides once player dismisses or opens a panel. */}
+      {!helpDismissed &&
+        !activeCutscene &&
+        !controlsOpen &&
+        !skillsOpen &&
+        !passOpen &&
+        !questOpen &&
+        !socialOpen &&
+        !economyOpen &&
+        !marketOpen &&
+        !shopOpen &&
+        !dialogueNpc &&
+        !isDead && (
+          <div className="absolute bottom-[5.5rem] left-1/2 -translate-x-1/2 z-20 font-mono border border-[#222428] bg-black/65 backdrop-blur-sm px-4 py-2 text-center max-w-[92vw]">
+            <div className="text-[10px] tracking-[0.16em] uppercase text-neutral-400">
+              <span style={{ color: COLORS.accent }}>wasd</span> move ·{' '}
+              <span style={{ color: COLORS.accent }}>e</span> talk ·{' '}
+              <span style={{ color: COLORS.accent }}>j</span> job ·{' '}
+              <span style={{ color: COLORS.accent }}>l</span> log ·{' '}
+              <span style={{ color: COLORS.accent }}>k</span> skills ·{' '}
+              <span style={{ color: COLORS.gold }}>o</span> pass
+            </div>
+            <button
+              type="button"
+              onClick={() => setHelpDismissed(true)}
+              className="mt-1 text-[8px] tracking-[0.25em] uppercase text-neutral-600 hover:text-neutral-400"
+            >
+              hide help
+            </button>
+          </div>
+        )}
+
+      {/* Ability hotbar + weapon hint + SP */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 font-mono flex items-end gap-1.5">
+        {[1, 2, 3, 4].map((n) => (
+          <div
+            key={`w${n}`}
+            className="relative w-10 h-12 border border-[#222428] bg-black/70 flex flex-col items-center justify-center"
+            title="Weapon slot"
+          >
+            <span className="text-[8px] text-neutral-600">{n}</span>
+            <span className="text-[7px] tracking-[0.1em] uppercase text-neutral-500">
+              arm
+            </span>
+          </div>
+        ))}
+        <div className="w-px h-10 bg-[#222428] mx-0.5" />
+        {gameStore.abilityBar.map((id, i) => {
+          const def = id ? ACTIVE_ABILITIES[id] : null;
+          const readyAt = id ? gameStore.abilityCooldowns[id] || 0 : 0;
+          const cdLeft = Math.max(0, readyAt - Date.now());
+          const onCd = cdLeft > 0;
+          return (
+            <div
+              key={i}
+              className="relative w-14 h-14 border flex flex-col items-center justify-center"
+              style={{
+                borderColor: def && !onCd ? def.color : '#222428',
+                background: 'rgba(0,0,0,0.75)',
+              }}
+            >
+              <span
+                className="text-[8px] tracking-[0.15em] uppercase text-center px-0.5 leading-tight"
+                style={{ color: def ? def.color : '#444' }}
+              >
+                {def ? def.name.split(' ')[0] : '—'}
+              </span>
+              <span className="absolute top-0.5 right-1 text-[8px] text-neutral-600">
+                {i + 5}
+              </span>
+              {onCd && (
+                <div className="absolute inset-0 bg-black/70 flex items-center justify-center text-[10px] text-neutral-400">
+                  {Math.ceil(cdLeft / 1000)}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {gameStore.playerStats.skillPoints > 0 && (
+          <button
+            onClick={() => {
+              skillsOpenRef.current = true;
+              openedSkillsRef.current = true;
+              setSkillsOpen(true);
+              if (document.pointerLockElement) document.exitPointerLock();
+            }}
+            className="ml-2 border border-[#c03a30] bg-[#c03a30]/15 px-3 py-2 text-[10px] tracking-[0.2em] uppercase text-[#c03a30] animate-pulse"
+          >
+            {gameStore.playerStats.skillPoints} sp · k
+          </button>
+        )}
       </div>
+
+      {(abilityFlash || lastCrit) && (
+        <div
+          className="absolute top-[42%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-[28] pointer-events-none font-mono text-[14px] tracking-[0.3em] uppercase"
+          style={{ color: lastCrit ? COLORS.gold : COLORS.accent }}
+        >
+          {lastCrit ? 'critical' : abilityFlash}
+        </div>
+      )}
     </div>
   );
 };

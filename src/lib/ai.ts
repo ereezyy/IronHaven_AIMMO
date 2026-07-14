@@ -184,19 +184,23 @@ class AIService {
       // lets the AI Director thread this mission into the player's personal arc.
       if (llmClient.isConfigured()) {
         const system =
-          'You are the mission designer for IronHaven, a cyberpunk crime MMO. ' +
-          'Return ONLY a JSON object with keys: title (string), description ' +
-          '(2 sentences), objectives (array of exactly 3 short strings), ' +
-          'difficulty ("easy"|"medium"|"hard"), reward (integer dollars).';
+          'You are the mission designer for IronHaven, a cyberpunk crime MMO powered by Grok. ' +
+          'Return ONLY a JSON object with keys: ' +
+          'title (string), description (2 sentences), ' +
+          'objectives (array of exactly 3 short strings), ' +
+          'difficulty ("easy"|"medium"|"hard"), reward (integer dollars 100-5000), ' +
+          'goalKind ("kills"|"earn"|"talks"|"rep"|"clear_heat"), ' +
+          'goalTarget (positive integer; for clear_heat use 0).';
         const user =
           `Player level: ${playerLevel}. District: ${location}. ` +
           `Mission type: ${type}. Target difficulty: ${difficulty}.` +
           (directorContext ? ` Story context: ${directorContext}` : '');
-        const parsed = await llmClient.completeJSON<Partial<MissionData>>(
-          system,
-          user,
-          { maxTokens: 400 }
-        );
+        const parsed = await llmClient.completeJSON<
+          Partial<MissionData> & {
+            goalKind?: string;
+            goalTarget?: number;
+          }
+        >(system, user, { maxTokens: 450 });
         if (parsed?.title && parsed.description) {
           return {
             id: `ai_mission_${crypto.randomUUID()}`,
@@ -212,7 +216,14 @@ class AIService {
                 ? parsed.reward
                 : Math.floor(1000 + playerLevel * 500 + Math.random() * 2000),
             location,
-          };
+            // Stash structured goal for the contract layer (duck-typed).
+            ...(parsed.goalKind
+              ? {
+                  goalKind: parsed.goalKind,
+                  goalTarget: parsed.goalTarget,
+                }
+              : {}),
+          } as MissionData;
         }
       }
 

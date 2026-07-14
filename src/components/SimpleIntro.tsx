@@ -12,9 +12,9 @@ const BOOT_LINES: ReadonlyArray<{ at: number; text: string }> = [
   { at: 2, text: 'loading /districts/north,south,docks,uptown  ok' },
   { at: 3, text: 'spawning ai/director  ok' },
   { at: 4, text: 'opening uplink supabase://realtime  optional' },
-  { at: 5, text: 'compositor  ok  · audio bus  ok  · input  ok' },
-  { at: 6, text: 'handshake  complete' },
-  { at: 7, text: 'press [ enter ] to continue — auto in 1s' },
+  { at: 5, text: 'compositor  ok  · audio bus  ok  · cinematics  ok' },
+  { at: 6, text: 'handshake  complete  · narrative buffer primed' },
+  { at: 7, text: 'press [ enter ] — cutscene sequence arming' },
 ];
 
 const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {

@@ -6,6 +6,12 @@ import {
   CITY_RADIUS,
 } from '../game/cityLayout';
 
+export interface HudObjective {
+  id: string;
+  label: string;
+  done: boolean;
+}
+
 interface MMOHUDProps {
   health: number;
   stamina: number;
@@ -18,9 +24,18 @@ interface MMOHUDProps {
   reputation: number;
   wanted: number;
   kills: number;
+  weaponName?: string;
+  weaponDamage?: number;
+  objectives?: HudObjective[];
   playerPosRef?: React.MutableRefObject<Vector3>;
   playerRotRef?: React.MutableRefObject<number>;
   otherPlayers?: { id: string; position: [number, number, number] }[];
+  /** When set, stamina bar is polled from this ref each animation frame. */
+  staminaRef?: React.MutableRefObject<number>;
+  /** Live NPC positions for minimap blips. */
+  npcBlipsRef?: React.MutableRefObject<
+    { x: number; z: number; hostile: boolean }[]
+  >;
 }
 
 const MINIMAP_SIZE = 188; // canvas px
@@ -33,7 +48,10 @@ const Minimap: React.FC<{
   playerPosRef?: React.MutableRefObject<Vector3>;
   playerRotRef?: React.MutableRefObject<number>;
   otherPlayers: { id: string; position: [number, number, number] }[];
-}> = ({ playerPosRef, playerRotRef, otherPlayers }) => {
+  npcBlipsRef?: React.MutableRefObject<
+    { x: number; z: number; hostile: boolean }[]
+  >;
+}> = ({ playerPosRef, playerRotRef, otherPlayers, npcBlipsRef }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const othersRef = useRef(otherPlayers);
   othersRef.current = otherPlayers;
@@ -88,6 +106,18 @@ const Minimap: React.FC<{
         const y = toY(l.position[2]);
         if (x < 0 || x > MINIMAP_SIZE || y < 0 || y > MINIMAP_SIZE) continue;
         ctx.fillRect(x - 1, y - 1, 2, 2);
+      }
+
+      // NPCs — red when hostile, dim otherwise.
+      const blips = npcBlipsRef?.current;
+      if (blips) {
+        for (const b of blips) {
+          const x = toX(b.x);
+          const y = toY(b.z);
+          if (x < 0 || x > MINIMAP_SIZE || y < 0 || y > MINIMAP_SIZE) continue;
+          ctx.fillStyle = b.hostile ? '#c03a30' : '#5a5d62';
+          ctx.fillRect(x - 1.5, y - 1.5, 3, 3);
+        }
       }
 
       // Other players.
@@ -173,22 +203,10 @@ const Icon: React.FC<{ name: string; size?: number; className?: string }> = ({
   </svg>
 );
 
-// Action-bar slot definitions: icon + keybind label.
-const ACTION_SLOTS = [
-  { key: '1', icon: 'fist', label: 'strike' },
-  { key: '2', icon: 'talk', label: 'talk' },
-  { key: '3', icon: 'sprint', label: 'sprint' },
-  { key: '4', icon: 'map', label: 'map' },
-  { key: '5', icon: 'cash', label: 'trade' },
-  { key: '6', icon: 'wanted', label: 'heat' },
-  { key: '7', icon: 'rep', label: 'rep' },
-  { key: '8', icon: 'mana', label: 'focus' },
-];
-
 const MMOHUD: React.FC<MMOHUDProps> = ({
   health,
   stamina,
-  mana,
+  mana: _mana,
   level,
   experience,
   maxExperience,
@@ -197,12 +215,37 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
   reputation,
   wanted,
   kills,
+  weaponName,
+  weaponDamage,
+  objectives,
   playerPosRef,
   playerRotRef,
   otherPlayers = [],
+  staminaRef,
+  npcBlipsRef,
 }) => {
   const PANEL = 'border border-[#222428] bg-black/60 backdrop-blur-sm';
   const LABEL = 'text-[10px] tracking-[0.3em] uppercase text-neutral-500';
+  const staminaBarRef = useRef<HTMLDivElement>(null);
+  const staminaLabelRef = useRef<HTMLSpanElement>(null);
+
+  // Poll stamina from the player controller without React re-renders.
+  useEffect(() => {
+    if (!staminaRef) return;
+    let raf = 0;
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      const v = Math.max(0, Math.min(100, staminaRef.current));
+      if (staminaBarRef.current) {
+        staminaBarRef.current.style.width = `${v}%`;
+      }
+      if (staminaLabelRef.current) {
+        staminaLabelRef.current.textContent = `${Math.round(v)}/100`;
+      }
+    };
+    tick();
+    return () => cancelAnimationFrame(raf);
+  }, [staminaRef]);
 
   const Objective: React.FC<{ label: string; done: boolean }> = ({
     label,
@@ -224,7 +267,9 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
     max: number;
     accent: string;
     icon?: string;
-  }> = ({ label, value, max, accent, icon }) => (
+    barRef?: React.RefObject<HTMLDivElement | null>;
+    valueRef?: React.RefObject<HTMLSpanElement | null>;
+  }> = ({ label, value, max, accent, icon, barRef, valueRef }) => (
     <div>
       <div className="flex items-center justify-between mb-1">
         <span className="flex items-center gap-1.5">
@@ -235,12 +280,13 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
           )}
           <span className={LABEL}>{label}</span>
         </span>
-        <span className="text-[10px] text-neutral-300">
-          {value}/{max}
+        <span ref={valueRef} className="text-[10px] text-neutral-300">
+          {Math.round(value)}/{max}
         </span>
       </div>
       <div className="h-[2px] w-full" style={{ background: '#1f1f22' }}>
         <div
+          ref={barRef}
           className="h-full transition-all duration-300"
           style={{
             width: `${Math.max(0, Math.min(100, (value / max) * 100))}%`,
@@ -250,6 +296,26 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
       </div>
     </div>
   );
+
+  const streetObjectives =
+    objectives ??
+    ([
+      {
+        id: 'rep',
+        label: `Make a name (rep ${Math.min(reputation, 50)}/50)`,
+        done: reputation >= 50,
+      },
+      {
+        id: 'kills',
+        label: `Thin the ranks (${Math.min(kills, 10)}/10 kills)`,
+        done: kills >= 10,
+      },
+      {
+        id: 'cash',
+        label: `Stack paper ($${Math.min(money, 5000)}/5000)`,
+        done: money >= 5000,
+      },
+    ] satisfies HudObjective[]);
 
   return (
     <div className="font-mono">
@@ -276,15 +342,25 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
               max={100}
               accent="#cfcfd2"
               icon="stamina"
-            />
-            <Bar
-              label="Mana"
-              value={mana}
-              max={100}
-              accent="#5a5d62"
-              icon="mana"
+              barRef={staminaBarRef}
+              valueRef={staminaLabelRef}
             />
           </div>
+
+          {weaponName && (
+            <div className="mt-3 pt-3 border-t border-[#1a1c1f] flex items-center justify-between text-[11px]">
+              <span className="flex items-center gap-1.5 text-neutral-500">
+                <Icon name="fist" size={11} />
+                ARMED
+              </span>
+              <span className="text-neutral-200">
+                {weaponName}
+                {weaponDamage != null && (
+                  <span className="ml-2 text-neutral-500">{weaponDamage} dmg</span>
+                )}
+              </span>
+            </div>
+          )}
 
           <div className="mt-4 pt-4 border-t border-[#1a1c1f]">
             <Bar
@@ -341,47 +417,20 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
             playerPosRef={playerPosRef}
             playerRotRef={playerRotRef}
             otherPlayers={otherPlayers}
+            npcBlipsRef={npcBlipsRef}
           />
         </div>
       </div>
 
-      <div className="absolute bottom-4 right-4">
+      {/* Contracts sit above ability hotbar + chat; leave bottom-center clear. */}
+      <div className="absolute bottom-24 right-4 max-w-[280px] z-[20]">
         <div className={`${PANEL} p-3`}>
-          <div className={`${LABEL} mb-2`}>objectives</div>
+          <div className={`${LABEL} mb-2`}>street contracts · l for log</div>
           <div className="space-y-2 text-[11px] text-neutral-300">
-            <Objective
-              label={`Make a name (rep ${Math.min(reputation, 50)}/50)`}
-              done={reputation >= 50}
-            />
-            <Objective
-              label={`Thin the ranks (${Math.min(kills, 10)}/10 kills)`}
-              done={kills >= 10}
-            />
-            <Objective
-              label={`Stack paper ($${Math.min(money, 5000)}/5000)`}
-              done={money >= 5000}
-            />
+            {streetObjectives.slice(0, 4).map((o) => (
+              <Objective key={o.id} label={o.label} done={o.done} />
+            ))}
           </div>
-        </div>
-      </div>
-
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-        <div className="flex gap-1">
-          {ACTION_SLOTS.map((slot) => (
-            <div
-              key={slot.key}
-              title={slot.label}
-              className={`${PANEL} relative w-12 h-12 flex flex-col items-center justify-center gap-0.5 text-neutral-500 hover:text-neutral-200 transition-colors cursor-pointer`}
-            >
-              <Icon name={slot.icon} size={16} />
-              <span className="text-[8px] tracking-[0.15em] uppercase">
-                {slot.label}
-              </span>
-              <span className="absolute top-0.5 right-1 text-[8px] text-neutral-600">
-                {slot.key}
-              </span>
-            </div>
-          ))}
         </div>
       </div>
     </div>

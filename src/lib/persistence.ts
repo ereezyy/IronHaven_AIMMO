@@ -1,4 +1,10 @@
-import { supabase, SUPABASE_CONFIGURED, ensureAuthUser } from './supabase';
+import {
+  supabase,
+  SUPABASE_CONFIGURED,
+  ensureAuthUser,
+  markSupabaseOffline,
+  isSupabaseRuntimeOffline,
+} from './supabase';
 
 export interface PlayerData {
   id: string;
@@ -91,6 +97,7 @@ class PersistenceService {
           error
         );
         this.offlineMode = true;
+        markSupabaseOffline(error.message || 'insert failed');
         this.currentPlayerId = playerId;
         this.saveToLocalStorage('player_data', playerData);
         return playerId;
@@ -102,6 +109,9 @@ class PersistenceService {
     } catch (error) {
       console.warn('Database error, switching to offline mode:', error);
       this.offlineMode = true;
+      markSupabaseOffline(
+        error instanceof Error ? error.message : 'network'
+      );
       const playerId = this.generatePlayerId();
       this.currentPlayerId = playerId;
       return playerId;
@@ -438,11 +448,17 @@ class PersistenceService {
   }
 
   isOfflineMode(): boolean {
-    return this.offlineMode;
+    return this.offlineMode || isSupabaseRuntimeOffline();
   }
 
   getCurrentPlayerId(): string | null {
     return this.currentPlayerId;
+  }
+
+  /** Resume a known player id (from local progress snapshot) without re-insert. */
+  adoptPlayerId(playerId: string, offline = false): void {
+    this.currentPlayerId = playerId;
+    if (offline) this.offlineMode = true;
   }
 }
 

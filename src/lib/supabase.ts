@@ -5,7 +5,24 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as
   | string
   | undefined;
 
+/** True when env credentials exist (may still fail DNS / network at runtime). */
 export const SUPABASE_CONFIGURED = Boolean(supabaseUrl && supabaseAnonKey);
+
+/** Flip to true after a hard network/DNS failure so UI can show offline. */
+let runtimeOffline = false;
+export function isSupabaseRuntimeOffline(): boolean {
+  return !SUPABASE_CONFIGURED || runtimeOffline;
+}
+export function markSupabaseOffline(reason?: string): void {
+  if (runtimeOffline) return;
+  runtimeOffline = true;
+  if (typeof console !== 'undefined') {
+    console.warn(
+      '[ironhaven] Supabase unreachable — offline mode' +
+        (reason ? `: ${reason}` : '')
+    );
+  }
+}
 
 // Offline / no-op stub so the app boots without Supabase credentials.
 // Every query/mutation resolves to an empty result; the persistence layer

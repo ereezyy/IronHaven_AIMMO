@@ -6,6 +6,8 @@ export interface DialogueEffect {
   rep?: number;
   money?: number;
   wanted?: number;
+  /** Delta applied to health (stims, medkits). Clamped to 0–100 by the store. */
+  health?: number;
 }
 
 export interface DialogueOption {
@@ -38,7 +40,7 @@ export function npcDialogue(npc: Npc, p: PlayerSnapshot): Dialogue {
           {
             label: 'Buy a stim ($120)',
             reply: 'Pleasure doing business. Don\u2019t flatline on me.',
-            effect: { money: -120, rep: 3 },
+            effect: { money: -120, rep: 3, health: 40 },
           },
           {
             label: 'Shake him down',

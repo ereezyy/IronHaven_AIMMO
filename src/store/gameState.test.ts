@@ -14,15 +14,64 @@ import { DEATH_LOSS_FRACTION } from '../components/MMOGame';
 const reset = () =>
   useGameStore.setState({
     playerId: null,
+    username: 'Runner',
+    inventory: [],
+    bag: {
+      scrap: 0,
+      circuits: 0,
+      chems: 0,
+      nano_fiber: 0,
+      stim_vial: 0,
+      armor_plate: 0,
+      fuel_cell: 0,
+    },
     playerStats: {
       health: 100,
       reputation: 0,
       wanted: 0,
       money: 1000,
       policeKillCount: 0,
+      xp: 0,
+      level: 1,
+      skillPoints: 3,
       skills: { combat: 10, stealth: 10, driving: 10, intimidation: 10 },
     },
-    sessionStats: { totalKills: 0, totalMoneyEarned: 0, maxWantedLevel: 0 },
+    skillRanks: {},
+    sessionStats: {
+      totalKills: 0,
+      totalMoneyEarned: 0,
+      maxWantedLevel: 0,
+      pvpKills: 0,
+      bossKills: 0,
+      huntKills: 0,
+      xpGained: 0,
+    },
+    xpToast: null,
+    factionId: 'null',
+    pvpEnabled: false,
+    fishBag: {
+      neon_minnow: 0,
+      chrome_bass: 0,
+      toxic_eel: 0,
+      void_koi: 0,
+      scrap_boot: 0,
+    },
+    pass: {
+      expiresAt: 0,
+      source: 'demo',
+      weeklySpClaimKey: null,
+      activatedAt: 0,
+    },
+    boardCounters: {
+      huntKills: 0,
+      totalKills: 0,
+      talks: 0,
+      harvests: 0,
+      moneyEarned: 0,
+      fishCaught: 0,
+      factionJoined: 0,
+    },
+    boardClaimed: [],
   });
 
 // Mirrors BlackMarket.buySkill — kept here so the test asserts the same
@@ -146,5 +195,43 @@ describe('death penalty — 25% money loss aversion', () => {
     const lost = applyDeathPenalty();
     expect(lost).toBe(0);
     expect(useGameStore.getState().playerStats.money).toBe(0);
+  });
+});
+
+describe('Iron Haven Pass — store integration', () => {
+  beforeEach(reset);
+
+  it('demo subscribe activates Pass for a week', () => {
+    const res = useGameStore.getState().subscribePass('demo');
+    expect(res.ok).toBe(true);
+    expect(res.path).toBe('demo');
+    expect(useGameStore.getState().isPassActive()).toBe(true);
+    expect(useGameStore.getState().pass.expiresAt).toBeGreaterThan(Date.now());
+  });
+
+  it('boosts XP by 25% when Pass is active', () => {
+    const base = useGameStore.getState().gainXp('hunt');
+    reset();
+    useGameStore.getState().subscribePass('demo');
+    const boosted = useGameStore.getState().gainXp('hunt');
+    // Pass multiplies after skill xpBonus; with empty ranks both start from same base.
+    expect(boosted).toBe(Math.round(base * 1.25));
+  });
+
+  it('claims weekly skill points once', () => {
+    useGameStore.getState().subscribePass('demo');
+    const before = useGameStore.getState().playerStats.skillPoints;
+    const first = useGameStore.getState().claimPassWeeklySp();
+    expect(first.ok).toBe(true);
+    expect(first.amount).toBe(2);
+    expect(useGameStore.getState().playerStats.skillPoints).toBe(before + 2);
+    const second = useGameStore.getState().claimPassWeeklySp();
+    expect(second.ok).toBe(false);
+  });
+
+  it('cancelPass clears benefits', () => {
+    useGameStore.getState().subscribePass('demo');
+    useGameStore.getState().cancelPass();
+    expect(useGameStore.getState().isPassActive()).toBe(false);
   });
 });

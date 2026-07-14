@@ -199,8 +199,14 @@ export function tickNpc(
     npc.targetZ = p.z;
     moveToward(npc, delta, npc.speed);
     if (distSq < MELEE_RANGE * MELEE_RANGE && npc.attackCd <= 0) {
-      npc.attackCd = 1.1;
-      events.push({ kind: 'damage', amount: BASE[npc.type].dmg });
+      npc.attackCd = npc.type === 'police' && p.wanted >= 3 ? 0.85 : 1.1;
+      // Police hit harder when the city wants you dead.
+      const heatBonus =
+        npc.type === 'police' ? Math.min(5, p.wanted) * 3 : 0;
+      events.push({
+        kind: 'damage',
+        amount: BASE[npc.type].dmg + heatBonus,
+      });
     }
   } else {
     npc.wanderCd -= delta;
@@ -275,13 +281,25 @@ function decideMood(
     const sawCombat = world ? witnessesCombat(npc, world) : false;
     npc.mood = p.wanted > 1 || p.kills > 5 || sawCombat ? 'fleeing' : 'calm';
   } else if (t === 'police') {
-    npc.mood =
-      (p.wanted > 0 || p.kills > 0) && distSq < AGGRO_RANGE * AGGRO_RANGE * 2
-        ? 'hostile'
-        : 'calm';
+    // Heat escalation: each wanted star pulls cops from farther away and
+    // they commit harder once the player is already a problem.
+    const heat = Math.max(0, Math.min(5, p.wanted));
+    const rangeMul = 1.2 + heat * 0.55;
+    const rangeSq = AGGRO_RANGE * AGGRO_RANGE * rangeMul * rangeMul;
+    const shouldHunt = heat > 0 || p.kills > 2;
+    npc.mood = shouldHunt && distSq < rangeSq ? 'hostile' : 'calm';
+    // Hot pursuits move faster.
+    if (npc.mood === 'hostile') {
+      npc.speed = BASE.police.speed * (1 + heat * 0.08);
+    } else {
+      npc.speed = BASE.police.speed;
+    }
   } else if (t === 'gangster' || t === 'hitman' || t === 'boss') {
+    // High heat makes crews twitchy too — they don't want your mess on them.
+    const heatAggro =
+      p.wanted >= 3 && distSq < AGGRO_RANGE * AGGRO_RANGE * 0.6;
     npc.mood =
-      p.reputation < 20 && distSq < AGGRO_RANGE * AGGRO_RANGE
+      (p.reputation < 20 && distSq < AGGRO_RANGE * AGGRO_RANGE) || heatAggro
         ? 'hostile'
         : 'calm';
   } else {

@@ -23,5 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.server
+.env.local
+.env.production.local
+*.server.env
+scripts/stripe-pass.meta.json
+.data/
+.vercel
 coverage
 .husky/_

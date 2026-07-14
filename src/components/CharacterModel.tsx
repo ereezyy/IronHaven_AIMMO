@@ -15,6 +15,10 @@ interface CharacterModelProps {
   speedRef: React.MutableRefObject<number>;
   /** Base tint for the outfit, so local/remote players read differently. */
   tint?: string;
+  /** Neon accent for hit emissive (character creator). */
+  accent?: string;
+  /** Body scale from character creator. */
+  bodyScale?: number;
   /** Optional ref that receives a "flash" trigger for hit feedback. */
   flashRef?: React.MutableRefObject<number>;
 }
@@ -27,6 +31,8 @@ interface CharacterModelProps {
 const CharacterModel: React.FC<CharacterModelProps> = ({
   speedRef,
   tint = '#d4d5d8',
+  accent = '#c03a30',
+  bodyScale = 1,
   flashRef,
 }) => {
   const group = useRef<THREE.Group>(null);
@@ -49,14 +55,14 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
         const src = mesh.material as THREE.MeshStandardMaterial;
         const mat = src.clone();
         mat.color.multiply(new THREE.Color(tint));
-        mat.emissive = new THREE.Color('#c03a30');
+        mat.emissive = new THREE.Color(accent);
         mat.emissiveIntensity = 0;
         mesh.material = mat;
         mats.push(mat);
       }
     });
     materials.current = mats;
-  }, [clone, tint]);
+  }, [clone, tint, accent]);
 
   useEffect(() => {
     actions.Idle?.play();
@@ -94,7 +100,7 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
   });
 
   return (
-    <group ref={group}>
+    <group ref={group} scale={bodyScale}>
       <primitive object={clone} />
     </group>
   );

@@ -18,6 +18,7 @@ export interface LLMOptions {
 
 // OpenAI-compatible chat endpoints keyed by provider id.
 const CHAT_ENDPOINTS: Record<string, string> = {
+  xai: 'https://api.x.ai/v1/chat/completions',
   openai: 'https://api.openai.com/v1/chat/completions',
   huggingface: 'https://router.huggingface.co/v1/chat/completions',
   local: 'http://localhost:11434/v1/chat/completions',

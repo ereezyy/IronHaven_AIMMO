@@ -6,6 +6,9 @@ interface InstantActionProps {
   onAIDemo: () => void;
   onMultiplayerDemo: () => void;
   onCombatDemo: () => void;
+  continueCallsign?: string | null;
+  onContinue?: () => void;
+  onNewRunner?: () => void;
 }
 
 // Deterministic pseudo-random so the city is identical on every load.
@@ -104,6 +107,9 @@ const InstantAction: React.FC<InstantActionProps> = ({
   onAIDemo,
   onMultiplayerDemo,
   onCombatDemo,
+  continueCallsign,
+  onContinue,
+  onNewRunner,
 }) => {
   const [hover, setHover] = useState<string | null>(null);
 
@@ -154,6 +160,38 @@ const InstantAction: React.FC<InstantActionProps> = ({
         </span>
       </div>
 
+      {/* Post-cinematic location sting */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-[16%] flex flex-col items-center font-mono"
+        style={{ animation: 'menuLocIn 1.2s ease both' }}
+      >
+        <div
+          className="text-[10px] tracking-[0.45em] uppercase mb-2"
+          style={{ color: '#c03a30' }}
+        >
+          now online
+        </div>
+        <div
+          className="text-[22px] md:text-[28px] tracking-[0.32em] uppercase text-neutral-200"
+          style={{ fontFamily: '"Inter Tight", Inter, system-ui, sans-serif' }}
+        >
+          District 01
+        </div>
+        <div
+          className="mt-3 h-[1px] w-20"
+          style={{
+            background:
+              'linear-gradient(90deg, transparent, #c03a30, transparent)',
+          }}
+        />
+      </div>
+      <style>{`
+        @keyframes menuLocIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
       {/* Left wordmark */}
       <div className="absolute left-10 bottom-32 max-w-[640px]">
         <div
@@ -181,6 +219,29 @@ const InstantAction: React.FC<InstantActionProps> = ({
       <div className="absolute right-10 bottom-10 w-[320px]">
         <div className={`${LABEL} mb-3`}>00 — entry points</div>
         <div className="divide-y divide-[#1a1c1f]">
+          {continueCallsign && onContinue && (
+            <button
+              onClick={onContinue}
+              onMouseEnter={() => setHover('cont')}
+              onMouseLeave={() => setHover(null)}
+              className={`${PANEL} w-full text-left px-5 py-4 flex items-center justify-between transition-colors`}
+              style={{
+                borderColor: hover === 'cont' ? '#c9a15a' : '#222428',
+              }}
+            >
+              <span>
+                <span className="block text-[15px] tracking-tight">
+                  Continue as {continueCallsign}
+                </span>
+                <span className="block mt-1 text-[10px] tracking-[0.28em] uppercase text-neutral-500 font-mono">
+                  saved loadout · skip creator
+                </span>
+              </span>
+              <span style={{ color: hover === 'cont' ? '#c9a15a' : '#5a5d62' }}>
+                →
+              </span>
+            </button>
+          )}
           {(
             [
               {
@@ -201,6 +262,16 @@ const InstantAction: React.FC<InstantActionProps> = ({
                 sub: 'Combat · ballistics · cover',
                 on: onCombatDemo,
               },
+              ...(onNewRunner
+                ? [
+                    {
+                      id: 'new',
+                      label: 'New runner',
+                      sub: 'Character creator',
+                      on: onNewRunner,
+                    },
+                  ]
+                : []),
             ] as const
           ).map((opt, i) => (
             <button
