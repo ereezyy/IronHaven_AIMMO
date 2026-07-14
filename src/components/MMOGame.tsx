@@ -51,6 +51,7 @@ import CutscenePlayer from './CutscenePlayer';
 import LocationTitle from './LocationTitle';
 import MissionBriefing from './MissionBriefing';
 import QuestLogPanel from './QuestLogPanel';
+import LeaderboardPanel from './LeaderboardPanel';
 import ControlsCard from './ControlsCard';
 import KillFeed, { type KillFeedEntry } from './KillFeed';
 import InteractPrompt from './InteractPrompt';
@@ -439,6 +440,8 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
   const passOpenRef = useRef(false);
   const [questOpen, setQuestOpen] = useState(false);
   const questOpenRef = useRef(false);
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const leaderboardOpenRef = useRef(false);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [killFeed, setKillFeed] = useState<KillFeedEntry[]>([]);
   const [helpDismissed, setHelpDismissed] = useState(false);
@@ -1096,6 +1099,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
         skillsOpenRef.current ||
         passOpenRef.current ||
         questOpenRef.current ||
+        leaderboardOpenRef.current ||
         cutsceneRef.current ||
         Boolean(pendingBrief) ||
         controlsOpen ||
@@ -1122,6 +1126,17 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
           return next;
         });
         gameAudio.play('ui', 0.15);
+        return;
+      }
+
+      // Seasonal leaderboard
+      if (e.code === 'KeyY') {
+        setLeaderboardOpen((v) => {
+          leaderboardOpenRef.current = !v;
+          if (!v && document.pointerLockElement) document.exitPointerLock();
+          return !v;
+        });
+        gameAudio.play('ui', 0.14);
         return;
       }
 
@@ -1226,6 +1241,9 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       } else if (e.code === 'Escape' && questOpenRef.current) {
         questOpenRef.current = false;
         setQuestOpen(false);
+      } else if (e.code === 'Escape' && leaderboardOpenRef.current) {
+        leaderboardOpenRef.current = false;
+        setLeaderboardOpen(false);
       } else if (e.code === 'Escape' && controlsOpen) {
         setControlsOpen(false);
       } else if (e.code === 'Escape' && aiPanelOpen) {
@@ -1817,6 +1835,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
           skillsOpen ||
           passOpen ||
           questOpen ||
+          leaderboardOpen ||
           socialOpen ||
           economyOpen ||
           marketOpen ||
@@ -1851,6 +1870,15 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
           onClose={() => {
             passOpenRef.current = false;
             setPassOpen(false);
+          }}
+        />
+      )}
+
+      {leaderboardOpen && (
+        <LeaderboardPanel
+          onClose={() => {
+            leaderboardOpenRef.current = false;
+            setLeaderboardOpen(false);
           }}
         />
       )}

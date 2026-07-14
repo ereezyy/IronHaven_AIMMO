@@ -76,6 +76,7 @@ export const CONTROLS_ROWS: { keys: string; action: string }[] = [
   { keys: 'K', action: 'Skill matrix' },
   { keys: 'O', action: 'Iron Haven Pass' },
   { keys: 'L', action: 'Quest log · daily board' },
+  { keys: 'Y', action: 'Leaderboard · season ranks' },
   { keys: 'B', action: 'Black market' },
   { keys: 'Tab', action: 'Economy / craft' },
   { keys: 'F', action: 'Vehicle enter/exit' },
