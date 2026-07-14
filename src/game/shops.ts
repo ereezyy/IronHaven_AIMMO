@@ -34,7 +34,13 @@ export const WORLD_SHOPS: WorldShop[] = [
       { kind: 'resource', id: 'scrap', name: 'Scrap Metal', price: 35 },
       { kind: 'resource', id: 'circuits', name: 'Circuits', price: 70 },
       { kind: 'resource', id: 'chems', name: 'Street Chems', price: 55 },
-      { kind: 'service', id: 'heal', name: 'Med Patch (+50 HP)', price: 200, service: 'heal' },
+      {
+        kind: 'service',
+        id: 'heal',
+        name: 'Med Patch (+50 HP)',
+        price: 200,
+        service: 'heal',
+      },
     ],
   },
   {
@@ -48,7 +54,13 @@ export const WORLD_SHOPS: WorldShop[] = [
       { kind: 'weapon', id: 'cyber_pistol', name: 'Cyber Pistol', price: 450 },
       { kind: 'weapon', id: 'plasma_rifle', name: 'Plasma Rifle', price: 1400 },
       { kind: 'resource', id: 'armor_plate', name: 'Armor Plate', price: 180 },
-      { kind: 'service', id: 'repair', name: 'Field Repair', price: 150, service: 'repair' },
+      {
+        kind: 'service',
+        id: 'repair',
+        name: 'Field Repair',
+        price: 150,
+        service: 'repair',
+      },
     ],
   },
   {
@@ -62,7 +74,13 @@ export const WORLD_SHOPS: WorldShop[] = [
       { kind: 'resource', id: 'stim_vial', name: 'Stim Vial', price: 130 },
       { kind: 'resource', id: 'chems', name: 'Chems', price: 50 },
       { kind: 'resource', id: 'nano_fiber', name: 'Nano Fiber', price: 110 },
-      { kind: 'service', id: 'heal', name: 'Full Stim (+100 HP)', price: 400, service: 'heal' },
+      {
+        kind: 'service',
+        id: 'heal',
+        name: 'Full Stim (+100 HP)',
+        price: 400,
+        service: 'heal',
+      },
     ],
   },
   {
@@ -74,7 +92,13 @@ export const WORLD_SHOPS: WorldShop[] = [
     factionId: 'dock_rats',
     items: [
       { kind: 'resource', id: 'fuel_cell', name: 'Fuel Cell', price: 90 },
-      { kind: 'service', id: 'clear_heat', name: 'Lose the Heat', price: 350, service: 'clear_heat' },
+      {
+        kind: 'service',
+        id: 'clear_heat',
+        name: 'Lose the Heat',
+        price: 350,
+        service: 'clear_heat',
+      },
       { kind: 'resource', id: 'scrap', name: 'Scrap', price: 30 },
     ],
   },

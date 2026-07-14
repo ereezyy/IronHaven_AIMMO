@@ -85,7 +85,10 @@ const SkillTreePanel: React.FC<SkillTreePanelProps> = ({ onClose }) => {
               }`}
               style={
                 tree === t
-                  ? { borderColor: TREE_META[t].color, color: TREE_META[t].color }
+                  ? {
+                      borderColor: TREE_META[t].color,
+                      color: TREE_META[t].color,
+                    }
                   : undefined
               }
             >
@@ -171,8 +174,7 @@ const SkillTreePanel: React.FC<SkillTreePanelProps> = ({ onClose }) => {
                             key={i}
                             className="h-1 flex-1"
                             style={{
-                              background:
-                                i < rank ? meta.color : '#1a1c1f',
+                              background: i < rank ? meta.color : '#1a1c1f',
                             }}
                           />
                         ))}
@@ -274,7 +276,9 @@ const SkillTreePanel: React.FC<SkillTreePanelProps> = ({ onClose }) => {
 
 const Mod: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <div className="flex justify-between">
-    <span className="text-neutral-600 tracking-[0.12em] uppercase">{label}</span>
+    <span className="text-neutral-600 tracking-[0.12em] uppercase">
+      {label}
+    </span>
     <span className="text-neutral-300">{value}</span>
   </div>
 );

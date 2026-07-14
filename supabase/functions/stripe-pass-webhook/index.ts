@@ -102,14 +102,18 @@ async function upsertPass(row: {
   return !error;
 }
 
-function playerIdFromMeta(obj: Record<string, unknown> | null | undefined): string {
+function playerIdFromMeta(
+  obj: Record<string, unknown> | null | undefined
+): string {
   if (!obj) return 'anonymous';
   const meta = (obj.metadata || {}) as Record<string, string>;
   return (
     meta.player_id ||
     meta.playerId ||
     meta.ironhaven_player ||
-    (typeof obj.client_reference_id === 'string' ? obj.client_reference_id : null) ||
+    (typeof obj.client_reference_id === 'string'
+      ? obj.client_reference_id
+      : null) ||
     'anonymous'
   );
 }
@@ -153,19 +157,17 @@ serve(async (req: Request) => {
   const type = event.type;
 
   try {
-    if (
-      type === 'checkout.session.completed' ||
-      type === 'invoice.paid'
-    ) {
+    if (type === 'checkout.session.completed' || type === 'invoice.paid') {
       const playerId = playerIdFromMeta(obj);
-      const customer =
-        typeof obj.customer === 'string' ? obj.customer : null;
+      const customer = typeof obj.customer === 'string' ? obj.customer : null;
       const subscription =
         typeof obj.subscription === 'string' ? obj.subscription : null;
       // invoice: period end on lines; session: grant one week
       let expires = Date.now() + WEEK_MS;
       if (type === 'invoice.paid') {
-        const lines = obj.lines as { data?: Array<{ period?: { end?: number } }> } | undefined;
+        const lines = obj.lines as
+          | { data?: Array<{ period?: { end?: number } }> }
+          | undefined;
         const end = lines?.data?.[0]?.period?.end;
         if (end) expires = end * 1000;
       }
@@ -186,8 +188,7 @@ serve(async (req: Request) => {
         player_id: playerId,
         stripe_customer_id:
           typeof obj.customer === 'string' ? obj.customer : null,
-        stripe_subscription_id:
-          typeof obj.id === 'string' ? obj.id : null,
+        stripe_subscription_id: typeof obj.id === 'string' ? obj.id : null,
         expires_at: active
           ? expiresFromPeriodEnd(periodEnd)
           : new Date().toISOString(),
@@ -209,7 +210,8 @@ serve(async (req: Request) => {
               ? obj.subscription
               : null,
         expires_at: new Date().toISOString(),
-        status: type === 'customer.subscription.deleted' ? 'canceled' : 'past_due',
+        status:
+          type === 'customer.subscription.deleted' ? 'canceled' : 'past_due',
       });
     }
   } catch (e) {

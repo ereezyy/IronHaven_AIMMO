@@ -41,9 +41,9 @@ describe('Iron Haven Pass model', () => {
   it('formats remaining time', () => {
     const now = Date.UTC(2026, 0, 1);
     const day = 24 * 60 * 60 * 1000;
-    expect(formatPassRemaining({ expiresAt: now + 2 * day + 3 * 3600000 }, now)).toMatch(
-      /2d/
-    );
+    expect(
+      formatPassRemaining({ expiresAt: now + 2 * day + 3 * 3600000 }, now)
+    ).toMatch(/2d/);
     expect(formatPassRemaining({ expiresAt: now - 1 }, now)).toBe('expired');
     expect(msRemaining({ expiresAt: now + 5000 }, now)).toBe(5000);
   });

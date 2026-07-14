@@ -16,11 +16,35 @@ export interface FishDef {
 }
 
 export const FISH: FishDef[] = [
-  { id: 'scrap_boot', name: 'Rusted Boot', rarity: 'common', sell: 5, weight: 20 },
-  { id: 'neon_minnow', name: 'Neon Minnow', rarity: 'common', sell: 25, weight: 40 },
-  { id: 'chrome_bass', name: 'Chrome Bass', rarity: 'uncommon', sell: 80, weight: 25 },
+  {
+    id: 'scrap_boot',
+    name: 'Rusted Boot',
+    rarity: 'common',
+    sell: 5,
+    weight: 20,
+  },
+  {
+    id: 'neon_minnow',
+    name: 'Neon Minnow',
+    rarity: 'common',
+    sell: 25,
+    weight: 40,
+  },
+  {
+    id: 'chrome_bass',
+    name: 'Chrome Bass',
+    rarity: 'uncommon',
+    sell: 80,
+    weight: 25,
+  },
   { id: 'toxic_eel', name: 'Toxic Eel', rarity: 'rare', sell: 180, weight: 12 },
-  { id: 'void_koi', name: 'Void Koi', rarity: 'legendary', sell: 600, weight: 3 },
+  {
+    id: 'void_koi',
+    name: 'Void Koi',
+    rarity: 'legendary',
+    sell: 600,
+    weight: 3,
+  },
 ];
 
 export interface FishSpot {

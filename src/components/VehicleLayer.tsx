@@ -38,10 +38,18 @@ function VehicleMesh({
 }) {
   if (spawn.kind === 'bike') {
     return (
-      <group ref={groupRef} position={spawn.position} rotation={[0, spawn.rotation, 0]}>
+      <group
+        ref={groupRef}
+        position={spawn.position}
+        rotation={[0, spawn.rotation, 0]}
+      >
         <mesh castShadow position={[0, 0.45, 0]}>
           <boxGeometry args={[0.5, 0.4, 1.6]} />
-          <meshStandardMaterial color={spawn.color} metalness={0.6} roughness={0.35} />
+          <meshStandardMaterial
+            color={spawn.color}
+            metalness={0.6}
+            roughness={0.35}
+          />
         </mesh>
         <mesh position={[0, 0.25, 0.55]} rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry args={[0.28, 0.28, 0.15, 12]} />
@@ -56,23 +64,43 @@ function VehicleMesh({
   }
   if (spawn.kind === 'hauler') {
     return (
-      <group ref={groupRef} position={spawn.position} rotation={[0, spawn.rotation, 0]}>
+      <group
+        ref={groupRef}
+        position={spawn.position}
+        rotation={[0, spawn.rotation, 0]}
+      >
         <mesh castShadow position={[0, 0.7, 0]}>
           <boxGeometry args={[2.2, 1.2, 3.6]} />
-          <meshStandardMaterial color={spawn.color} metalness={0.45} roughness={0.5} />
+          <meshStandardMaterial
+            color={spawn.color}
+            metalness={0.45}
+            roughness={0.5}
+          />
         </mesh>
         <mesh position={[0, 1.5, 0.6]}>
           <boxGeometry args={[2, 0.7, 1.4]} />
-          <meshStandardMaterial color="#1a1c20" metalness={0.5} roughness={0.4} />
+          <meshStandardMaterial
+            color="#1a1c20"
+            metalness={0.5}
+            roughness={0.4}
+          />
         </mesh>
       </group>
     );
   }
   return (
-    <group ref={groupRef} position={spawn.position} rotation={[0, spawn.rotation, 0]}>
+    <group
+      ref={groupRef}
+      position={spawn.position}
+      rotation={[0, spawn.rotation, 0]}
+    >
       <mesh castShadow position={[0, 0.55, 0]}>
         <boxGeometry args={[1.8, 0.7, 3.2]} />
-        <meshStandardMaterial color={spawn.color} metalness={0.55} roughness={0.4} />
+        <meshStandardMaterial
+          color={spawn.color}
+          metalness={0.55}
+          roughness={0.4}
+        />
       </mesh>
       <mesh position={[0, 1.05, -0.2]}>
         <boxGeometry args={[1.5, 0.55, 1.6]} />
@@ -140,13 +168,9 @@ const VehicleLayer: React.FC<VehicleLayerProps> = ({
     const { forward, backward, left, right } = getKeys();
     const mods = useGameStore.getState().getModifiers();
     const buffs = useGameStore.getState().buffs;
-    const driveBuff =
-      Date.now() < buffs.driveUntil ? buffs.driveMult : 1;
+    const driveBuff = Date.now() < buffs.driveUntil ? buffs.driveMult : 1;
     const maxSpeed =
-      spawn.maxSpeed *
-      (0.85 + drivingSkill / 80) *
-      mods.driveSpeed *
-      driveBuff;
+      spawn.maxSpeed * (0.85 + drivingSkill / 80) * mods.driveSpeed * driveBuff;
     const accel = (28 + drivingSkill * 0.4) * mods.driveSpeed;
     const turn = 2.1 + drivingSkill * 0.02;
 

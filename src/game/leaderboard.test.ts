@@ -54,9 +54,37 @@ describe('rival seeding', () => {
 
 describe('ranking', () => {
   const scores: LeaderboardScore[] = [
-    { id: 'a', name: 'Alpha', factionId: 'dock_rats', pvpKills: 3, bossKills: 1, huntKills: 2, wealth: 100, xp: 50 },
-    { id: 'b', name: 'Bravo', factionId: 'chrome_guard', pvpKills: 9, bossKills: 0, huntKills: 4, wealth: 300, xp: 20 },
-    { id: 'c', name: 'Charlie', factionId: 'neon_syndicate', pvpKills: 9, bossKills: 5, huntKills: 1, wealth: 50, xp: 80, isPlayer: true },
+    {
+      id: 'a',
+      name: 'Alpha',
+      factionId: 'dock_rats',
+      pvpKills: 3,
+      bossKills: 1,
+      huntKills: 2,
+      wealth: 100,
+      xp: 50,
+    },
+    {
+      id: 'b',
+      name: 'Bravo',
+      factionId: 'chrome_guard',
+      pvpKills: 9,
+      bossKills: 0,
+      huntKills: 4,
+      wealth: 300,
+      xp: 20,
+    },
+    {
+      id: 'c',
+      name: 'Charlie',
+      factionId: 'neon_syndicate',
+      pvpKills: 9,
+      bossKills: 5,
+      huntKills: 1,
+      wealth: 50,
+      xp: 80,
+      isPlayer: true,
+    },
   ];
 
   it('sorts descending by category value', () => {
@@ -89,28 +117,57 @@ describe('ranking', () => {
 
 describe('persistence merge', () => {
   it('takes per-field max of best vs live', () => {
-    const best = { pvpKills: 5, bossKills: 2, huntKills: 10, wealth: 500, xp: 200 };
-    const live = { pvpKills: 3, bossKills: 4, huntKills: 8, wealth: 900, xp: 150 };
+    const best = {
+      pvpKills: 5,
+      bossKills: 2,
+      huntKills: 10,
+      wealth: 500,
+      xp: 200,
+    };
+    const live = {
+      pvpKills: 3,
+      bossKills: 4,
+      huntKills: 8,
+      wealth: 900,
+      xp: 150,
+    };
     expect(mergeBest(best, live)).toEqual({
-      pvpKills: 5, bossKills: 4, huntKills: 10, wealth: 900, xp: 200,
+      pvpKills: 5,
+      bossKills: 4,
+      huntKills: 10,
+      wealth: 900,
+      xp: 200,
     });
   });
 
   it('empty score is all zeros', () => {
     expect(emptyPlayerScore()).toEqual({
-      pvpKills: 0, bossKills: 0, huntKills: 0, wealth: 0, xp: 0,
+      pvpKills: 0,
+      bossKills: 0,
+      huntKills: 0,
+      wealth: 0,
+      xp: 0,
     });
   });
 });
 
 describe('buildBoard', () => {
   const player = {
-    name: 'Tester', factionId: 'dock_rats' as const,
-    pvpKills: 999, bossKills: 999, huntKills: 999, wealth: 9_999_999, xp: 9_999_999,
+    name: 'Tester',
+    factionId: 'dock_rats' as const,
+    pvpKills: 999,
+    bossKills: 999,
+    huntKills: 999,
+    wealth: 9_999_999,
+    xp: 9_999_999,
   };
 
   it('includes the player and ranks them #1 with dominant stats', () => {
-    const { rows, season } = buildBoard(player, 'wealth', new Date('2026-07-08T12:00:00Z'));
+    const { rows, season } = buildBoard(
+      player,
+      'wealth',
+      new Date('2026-07-08T12:00:00Z')
+    );
     expect(season).toMatch(/^S-\d{4}-W\d{2}$/);
     const me = playerRank(rows);
     expect(me?.rank).toBe(1);
@@ -123,7 +180,14 @@ describe('buildBoard', () => {
       season: season(now),
       best: { pvpKills: 40, bossKills: 0, huntKills: 0, wealth: 0, xp: 0 },
     };
-    const weakPlayer = { ...player, pvpKills: 1, wealth: 0, xp: 0, bossKills: 0, huntKills: 0 };
+    const weakPlayer = {
+      ...player,
+      pvpKills: 1,
+      wealth: 0,
+      xp: 0,
+      bossKills: 0,
+      huntKills: 0,
+    };
     const { playerBest } = buildBoard(weakPlayer, 'pvpKills', now, persisted);
     expect(playerBest.pvpKills).toBe(40); // persisted best wins over weak live
   });

@@ -27,7 +27,9 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
       const body =
-        typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
+        typeof req.body === 'string'
+          ? JSON.parse(req.body || '{}')
+          : req.body || {};
       playerId = body.playerId || body.player_id || playerId;
     } catch {
       /* ignore */
@@ -35,7 +37,9 @@ export default async function handler(req, res) {
   }
 
   if (!playerId) {
-    res.status(200).json({ active: false, expiresAt: 0, hint: 'pass playerId' });
+    res
+      .status(200)
+      .json({ active: false, expiresAt: 0, hint: 'pass playerId' });
     return;
   }
 

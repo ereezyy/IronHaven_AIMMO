@@ -109,9 +109,7 @@ class PersistenceService {
     } catch (error) {
       console.warn('Database error, switching to offline mode:', error);
       this.offlineMode = true;
-      markSupabaseOffline(
-        error instanceof Error ? error.message : 'network'
-      );
+      markSupabaseOffline(error instanceof Error ? error.message : 'network');
       const playerId = this.generatePlayerId();
       this.currentPlayerId = playerId;
       return playerId;

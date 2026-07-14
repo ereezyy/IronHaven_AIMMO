@@ -131,11 +131,7 @@ class GameAudio {
    * Procedural "voice" for cutscene subtitles — formant-ish blips paced
    * by word count. Not TTS; a cinematic radio stinger that feels spoken.
    */
-  speak(
-    text: string,
-    tone: VoiceTone = 'director',
-    volume = 0.22
-  ): void {
+  speak(text: string, tone: VoiceTone = 'director', volume = 0.22): void {
     if (!this.ctx || !this.master || this.muted || !this.unlocked) return;
     const ctx = this.ctx;
     const now = ctx.currentTime;
@@ -152,8 +148,7 @@ class GameAudio {
 
     for (let i = 0; i < n; i++) {
       const t = now + i * 0.075;
-      const f =
-        base * pitch * (1 + 0.08 * Math.sin(i * 1.7) + (i % 3) * 0.04);
+      const f = base * pitch * (1 + 0.08 * Math.sin(i * 1.7) + (i % 3) * 0.04);
       // Two partials ≈ rough formants.
       this.tone(this.voiceGain, t, f, 0.055, 'sawtooth', 0.07);
       this.tone(this.voiceGain, t, f * 1.85, 0.045, 'triangle', 0.035);

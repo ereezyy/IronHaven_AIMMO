@@ -160,9 +160,11 @@ const server = http.createServer(async (req, res) => {
   // --- status restore ---
   if (
     (req.method === 'GET' || req.method === 'POST') &&
-    (pathname === '/stripe-pass-status' || pathname.endsWith('/stripe-pass-status'))
+    (pathname === '/stripe-pass-status' ||
+      pathname.endsWith('/stripe-pass-status'))
   ) {
-    let playerId = url.searchParams.get('playerId') || url.searchParams.get('player_id');
+    let playerId =
+      url.searchParams.get('playerId') || url.searchParams.get('player_id');
     if (req.method === 'POST') {
       try {
         const body = JSON.parse(await readBody(req));
@@ -172,13 +174,18 @@ const server = http.createServer(async (req, res) => {
       }
     }
     if (!playerId) {
-      return json(res, 200, { active: false, expiresAt: 0, hint: 'pass playerId' });
+      return json(res, 200, {
+        active: false,
+        expiresAt: 0,
+        hint: 'pass playerId',
+      });
     }
     const row = readStore().rows[playerId];
     if (!row) return json(res, 200, { active: false, expiresAt: 0 });
     const expiresAt = new Date(row.expires_at).getTime();
     const active =
-      (row.status === 'active' || row.status === 'trialing') && expiresAt > Date.now();
+      (row.status === 'active' || row.status === 'trialing') &&
+      expiresAt > Date.now();
     return json(res, 200, {
       active,
       expiresAt: active ? expiresAt : 0,
@@ -189,7 +196,8 @@ const server = http.createServer(async (req, res) => {
   // --- webhook ---
   if (
     req.method === 'POST' &&
-    (pathname === '/stripe-pass-webhook' || pathname.endsWith('/stripe-pass-webhook'))
+    (pathname === '/stripe-pass-webhook' ||
+      pathname.endsWith('/stripe-pass-webhook'))
   ) {
     const body = await readBody(req);
     const sig = req.headers['stripe-signature'] || '';
@@ -199,7 +207,9 @@ const server = http.createServer(async (req, res) => {
         return json(res, 400, { error: 'invalid signature' });
       }
     } else {
-      console.warn('[pass-api] STRIPE_WEBHOOK_SECRET unset — accepting without verify (dev only)');
+      console.warn(
+        '[pass-api] STRIPE_WEBHOOK_SECRET unset — accepting without verify (dev only)'
+      );
     }
 
     let event;
@@ -213,10 +223,7 @@ const server = http.createServer(async (req, res) => {
     const obj = (event.data && event.data.object) || {};
     const playerId = playerIdFromObj(obj);
 
-    if (
-      type === 'checkout.session.completed' ||
-      type === 'invoice.paid'
-    ) {
+    if (type === 'checkout.session.completed' || type === 'invoice.paid') {
       let expires = Date.now() + WEEK_MS;
       if (type === 'invoice.paid') {
         const end = obj.lines?.data?.[0]?.period?.end;
@@ -225,7 +232,8 @@ const server = http.createServer(async (req, res) => {
       upsertPass(playerId, {
         expires_at: new Date(expires).toISOString(),
         status: 'active',
-        stripe_customer_id: typeof obj.customer === 'string' ? obj.customer : null,
+        stripe_customer_id:
+          typeof obj.customer === 'string' ? obj.customer : null,
         stripe_subscription_id:
           typeof obj.subscription === 'string' ? obj.subscription : null,
       });
@@ -239,7 +247,8 @@ const server = http.createServer(async (req, res) => {
         expires_at: active
           ? new Date((periodEnd || Date.now() / 1000) * 1000).toISOString()
           : new Date().toISOString(),
-        stripe_customer_id: typeof obj.customer === 'string' ? obj.customer : null,
+        stripe_customer_id:
+          typeof obj.customer === 'string' ? obj.customer : null,
         stripe_subscription_id: typeof obj.id === 'string' ? obj.id : null,
       });
     } else if (
@@ -247,7 +256,8 @@ const server = http.createServer(async (req, res) => {
       type === 'invoice.payment_failed'
     ) {
       upsertPass(playerId, {
-        status: type === 'customer.subscription.deleted' ? 'canceled' : 'past_due',
+        status:
+          type === 'customer.subscription.deleted' ? 'canceled' : 'past_due',
         expires_at: new Date().toISOString(),
       });
     }

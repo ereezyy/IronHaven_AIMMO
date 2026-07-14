@@ -598,10 +598,12 @@ export function computeModifiers(ranks: SkillRanks): SkillModifiers {
       else if (key === 'critChance') m.critChance += add;
       else if (key === 'critMult') m.critMult += add;
       else if (key === 'maxHealth') m.maxHealth += add;
-      else if (key === 'staminaDrain') m.staminaDrain = Math.max(0.4, m.staminaDrain - add);
+      else if (key === 'staminaDrain')
+        m.staminaDrain = Math.max(0.4, m.staminaDrain - add);
       else if (key === 'harvestYield') m.harvestYield += add;
       else if (key === 'fishChance') m.fishChance += add;
-      else if (key === 'craftCost') m.craftCost = Math.max(0.5, m.craftCost - add);
+      else if (key === 'craftCost')
+        m.craftCost = Math.max(0.5, m.craftCost - add);
       else if (key === 'driveSpeed') m.driveSpeed += add;
       else if (key === 'xpBonus') m.xpBonus += add;
       else if (key === 'cooldown') m.cooldown = Math.max(0.5, m.cooldown - add);

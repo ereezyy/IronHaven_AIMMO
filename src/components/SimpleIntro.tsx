@@ -51,27 +51,27 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
           'ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace',
       }}
     >
-      {/* Dramatic generated city background */}
+      {/* Brighter generated city background */}
       <div
-        className="absolute inset-0 opacity-55"
+        className="absolute inset-0 opacity-75"
         style={{
           backgroundImage: `url(/assets/ironhaven_city_intro.png)`,
           backgroundSize: 'cover',
           backgroundPosition: 'center 38%',
-          filter: 'contrast(1.12) brightness(0.62) saturate(0.88)',
+          filter: 'contrast(1.1) brightness(0.85)',
         }}
       />
 
-      {/* Heavy vignette + film grain / scanlines */}
+      {/* Softer vignette + film grain */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse at center, transparent 12%, rgba(0,0,0,0.62) 58%, rgba(0,0,0,0.92) 100%)',
+            'radial-gradient(ellipse at center, transparent 25%, rgba(0,0,0,0.45) 70%, rgba(0,0,0,0.75) 100%)',
         }}
       />
       <div
-        className="absolute inset-0 opacity-[0.07] pointer-events-none"
+        className="absolute inset-0 opacity-[0.06] pointer-events-none"
         style={{
           backgroundImage:
             'repeating-linear-gradient(0deg, transparent, transparent 2px, #111 2px, #111 3.5px)',
@@ -81,7 +81,7 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
       {/* Title band */}
       <div
         className="absolute inset-x-0 top-0 px-10 pt-8 flex items-baseline justify-between text-[11px] tracking-[0.3em] uppercase z-10"
-        style={{ color: '#6b6b70' }}
+        style={{ color: '#8a8d92' }}
       >
         <span>IRONHAVEN / cold boot</span>
         <span>
@@ -93,7 +93,7 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
       <div className="absolute left-10 right-10 z-10" style={{ top: '9vh' }}>
         <div
           className="text-[11px] tracking-[0.4em] uppercase mb-2.5"
-          style={{ color: '#8a3b34' }}
+          style={{ color: '#c03a30' }}
         >
           ironhaven · aimmo · build 2087
         </div>
@@ -103,13 +103,13 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
           style={{
             backgroundImage: `url(/assets/ironhaven_title.png)`,
             backgroundPosition: 'left center',
-            filter: 'contrast(1.08) brightness(1.05)',
+            filter: 'contrast(1.1) brightness(1.1)',
           }}
         />
 
         <div
           className="mt-1 text-[13px] tracking-[0.2em] uppercase"
-          style={{ color: '#9ca3af' }}
+          style={{ color: '#aab0b9' }}
         >
           a cyberpunk mmo · ai-directed · webgl
         </div>
@@ -125,8 +125,8 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
           style={{ borderColor: '#c03a30' }}
         >
           {visibleLines.map((l) => (
-            <div key={l.at} style={{ color: '#cfcfd2' }}>
-              <span style={{ color: '#6b6b70' }}>
+            <div key={l.at} style={{ color: '#e0e2e5' }}>
+              <span style={{ color: '#7a7e85' }}>
                 [ {String(l.at).padStart(2, '0')}.000 ]
               </span>{' '}
               {l.text}
@@ -152,12 +152,12 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
       <div className="absolute inset-x-10 bottom-7 z-10">
         <div
           className="flex items-center justify-between text-[11px] tracking-[0.3em] uppercase mb-1.5"
-          style={{ color: '#6b6b70' }}
+          style={{ color: '#7a7e85' }}
         >
           <span>compositing</span>
           <span>{pct.toString().padStart(3, '0')}%</span>
         </div>
-        <div className="h-[2px] w-full" style={{ background: '#1f1f22' }}>
+        <div className="h-[2px] w-full" style={{ background: '#2a2c30' }}>
           <div
             className="h-full transition-all duration-700"
             style={{ width: `${pct}%`, background: '#c03a30' }}
@@ -176,7 +176,7 @@ const SimpleIntro: React.FC<SimpleIntroProps> = ({ onComplete }) => {
 };
 
 function CornerTicks() {
-  const c = '#3a3a3e';
+  const c = '#4a4d52';
   return (
     <>
       <div

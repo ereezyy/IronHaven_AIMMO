@@ -61,8 +61,15 @@ async function stripe(method, endpoint, fields) {
 const list = await stripe('GET', 'webhook_endpoints?limit=100');
 const existing = (list.data || []).find((w) => w.url === targetUrl);
 if (existing) {
-  console.log('Webhook already exists:', existing.id, existing.status, existing.url);
-  console.log('Signing secret is only shown at creation — keep your existing whsec.');
+  console.log(
+    'Webhook already exists:',
+    existing.id,
+    existing.status,
+    existing.url
+  );
+  console.log(
+    'Signing secret is only shown at creation — keep your existing whsec.'
+  );
   process.exit(0);
 }
 

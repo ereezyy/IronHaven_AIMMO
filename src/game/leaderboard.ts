@@ -29,11 +29,36 @@ export interface CategoryDef {
 }
 
 export const LEADERBOARD_CATEGORIES: CategoryDef[] = [
-  { id: 'pvpKills', label: 'PvP Kills', blurb: 'Runners dropped in open-world PvP.', field: 'pvpKills' },
-  { id: 'bossKills', label: 'Boss Kills', blurb: 'World bosses put down.', field: 'bossKills' },
-  { id: 'huntKills', label: 'Hunts', blurb: 'Wildlife taken across the district.', field: 'huntKills' },
-  { id: 'wealth', label: 'Wealth', blurb: 'Total cash earned this season.', field: 'wealth' },
-  { id: 'xp', label: 'XP', blurb: 'Experience banked this season.', field: 'xp' },
+  {
+    id: 'pvpKills',
+    label: 'PvP Kills',
+    blurb: 'Runners dropped in open-world PvP.',
+    field: 'pvpKills',
+  },
+  {
+    id: 'bossKills',
+    label: 'Boss Kills',
+    blurb: 'World bosses put down.',
+    field: 'bossKills',
+  },
+  {
+    id: 'huntKills',
+    label: 'Hunts',
+    blurb: 'Wildlife taken across the district.',
+    field: 'huntKills',
+  },
+  {
+    id: 'wealth',
+    label: 'Wealth',
+    blurb: 'Total cash earned this season.',
+    field: 'wealth',
+  },
+  {
+    id: 'xp',
+    label: 'XP',
+    blurb: 'Experience banked this season.',
+    field: 'xp',
+  },
 ];
 
 export interface LeaderboardScore {
@@ -75,10 +100,28 @@ function hash(s: string): number {
 }
 
 const RIVAL_NAMES = [
-  'Vex', 'Static', 'Mako', 'Cinder', 'Halcyon', 'Rook', 'Nyx', 'Drift',
-  'Ozone', 'Wraith', 'Quartz', 'Havoc', 'Slate', 'Ember', 'Cobalt', 'Riven',
+  'Vex',
+  'Static',
+  'Mako',
+  'Cinder',
+  'Halcyon',
+  'Rook',
+  'Nyx',
+  'Drift',
+  'Ozone',
+  'Wraith',
+  'Quartz',
+  'Havoc',
+  'Slate',
+  'Ember',
+  'Cobalt',
+  'Riven',
 ];
-const RIVAL_FACTIONS: FactionId[] = ['neon_syndicate', 'chrome_guard', 'dock_rats'];
+const RIVAL_FACTIONS: FactionId[] = [
+  'neon_syndicate',
+  'chrome_guard',
+  'dock_rats',
+];
 
 /**
  * Deterministic AI rival pool for a season. Same season key → same rivals,
@@ -91,7 +134,10 @@ export function seedRivals(key: string, count = 12): LeaderboardScore[] {
     const tier = 1 + (h % 5); // 1..5 skill tier scales all stats
     rivals.push({
       id: `rival_${key}_${i}`,
-      name: RIVAL_NAMES[h % RIVAL_NAMES.length] + '-' + String(((h >>> 8) % 90) + 10),
+      name:
+        RIVAL_NAMES[h % RIVAL_NAMES.length] +
+        '-' +
+        String(((h >>> 8) % 90) + 10),
       factionId: RIVAL_FACTIONS[h % RIVAL_FACTIONS.length],
       pvpKills: tier * (3 + (h % 9)),
       bossKills: Math.floor(tier * ((h >>> 3) % 4)),
@@ -143,7 +189,8 @@ export function emptyPlayerScore(): PersistedLeaderboard['best'] {
 export function loadLeaderboard(now = new Date()): PersistedLeaderboard {
   const season = seasonKey(now);
   try {
-    if (typeof localStorage === 'undefined') return { season, best: emptyPlayerScore() };
+    if (typeof localStorage === 'undefined')
+      return { season, best: emptyPlayerScore() };
     const raw = localStorage.getItem(LEADERBOARD_STORAGE_KEY);
     if (!raw) return { season, best: emptyPlayerScore() };
     const parsed = JSON.parse(raw) as Partial<PersistedLeaderboard>;
@@ -211,11 +258,16 @@ export function buildBoard(
   now = new Date(),
   persisted?: PersistedLeaderboard,
   rivalCount = 12
-): { season: string; rows: RankedRow[]; playerBest: PersistedLeaderboard['best'] } {
+): {
+  season: string;
+  rows: RankedRow[];
+  playerBest: PersistedLeaderboard['best'];
+} {
   const season = seasonKey(now);
-  const prev = persisted && persisted.season === season
-    ? persisted.best
-    : emptyPlayerScore();
+  const prev =
+    persisted && persisted.season === season
+      ? persisted.best
+      : emptyPlayerScore();
   const merged = mergeBest(prev, {
     pvpKills: player.pvpKills,
     bossKills: player.bossKills,

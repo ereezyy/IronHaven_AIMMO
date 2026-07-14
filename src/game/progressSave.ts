@@ -52,7 +52,11 @@ export interface ProgressSnapshot {
 export function saveProgressSnapshot(snap: ProgressSnapshot): boolean {
   try {
     if (typeof localStorage === 'undefined') return false;
-    const payload: ProgressSnapshot = { ...snap, version: 1, savedAt: Date.now() };
+    const payload: ProgressSnapshot = {
+      ...snap,
+      version: 1,
+      savedAt: Date.now(),
+    };
     localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(payload));
     return true;
   } catch {

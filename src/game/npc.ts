@@ -201,8 +201,7 @@ export function tickNpc(
     if (distSq < MELEE_RANGE * MELEE_RANGE && npc.attackCd <= 0) {
       npc.attackCd = npc.type === 'police' && p.wanted >= 3 ? 0.85 : 1.1;
       // Police hit harder when the city wants you dead.
-      const heatBonus =
-        npc.type === 'police' ? Math.min(5, p.wanted) * 3 : 0;
+      const heatBonus = npc.type === 'police' ? Math.min(5, p.wanted) * 3 : 0;
       events.push({
         kind: 'damage',
         amount: BASE[npc.type].dmg + heatBonus,
@@ -296,8 +295,7 @@ function decideMood(
     }
   } else if (t === 'gangster' || t === 'hitman' || t === 'boss') {
     // High heat makes crews twitchy too — they don't want your mess on them.
-    const heatAggro =
-      p.wanted >= 3 && distSq < AGGRO_RANGE * AGGRO_RANGE * 0.6;
+    const heatAggro = p.wanted >= 3 && distSq < AGGRO_RANGE * AGGRO_RANGE * 0.6;
     npc.mood =
       (p.reputation < 20 && distSq < AGGRO_RANGE * AGGRO_RANGE) || heatAggro
         ? 'hostile'

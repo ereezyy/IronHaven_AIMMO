@@ -42,13 +42,19 @@ describe('world events triggers', () => {
   });
 
   it('does nothing below thresholds', () => {
-    const t = advance(emptyWorldEventState(), pulse({ totalKills: 3, moneyEarned: 100 }));
+    const t = advance(
+      emptyWorldEventState(),
+      pulse({ totalKills: 3, moneyEarned: 100 })
+    );
     expect(t.started).toBeNull();
     expect(t.state.active).toBeNull();
   });
 
   it('prioritizes turf war over kill streak', () => {
-    const k = pickTrigger(emptyWorldEventState(), pulse({ zoneFlipped: true, totalKills: 20 }));
+    const k = pickTrigger(
+      emptyWorldEventState(),
+      pulse({ zoneFlipped: true, totalKills: 20 })
+    );
     expect(k).toBe('turf_war');
   });
 });
@@ -59,20 +65,29 @@ describe('world events lifetime', () => {
     const t1 = advance(s0, pulse({ now: 1_000, zoneFlipped: true }));
     expect(isEventActive(t1.state, 2_000)).toBe(true);
     // Another flip mid-event should be ignored.
-    const t2 = advance(t1.state, pulse({ now: 2_000, zoneFlipped: true, totalKills: 30 }));
+    const t2 = advance(
+      t1.state,
+      pulse({ now: 2_000, zoneFlipped: true, totalKills: 30 })
+    );
     expect(t2.started).toBeNull();
     expect(t2.state.active?.kind).toBe('turf_war');
   });
 
   it('expires and applies a cooldown', () => {
     const def = WORLD_EVENTS.turf_war;
-    const t1 = advance(emptyWorldEventState(), pulse({ now: 1_000, zoneFlipped: true }));
+    const t1 = advance(
+      emptyWorldEventState(),
+      pulse({ now: 1_000, zoneFlipped: true })
+    );
     const afterEnd = t1.state.active!.endsAt + 1;
     const t2 = advance(t1.state, pulse({ now: afterEnd, zoneFlipped: false }));
     expect(t2.ended?.kind).toBe('turf_war');
     expect(t2.state.active).toBeNull();
     // Immediately flipping again is blocked by cooldown.
-    const t3 = advance(t2.state, pulse({ now: afterEnd + 1, zoneFlipped: true }));
+    const t3 = advance(
+      t2.state,
+      pulse({ now: afterEnd + 1, zoneFlipped: true })
+    );
     expect(t3.started).toBeNull();
     // After the cooldown passes it can trigger again.
     const later = afterEnd + def.cooldownMs + 10;
@@ -81,15 +96,23 @@ describe('world events lifetime', () => {
   });
 
   it('reward multiplier reflects the active event and resets after', () => {
-    const t1 = advance(emptyWorldEventState(), pulse({ now: 1_000, zoneFlipped: true }));
-    expect(eventRewardMult(t1.state, 2_000)).toBe(WORLD_EVENTS.turf_war.rewardMult);
+    const t1 = advance(
+      emptyWorldEventState(),
+      pulse({ now: 1_000, zoneFlipped: true })
+    );
+    expect(eventRewardMult(t1.state, 2_000)).toBe(
+      WORLD_EVENTS.turf_war.rewardMult
+    );
     const afterEnd = t1.state.active!.endsAt + 1;
     const t2 = advance(t1.state, pulse({ now: afterEnd }));
     expect(eventRewardMult(t2.state, afterEnd)).toBe(1);
   });
 
   it('reports remaining time', () => {
-    const t1 = advance(emptyWorldEventState(), pulse({ now: 1_000, zoneFlipped: true }));
+    const t1 = advance(
+      emptyWorldEventState(),
+      pulse({ now: 1_000, zoneFlipped: true })
+    );
     const rem = eventRemainingMs(t1.state, 1_000);
     expect(rem).toBe(WORLD_EVENTS.turf_war.durationMs);
     expect(eventRemainingMs(t1.state, t1.state.active!.endsAt + 100)).toBe(0);

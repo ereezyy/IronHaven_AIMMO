@@ -8,7 +8,8 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
-const keysPath = process.env.IRONHAVEN_KEYS || 'C:/Users/Eddy/Documents/keys.txt';
+const keysPath =
+  process.env.IRONHAVEN_KEYS || 'C:/Users/Eddy/Documents/keys.txt';
 
 function parseEnvFile(raw) {
   /** Prefer unified-diff "+" side, then plain KEY=value, then "-" side. */
@@ -77,7 +78,8 @@ function upsert(content, key, value) {
   const re = new RegExp(`^${key}=.*$`, 'm');
   const line = `${key}=${value}`;
   if (re.test(content)) return content.replace(re, line);
-  const base = content.endsWith('\n') || content === '' ? content : content + '\n';
+  const base =
+    content.endsWith('\n') || content === '' ? content : content + '\n';
   return base + line + '\n';
 }
 
@@ -175,7 +177,9 @@ try {
   const search = await stripeGet(
     sk,
     'products/search?query=' +
-      encodeURIComponent("metadata['ironhaven_product']:'iron_haven_pass' active:'true'")
+      encodeURIComponent(
+        "metadata['ironhaven_product']:'iron_haven_pass' active:'true'"
+      )
   );
   if (search.data?.[0]?.id) {
     productId = search.data[0].id;
@@ -228,8 +232,7 @@ if (weekly) {
 // Payment Link — success URL with ?pass=success
 // Use localhost for dev; player can change after deploy
 const successUrl =
-  process.env.IRONHAVEN_SUCCESS_URL ||
-  'http://localhost:5173/?pass=success';
+  process.env.IRONHAVEN_SUCCESS_URL || 'http://localhost:5173/?pass=success';
 
 let paymentLinkUrl = envMap.VITE_STRIPE_PAYMENT_LINK || '';
 if (!paymentLinkUrl || !paymentLinkUrl.includes('buy.stripe.com')) {
@@ -289,4 +292,6 @@ const envKeys = env
   .filter((l) => l && !l.startsWith('#'))
   .map((l) => l.split('=')[0]);
 console.log('ENV_KEYS', envKeys.join(', '));
-console.log('Done. Payment link and meta written; secrets only in gitignored files.');
+console.log(
+  'Done. Payment link and meta written; secrets only in gitignored files.'
+);

@@ -283,7 +283,7 @@ export class AIConfigManager {
       this.sessionApiKey = config.apiKey;
 
       // Create a copy without the API key for persistent storage
-       
+
       const { apiKey, ...persistentConfig } = config;
 
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(persistentConfig));

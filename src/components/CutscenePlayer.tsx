@@ -49,9 +49,7 @@ const CutscenePlayer: React.FC<CutscenePlayerProps> = ({
   const title = beat?.title || '';
   const body = useMemo(() => {
     if (!beat?.body) return '';
-    return callsign
-      ? beat.body.replace(/\{callsign\}/gi, callsign)
-      : beat.body;
+    return callsign ? beat.body.replace(/\{callsign\}/gi, callsign) : beat.body;
   }, [beat, callsign]);
 
   const subtitle = useMemo(() => {

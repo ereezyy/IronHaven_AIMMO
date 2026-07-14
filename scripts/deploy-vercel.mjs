@@ -107,22 +107,18 @@ try {
 function vercelEnvAdd(key, value, target = 'production') {
   if (!value) return;
   // vercel env add is interactive; use `vercel env rm` then pipe
-  const rm = spawnSync(
-    'npx',
-    ['vercel', 'env', 'rm', key, target, '--yes'],
-    { cwd: root, shell: true, stdio: 'pipe' }
-  );
-  const add = spawnSync(
-    'npx',
-    ['vercel', 'env', 'add', key, target],
-    {
-      cwd: root,
-      shell: true,
-      input: value + '\n',
-      encoding: 'utf8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    }
-  );
+  const rm = spawnSync('npx', ['vercel', 'env', 'rm', key, target, '--yes'], {
+    cwd: root,
+    shell: true,
+    stdio: 'pipe',
+  });
+  const add = spawnSync('npx', ['vercel', 'env', 'add', key, target], {
+    cwd: root,
+    shell: true,
+    input: value + '\n',
+    encoding: 'utf8',
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
   if (add.status === 0) {
     console.log('Set env', key, '→', target);
   } else {

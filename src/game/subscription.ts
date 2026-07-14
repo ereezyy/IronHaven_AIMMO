@@ -255,10 +255,7 @@ export function applyPassShopDiscount(
   return Math.max(floor, currentMult - PASS_BENEFITS.shopDiscount);
 }
 
-export function applyPassXp(
-  amount: number,
-  passActive: boolean
-): number {
+export function applyPassXp(amount: number, passActive: boolean): number {
   if (!passActive || amount <= 0) return amount;
   return Math.round(amount * PASS_BENEFITS.xpMult);
 }

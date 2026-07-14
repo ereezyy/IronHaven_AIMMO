@@ -38,7 +38,8 @@ serve(async (req: Request) => {
 
   let playerId: string | null = null;
   const url = new URL(req.url);
-  playerId = url.searchParams.get('playerId') || url.searchParams.get('player_id');
+  playerId =
+    url.searchParams.get('playerId') || url.searchParams.get('player_id');
 
   if (req.method === 'POST') {
     try {

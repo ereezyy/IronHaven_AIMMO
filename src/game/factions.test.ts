@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  isHostileFaction,
-  zoneAt,
-  FACTIONS,
-  emptyStanding,
-} from './factions';
+import { isHostileFaction, zoneAt, FACTIONS, emptyStanding } from './factions';
 import { zoneAt as combatZoneAt, allowsPvp } from './zones';
 import { rollFish, FISH_SPOTS, emptyFishBag, sellAllFish } from './fishing';
 import { createBossRuntime, damageBoss } from './bosses';

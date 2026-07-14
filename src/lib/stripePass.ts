@@ -111,8 +111,7 @@ export async function restorePassFromServer(
     };
     if (!data.expiresAt && !data.active) return null;
     const expiresAt =
-      data.expiresAt ||
-      (data.active ? Date.now() + PASS_DURATION_MS : 0);
+      data.expiresAt || (data.active ? Date.now() + PASS_DURATION_MS : 0);
     if (expiresAt <= Date.now()) return null;
     const pass: PassPersisted = {
       ...EMPTY_PASS,
@@ -142,14 +141,16 @@ export async function grantPassViaLocalApi(
     const grantUrl = `${base.origin}/dev/grant-pass`;
     const res = await fetch(grantUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
       body: JSON.stringify({ playerId: playerId || 'anonymous' }),
     });
     if (!res.ok) return null;
     const data = (await res.json()) as { expiresAt?: number; active?: boolean };
     if (!data.active && !data.expiresAt) return null;
-    const expiresAt =
-      data.expiresAt || Date.now() + PASS_DURATION_MS;
+    const expiresAt = data.expiresAt || Date.now() + PASS_DURATION_MS;
     const pass: PassPersisted = {
       ...EMPTY_PASS,
       expiresAt,

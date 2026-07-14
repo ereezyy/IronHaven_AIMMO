@@ -63,8 +63,8 @@ const SocialPanel: React.FC<SocialPanelProps> = ({
           {tab === 'factions' && (
             <>
               <p className="text-[11px] text-neutral-500 leading-relaxed">
-                Pick a color. Enemies hunt you harder in their turf; allies
-                cut shop prices and open dialogue.
+                Pick a color. Enemies hunt you harder in their turf; allies cut
+                shop prices and open dialogue.
               </p>
               {FACTIONS.map((f) => (
                 <button

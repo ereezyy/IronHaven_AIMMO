@@ -102,10 +102,7 @@ export interface BossEvent {
 }
 
 /** Roll loot table on boss death. */
-export function rollBossLoot(
-  def: BossDef,
-  rng = Math.random
-): BossLoot {
+export function rollBossLoot(def: BossDef, rng = Math.random): BossLoot {
   const bonus = rng() > 0.55;
   return {
     money: def.rewardMoney + (bonus ? Math.round(def.rewardMoney * 0.25) : 0),
@@ -169,8 +166,7 @@ export function tickBoss(
 
     const ndx = player.x - nx;
     const ndz = player.z - nz;
-    const inMelee =
-      ndx * ndx + ndz * ndz < b.def.meleeRange * b.def.meleeRange;
+    const inMelee = ndx * ndx + ndz * ndz < b.def.meleeRange * b.def.meleeRange;
 
     // Telegraph → strike: wind-up gives players a beat to dodge.
     if (b.mood === 'windup') {

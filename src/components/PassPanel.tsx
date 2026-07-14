@@ -105,8 +105,7 @@ const PassPanel: React.FC<PassPanelProps> = ({ onClose }) => {
           <span className="text-[11px] text-neutral-500">
             {active ? (
               <>
-                ends in{' '}
-                <span style={{ color: '#c9a15a' }}>{remaining}</span>
+                ends in <span style={{ color: '#c9a15a' }}>{remaining}</span>
                 {pass.source !== 'demo' ? (
                   <span className="ml-2 text-neutral-600">· {pass.source}</span>
                 ) : (

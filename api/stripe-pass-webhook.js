@@ -137,7 +137,8 @@ export default async function handler(req, res) {
       player_id: playerId,
       expires_at: new Date(expires).toISOString(),
       status: 'active',
-      stripe_customer_id: typeof obj.customer === 'string' ? obj.customer : null,
+      stripe_customer_id:
+        typeof obj.customer === 'string' ? obj.customer : null,
       stripe_subscription_id:
         typeof obj.subscription === 'string' ? obj.subscription : null,
       updated_at: new Date().toISOString(),
@@ -154,7 +155,8 @@ export default async function handler(req, res) {
       expires_at: active
         ? new Date((periodEnd || Date.now() / 1000) * 1000).toISOString()
         : new Date().toISOString(),
-      stripe_customer_id: typeof obj.customer === 'string' ? obj.customer : null,
+      stripe_customer_id:
+        typeof obj.customer === 'string' ? obj.customer : null,
       stripe_subscription_id: typeof obj.id === 'string' ? obj.id : null,
       updated_at: new Date().toISOString(),
     };
@@ -166,7 +168,8 @@ export default async function handler(req, res) {
   ) {
     const row = {
       player_id: playerId,
-      status: type === 'customer.subscription.deleted' ? 'canceled' : 'past_due',
+      status:
+        type === 'customer.subscription.deleted' ? 'canceled' : 'past_due',
       expires_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };

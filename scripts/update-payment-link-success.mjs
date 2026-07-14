@@ -8,7 +8,8 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
-const successUrl = process.argv[2] || 'https://ironhaven-aimmo.vercel.app/?pass=success';
+const successUrl =
+  process.argv[2] || 'https://ironhaven-aimmo.vercel.app/?pass=success';
 
 const server = fs.readFileSync(path.join(root, '.env.server'), 'utf8');
 const sk = server.match(/^STRIPE_SECRET_KEY=(.+)$/m)?.[1];

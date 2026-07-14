@@ -84,6 +84,9 @@ export const CONTROLS_ROWS: { keys: string; action: string }[] = [
   { keys: 'C', action: 'Fish cast' },
   { keys: 'P', action: 'Toggle PvP' },
   { keys: '5–8', action: 'Active abilities' },
-  { keys: 'Gamepad', action: 'LS stick move · R stick look · A jump · RT attack' },
+  {
+    keys: 'Gamepad',
+    action: 'LS stick move · R stick look · A jump · RT attack',
+  },
   { keys: 'N', action: 'Next coach tip (first-time guide)' },
 ];

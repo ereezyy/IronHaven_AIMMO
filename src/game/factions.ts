@@ -1,6 +1,10 @@
 // District factions — allegiance, standings, and territorial zones.
 
-export type FactionId = 'neon_syndicate' | 'chrome_guard' | 'dock_rats' | 'null';
+export type FactionId =
+  | 'neon_syndicate'
+  | 'chrome_guard'
+  | 'dock_rats'
+  | 'null';
 
 export interface FactionDef {
   id: FactionId;
@@ -44,7 +48,7 @@ export const FACTIONS: FactionDef[] = [
   {
     id: 'null',
     name: 'Unaffiliated',
-    blurb: 'No colors. Free agent — everyone\'s problem, no one\'s friend.',
+    blurb: "No colors. Free agent — everyone's problem, no one's friend.",
     color: '#8a8d92',
     enemies: [],
     allies: [],

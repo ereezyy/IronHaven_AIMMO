@@ -22,7 +22,9 @@ describe('cutscene scripts', () => {
   });
 
   it('district drop teaches controls', () => {
-    const text = DISTRICT_DROP_CUTSCENE.beats.map((b) => b.body || '').join(' ');
+    const text = DISTRICT_DROP_CUTSCENE.beats
+      .map((b) => b.body || '')
+      .join(' ');
     expect(text.toLowerCase()).toMatch(/wasd|skills|pass/);
   });
 

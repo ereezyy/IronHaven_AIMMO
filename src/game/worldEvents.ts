@@ -9,7 +9,11 @@
 
 import type { FactionId } from './factions';
 
-export type WorldEventKind = 'turf_war' | 'boss_raid' | 'heat_wave' | 'gold_rush';
+export type WorldEventKind =
+  | 'turf_war'
+  | 'boss_raid'
+  | 'heat_wave'
+  | 'gold_rush';
 
 export interface WorldEventDef {
   kind: WorldEventKind;
@@ -29,7 +33,8 @@ export const WORLD_EVENTS: Record<WorldEventKind, WorldEventDef> = {
   turf_war: {
     kind: 'turf_war',
     title: 'TURF WAR',
-    blurb: 'A zone just flipped — factions fight for the block. Kills pay double.',
+    blurb:
+      'A zone just flipped — factions fight for the block. Kills pay double.',
     durationMs: 90_000,
     cooldownMs: 120_000,
     rewardMult: 2,
@@ -92,7 +97,11 @@ export interface WorldEventState {
 }
 
 export function emptyWorldEventState(): WorldEventState {
-  return { active: null, cooldownUntil: {}, base: { totalKills: 0, moneyEarned: 0 } };
+  return {
+    active: null,
+    cooldownUntil: {},
+    base: { totalKills: 0, moneyEarned: 0 },
+  };
 }
 
 export function isEventActive(s: WorldEventState, now: number): boolean {
@@ -105,7 +114,11 @@ export function eventRewardMult(s: WorldEventState, now: number): number {
   return WORLD_EVENTS[s.active.kind].rewardMult;
 }
 
-function offCooldown(s: WorldEventState, kind: WorldEventKind, now: number): boolean {
+function offCooldown(
+  s: WorldEventState,
+  kind: WorldEventKind,
+  now: number
+): boolean {
   const until = s.cooldownUntil[kind] ?? 0;
   return now >= until;
 }
@@ -119,11 +132,18 @@ export function pickTrigger(
   const moneySince = p.moneyEarned - s.base.moneyEarned;
   // Priority: territory flip > boss surge > kill streak > cash surge.
   if (p.zoneFlipped && offCooldown(s, 'turf_war', p.now)) return 'turf_war';
-  if (p.bossKills > 0 && killsSince >= 1 && p.zoneFlipped === false && offCooldown(s, 'boss_raid', p.now) && p.bossKills % 2 === 0) {
+  if (
+    p.bossKills > 0 &&
+    killsSince >= 1 &&
+    p.zoneFlipped === false &&
+    offCooldown(s, 'boss_raid', p.now) &&
+    p.bossKills % 2 === 0
+  ) {
     return 'boss_raid';
   }
   if (killsSince >= 8 && offCooldown(s, 'heat_wave', p.now)) return 'heat_wave';
-  if (moneySince >= 2500 && offCooldown(s, 'gold_rush', p.now)) return 'gold_rush';
+  if (moneySince >= 2500 && offCooldown(s, 'gold_rush', p.now))
+    return 'gold_rush';
   return null;
 }
 
@@ -140,7 +160,10 @@ export interface WorldEventTransition {
  * (if idle) evaluates triggers and starts a new one, resetting baselines so
  * "since" thresholds measure from the last decision point.
  */
-export function advance(s: WorldEventState, p: WorldPulse): WorldEventTransition {
+export function advance(
+  s: WorldEventState,
+  p: WorldPulse
+): WorldEventTransition {
   let state = s;
   let ended: WorldEventDef | null = null;
 
@@ -151,7 +174,10 @@ export function advance(s: WorldEventState, p: WorldPulse): WorldEventTransition
     state = {
       ...state,
       active: null,
-      cooldownUntil: { ...state.cooldownUntil, [def.kind]: p.now + def.cooldownMs },
+      cooldownUntil: {
+        ...state.cooldownUntil,
+        [def.kind]: p.now + def.cooldownMs,
+      },
       base: { totalKills: p.totalKills, moneyEarned: p.moneyEarned },
     };
   }

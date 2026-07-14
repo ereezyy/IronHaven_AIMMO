@@ -134,11 +134,9 @@ export const ShopUI: React.FC<ShopUIProps> = ({ shop, onClose }) => {
                 onClick={() => {
                   if (item.kind === 'resource' && isResourceId(item.id)) {
                     purchase(item.price, () => {
-                      useGameStore
-                        .getState()
-                        .harvestIntoBag({
-                          [item.id]: 1,
-                        } as Partial<Record<ResourceId, number>>);
+                      useGameStore.getState().harvestIntoBag({
+                        [item.id]: 1,
+                      } as Partial<Record<ResourceId, number>>);
                     });
                     return;
                   }

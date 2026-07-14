@@ -356,7 +356,9 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
               <span className="text-neutral-200">
                 {weaponName}
                 {weaponDamage != null && (
-                  <span className="ml-2 text-neutral-500">{weaponDamage} dmg</span>
+                  <span className="ml-2 text-neutral-500">
+                    {weaponDamage} dmg
+                  </span>
                 )}
               </span>
             </div>

@@ -174,14 +174,7 @@ interface GameState {
     sp?: number;
   };
   noteBoardEvent: (
-    kind:
-      | 'hunt'
-      | 'kill'
-      | 'talk'
-      | 'harvest'
-      | 'fish'
-      | 'faction'
-      | 'money'
+    kind: 'hunt' | 'kill' | 'talk' | 'harvest' | 'fish' | 'faction' | 'money'
   ) => void;
   setTerritory: (t: TerritoryState) => void;
   applyBossLoot: (loot: {
@@ -609,9 +602,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const newXp = state.playerStats.xp + amount;
     const info = levelFromXp(newXp);
     const leveled = info.level > prevLevel;
-    const spGain = leveled
-      ? skillPointsOnLevel(prevLevel, info.level)
-      : 0;
+    const spGain = leveled ? skillPointsOnLevel(prevLevel, info.level) : 0;
     const modHp = mods.maxHealth;
     set({
       playerStats: {
@@ -647,7 +638,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!check.ok) return false;
     const node = getNode(nodeId);
     if (!node) return false;
-    const ranks = { ...s.skillRanks, [nodeId]: (s.skillRanks[nodeId] || 0) + 1 };
+    const ranks = {
+      ...s.skillRanks,
+      [nodeId]: (s.skillRanks[nodeId] || 0) + 1,
+    };
     const abilityBar = [...s.abilityBar] as (ActiveAbilityId | null)[];
     if (node.unlocksActive && ranks[nodeId] === 1) {
       const empty = abilityBar.findIndex((a) => a === null);
@@ -667,7 +661,9 @@ export const useGameStore = create<GameState>((set, get) => ({
         skills: {
           ...s.playerStats.skills,
           combat: Math.round(10 + (mods.damage - 1) * 50),
-          stealth: Math.round(10 + mods.shopDiscount * 40 + mods.wantedDecay * 10),
+          stealth: Math.round(
+            10 + mods.shopDiscount * 40 + mods.wantedDecay * 10
+          ),
           driving: Math.round(10 + (mods.driveSpeed - 1) * 40),
           intimidation: Math.round(10 + mods.critChance * 30),
         },
@@ -723,8 +719,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         buffs.driveMult = 1.4;
         break;
       case 'field_patch': {
-        const maxHp =
-          maxHealthForLevel(s.playerStats.level) + mods.maxHealth;
+        const maxHp = maxHealthForLevel(s.playerStats.level) + mods.maxHealth;
         health = Math.min(maxHp, health + Math.round(maxHp * 0.35));
         break;
       }
@@ -838,7 +833,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
   applyCharacter: (build) => {
     saveBuild(build);
-    const arch = ARCHETYPES.find((a) => a.id === build.archetype) || ARCHETYPES[0];
+    const arch =
+      ARCHETYPES.find((a) => a.id === build.archetype) || ARCHETYPES[0];
     const skills = resolveSkills(build);
     set({
       character: build,
@@ -969,7 +965,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     set((s) => ({
       factionStanding: {
         ...s.factionStanding,
-        [id]: Math.max(-100, Math.min(100, (s.factionStanding[id] || 0) + delta)),
+        [id]: Math.max(
+          -100,
+          Math.min(100, (s.factionStanding[id] || 0) + delta)
+        ),
       },
     }));
   },
@@ -1003,7 +1002,13 @@ export const useGameStore = create<GameState>((set, get) => ({
     get().noteBoardEvent('fish');
     // Rarer fish already weighted in tables; flat fish XP here.
     const bonus =
-      id === 'void_koi' ? 80 : id === 'toxic_eel' ? 40 : id === 'chrome_bass' ? 25 : 18;
+      id === 'void_koi'
+        ? 80
+        : id === 'toxic_eel'
+          ? 40
+          : id === 'chrome_bass'
+            ? 25
+            : 18;
     get().gainXp('fish', bonus);
   },
   sellFish: () => {
@@ -1109,7 +1114,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       let factionId: FactionId = get().factionId || 'null';
       if (factionId === 'null') {
         try {
-          const f = localStorage.getItem('ironhaven-faction') as FactionId | null;
+          const f = localStorage.getItem(
+            'ironhaven-faction'
+          ) as FactionId | null;
           if (f) factionId = f;
         } catch {
           /* ignore */
@@ -1206,7 +1213,9 @@ function captureAndSaveProgress(get: () => GameState): void {
 }
 
 function applyProgressSnapshot(
-  set: (partial: Partial<GameState> | ((s: GameState) => Partial<GameState>)) => void,
+  set: (
+    partial: Partial<GameState> | ((s: GameState) => Partial<GameState>)
+  ) => void,
   snap: ProgressSnapshot
 ): void {
   set({

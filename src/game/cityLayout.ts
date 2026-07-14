@@ -164,11 +164,11 @@ export const CITY_STREET_PROPS: CityStreetProp[] = Array.from(
     return {
       id: `prop_${i}`,
       kind,
-      position: [
-        Math.cos(angle) * distance,
-        0,
-        Math.sin(angle) * distance,
-      ] as [number, number, number],
+      position: [Math.cos(angle) * distance, 0, Math.sin(angle) * distance] as [
+        number,
+        number,
+        number,
+      ],
       rotation: rand() * Math.PI * 2,
       scale: (PROP_SCALE[kind] ?? 1) * (0.9 + rand() * 0.25),
     };

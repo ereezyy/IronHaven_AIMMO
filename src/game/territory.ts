@@ -30,10 +30,7 @@ export function emptyTerritory(): TerritoryState {
   return { control, capture, capturingBy };
 }
 
-export function territoryAt(
-  x: number,
-  z: number
-): FactionZone | null {
+export function territoryAt(x: number, z: number): FactionZone | null {
   for (const z0 of FACTION_ZONES) {
     const dx = x - z0.center[0];
     const dz = z - z0.center[1];
