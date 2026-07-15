@@ -144,20 +144,40 @@ class PersistenceService {
       await ensureAuthUser();
 
       const sessionId = this.generateSessionId();
-      const { data, error } = await supabase
-        .from('game_sessions')
-        .insert([
+      const insertSession = () =>
+        supabase
+          .from('game_sessions')
+          .insert([
+            {
+              id: sessionId,
+              player_id: playerId,
+              start_time: new Date().toISOString(),
+              total_kills: 0,
+              total_money_earned: 0,
+              max_wanted_level: 0,
+            },
+          ])
+          .select()
+          .maybeSingle();
+
+      let { data, error } = await insertSession();
+
+      // 23503 (FK violation → HTTP 409): the adopted player id has no players
+      // row on this DB (minted offline or before anon auth existed). Self-heal
+      // by creating the missing row, then retry the session insert once.
+      if (error && error.code === '23503') {
+        const username = this.loadFromLocalStorage('player_data')?.username;
+        const { error: healError } = await supabase.from('players').upsert(
           {
-            id: sessionId,
-            player_id: playerId,
-            start_time: new Date().toISOString(),
-            total_kills: 0,
-            total_money_earned: 0,
-            max_wanted_level: 0,
+            id: playerId,
+            username: username || `Player_${playerId.slice(-8)}`,
           },
-        ])
-        .select()
-        .maybeSingle();
+          { onConflict: 'id', ignoreDuplicates: true }
+        );
+        if (!healError) {
+          ({ data, error } = await insertSession());
+        }
+      }
 
       if (error) {
         // FK/RLS rejection (e.g. adopted player id with no players row on this

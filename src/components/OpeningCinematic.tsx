@@ -7,6 +7,7 @@ import {
   Vignette,
 } from '@react-three/postprocessing';
 import { KernelSize, BlendFunction } from 'postprocessing';
+import ContextLossGuard from './ContextLossGuard';
 import * as THREE from 'three';
 import CutscenePlayer from './CutscenePlayer';
 import { OPENING_CUTSCENE } from '../game/cutscenes';
@@ -278,22 +279,24 @@ const OpeningCinematic: React.FC<OpeningCinematicProps> = ({ onComplete }) => {
         <Rain />
         <FlyingTraffic />
 
-        <EffectComposer multisampling={0}>
-          <Bloom
-            intensity={1.25}
-            luminanceThreshold={0.12}
-            luminanceSmoothing={0.75}
-            mipmapBlur
-            radius={0.95}
-            kernelSize={KernelSize.HUGE}
-          />
-          <Noise
-            premultiply
-            blendFunction={BlendFunction.SCREEN}
-            opacity={0.22}
-          />
-          <Vignette offset={0.25} darkness={0.5} eskil={false} />
-        </EffectComposer>
+        <ContextLossGuard>
+          <EffectComposer multisampling={0}>
+            <Bloom
+              intensity={1.25}
+              luminanceThreshold={0.12}
+              luminanceSmoothing={0.75}
+              mipmapBlur
+              radius={0.95}
+              kernelSize={KernelSize.HUGE}
+            />
+            <Noise
+              premultiply
+              blendFunction={BlendFunction.SCREEN}
+              opacity={0.22}
+            />
+            <Vignette offset={0.25} darkness={0.5} eskil={false} />
+          </EffectComposer>
+        </ContextLossGuard>
       </Canvas>
 
       <div

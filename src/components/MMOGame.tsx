@@ -24,6 +24,7 @@ import {
   Noise,
 } from '@react-three/postprocessing';
 import { KernelSize, BlendFunction } from 'postprocessing';
+import ContextLossGuard from './ContextLossGuard';
 import { Physics, CuboidCollider } from '@react-three/rapier';
 import * as THREE from 'three';
 import { useGameStore } from '../store/gameState';
@@ -1693,36 +1694,41 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
           {/* Post-processing: SSAO grounds objects with contact shadows,
               bloom makes every emissive neon sign glow, subtle radial
               chromatic aberration + film grain read as a camera lens, the
-              vignette deepens the noir mood, and SMAA resolves edges. */}
-          <EffectComposer multisampling={0} enableNormalPass>
-            <SSAO
-              blendFunction={BlendFunction.MULTIPLY}
-              samples={16}
-              radius={0.08}
-              intensity={18}
-              luminanceInfluence={0.55}
-              worldDistanceThreshold={24}
-              worldDistanceFalloff={4}
-              worldProximityThreshold={0.4}
-              worldProximityFalloff={0.2}
-            />
-            <Bloom
-              intensity={0.9}
-              luminanceThreshold={0.2}
-              luminanceSmoothing={0.9}
-              mipmapBlur
-              radius={0.7}
-              kernelSize={KernelSize.LARGE}
-            />
-            <ChromaticAberration
-              offset={CA_OFFSET}
-              radialModulation
-              modulationOffset={0.5}
-            />
-            <Noise premultiply blendFunction={BlendFunction.SCREEN} />
-            <Vignette offset={0.3} darkness={0.75} eskil={false} />
-            <SMAA />
-          </EffectComposer>
+              vignette deepens the noir mood, and SMAA resolves edges.
+              ContextLossGuard unmounts the composer while the WebGL context
+              is lost — addPass reads context attributes and crashes on a
+              null context otherwise. */}
+          <ContextLossGuard>
+            <EffectComposer multisampling={0} enableNormalPass>
+              <SSAO
+                blendFunction={BlendFunction.MULTIPLY}
+                samples={16}
+                radius={0.08}
+                intensity={18}
+                luminanceInfluence={0.55}
+                worldDistanceThreshold={24}
+                worldDistanceFalloff={4}
+                worldProximityThreshold={0.4}
+                worldProximityFalloff={0.2}
+              />
+              <Bloom
+                intensity={0.9}
+                luminanceThreshold={0.2}
+                luminanceSmoothing={0.9}
+                mipmapBlur
+                radius={0.7}
+                kernelSize={KernelSize.LARGE}
+              />
+              <ChromaticAberration
+                offset={CA_OFFSET}
+                radialModulation
+                modulationOffset={0.5}
+              />
+              <Noise premultiply blendFunction={BlendFunction.SCREEN} />
+              <Vignette offset={0.3} darkness={0.75} eskil={false} />
+              <SMAA />
+            </EffectComposer>
+          </ContextLossGuard>
         </Canvas>
       </KeyboardControls>
 
