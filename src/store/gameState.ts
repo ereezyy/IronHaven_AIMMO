@@ -237,6 +237,8 @@ interface GameState {
   initializePlayer: (username?: string) => Promise<void>;
   saveGameState: () => Promise<void>;
   loadGameState: (playerId: string) => Promise<void>;
+  /** Guard: prevent applyCharacter from re-firing on re-render loops. */
+  _characterApplied: boolean;
 }
 
 const initialPass = (() => {
@@ -345,6 +347,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   club: loadLocalClub(),
   pvpEnabled: false,
   pass: initialPass,
+  _characterApplied: false,
   dailyBoard: initialBoard.dailyBoard,
   boardCounters: initialBoard.boardCounters,
   boardClaimed: initialBoard.boardClaimed,
@@ -832,11 +835,13 @@ export const useGameStore = create<GameState>((set, get) => ({
     }));
   },
   applyCharacter: (build) => {
+    if (get()._characterApplied) return;
     saveBuild(build);
     const arch =
       ARCHETYPES.find((a) => a.id === build.archetype) || ARCHETYPES[0];
     const skills = resolveSkills(build);
     set({
+      _characterApplied: true,
       character: build,
       username: build.callsign,
       playerStats: {
