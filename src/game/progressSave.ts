@@ -51,6 +51,19 @@ export interface ProgressSnapshot {
   territory: TerritoryState;
 }
 
+/**
+ * A snapshot captured mid-death (autosave ticked while health was 0) would
+ * otherwise restore the player already dead — instant death cutscene on
+ * spawn, plus the money penalty re-applied every reload. Restore such saves
+ * as freshly respawned instead: full health, heat cleared.
+ */
+export function reviveRestoredStats<
+  T extends { health: number; wanted: number },
+>(stats: T): T {
+  if (stats.health > 0) return stats;
+  return { ...stats, health: 100, wanted: 0 };
+}
+
 export function saveProgressSnapshot(snap: ProgressSnapshot): boolean {
   try {
     if (typeof localStorage === 'undefined') return false;

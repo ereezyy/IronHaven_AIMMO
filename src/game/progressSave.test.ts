@@ -3,6 +3,7 @@ import {
   saveProgressSnapshot,
   loadProgressSnapshot,
   clearProgressSnapshot,
+  reviveRestoredStats,
   type ProgressSnapshot,
   PROGRESS_STORAGE_KEY,
 } from './progressSave';
@@ -85,5 +86,22 @@ describe('progressSave', () => {
 
   it('returns null when empty', () => {
     expect(loadProgressSnapshot()).toBeNull();
+  });
+});
+
+describe('reviveRestoredStats — never restore a dead player', () => {
+  it('revives a snapshot saved mid-death at full health with heat cleared', () => {
+    const dead = { ...sample().playerStats, health: 0, wanted: 4 };
+    const revived = reviveRestoredStats(dead);
+    expect(revived.health).toBe(100);
+    expect(revived.wanted).toBe(0);
+    // Everything else survives the revive untouched.
+    expect(revived.money).toBe(dead.money);
+    expect(revived.xp).toBe(dead.xp);
+  });
+
+  it('leaves living stats alone', () => {
+    const alive = { ...sample().playerStats, health: 37, wanted: 2 };
+    expect(reviveRestoredStats(alive)).toEqual(alive);
   });
 });

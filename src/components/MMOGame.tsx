@@ -2004,6 +2004,9 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
           onClose={() => {
             setControlsOpen(false);
             setTipsReady(true);
+            // The card blocks input — restart the grace clock so the player
+            // gets the full protection window once they can actually move.
+            grantSpawnProtection();
           }}
         />
       )}
@@ -2111,6 +2114,9 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
             const was = activeCutscene.id;
             cutsceneRef.current = false;
             setActiveCutscene(null);
+            // Cutscenes freeze the player; re-arm spawn grace on exit so the
+            // 8s window counts from when control returns, not from mount.
+            grantSpawnProtection();
             if (was === 'district_drop') {
               setZoneSplash({
                 title: zoneLabel || 'Open Streets',

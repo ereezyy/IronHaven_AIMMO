@@ -88,6 +88,7 @@ import {
 import {
   saveProgressSnapshot,
   loadProgressSnapshot,
+  reviveRestoredStats,
   type ProgressSnapshot,
 } from '../game/progressSave';
 
@@ -1190,7 +1191,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         playerId: playerData.id,
         playerPosition: playerData.position,
         username: playerData.username,
-        playerStats: {
+        playerStats: reviveRestoredStats({
           ...s.playerStats,
           health: playerData.health,
           reputation: playerData.reputation,
@@ -1202,7 +1203,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           xp: s.playerStats.xp,
           level: s.playerStats.level,
           skillPoints: s.playerStats.skillPoints,
-        },
+        }),
         inventory: playerData.inventory,
         currentWeaponId: playerData.currentWeaponId,
         stash: { ...emptyBag(), ...(playerData.stash || {}) },
@@ -1252,10 +1253,10 @@ function applyProgressSnapshot(
   set({
     playerId: snap.playerId,
     username: snap.username,
-    playerStats: {
+    playerStats: reviveRestoredStats({
       ...snap.playerStats,
       skills: { ...snap.playerStats.skills },
-    },
+    }),
     skillRanks: { ...snap.skillRanks },
     abilityBar: [...snap.abilityBar],
     inventory: [...snap.inventory],
