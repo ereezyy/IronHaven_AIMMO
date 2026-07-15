@@ -1,10 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { Vector3 } from 'three';
 import {
   CITY_BUILDINGS,
   CITY_STREET_LIGHTS,
   CITY_RADIUS,
 } from '../game/cityLayout';
+import { gameAudio } from '../lib/gameAudio';
 
 export interface HudObjective {
   id: string;
@@ -413,6 +414,7 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
       </div>
 
       <div className="absolute top-4 right-4">
+        <AudioToggle />
         <div className={`${PANEL} p-4`}>
           <div className={`${LABEL} mb-3`}>district map</div>
           <Minimap
@@ -438,5 +440,23 @@ const MMOHUD: React.FC<MMOHUDProps> = ({
     </div>
   );
 };
+
+function AudioToggle() {
+  const [muted, setMuted] = useState(() => gameAudio.isMuted());
+
+  return (
+    <button
+      onClick={() => {
+        const m = gameAudio.toggleMute();
+        setMuted(m);
+      }}
+      className="mb-2 ml-auto block text-[11px] tracking-[0.18em] uppercase px-2 py-1 border border-[#2a2c30] bg-black/60 backdrop-blur-sm hover:border-[#555] transition-colors"
+      style={{ color: muted ? '#555' : '#c03a30' }}
+      title={muted ? 'Unmute audio' : 'Mute audio'}
+    >
+      {muted ? '♪ muted' : '♪ audio on'}
+    </button>
+  );
+}
 
 export default MMOHUD;

@@ -206,54 +206,164 @@ class GameAudio {
   startCityBed(): void {
     if (!this.ctx || !this.master || this.muted || this.cityRunning) return;
     const ctx = this.ctx;
+    const now = ctx.currentTime;
     this.cityRunning = true;
 
-    // Low cyberpunk drone.
-    const osc = ctx.createOscillator();
-    const oscGain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = 55;
-    oscGain.gain.value = 0.018;
-    osc.connect(oscGain);
-    oscGain.connect(this.master);
-    osc.start();
+    // Master ambient gain — kept low so it's atmospheric, not intrusive.
+    const ambGain = ctx.createGain();
+    ambGain.gain.value = 0.28;
+    ambGain.connect(this.master);
 
-    // Soft second partial.
-    const osc2 = ctx.createOscillator();
-    const osc2Gain = ctx.createGain();
-    osc2.type = 'triangle';
-    osc2.frequency.value = 82.5;
-    osc2Gain.gain.value = 0.008;
-    osc2.connect(osc2Gain);
-    osc2Gain.connect(this.master);
-    osc2.start();
+    const nodes: AudioNode[] = [ambGain];
 
-    // Filtered noise = rain / traffic hush.
-    const bufferSize = ctx.sampleRate * 2;
-    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-    const noise = ctx.createBufferSource();
-    noise.buffer = noiseBuffer;
-    noise.loop = true;
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 600;
-    const noiseGain = ctx.createGain();
-    noiseGain.gain.value = 0.012;
-    noise.connect(filter);
-    filter.connect(noiseGain);
-    noiseGain.connect(this.master);
-    noise.start();
+    // ── Sub-bass (felt, not heard) ──
+    const sub = ctx.createOscillator();
+    const subG = ctx.createGain();
+    sub.type = 'sine';
+    sub.frequency.value = 41;
+    subG.gain.value = 0.35;
+    sub.connect(subG);
+    subG.connect(ambGain);
+    sub.start(now);
+    nodes.push(sub, subG);
 
-    this.cityNodes = [osc, osc2, noise, oscGain, osc2Gain, noiseGain, filter];
+    // Slow LFO on sub-bass pitch for organic drift.
+    const subLfo = ctx.createOscillator();
+    const subLfoG = ctx.createGain();
+    subLfo.type = 'sine';
+    subLfo.frequency.value = 0.12;
+    subLfoG.gain.value = 2.5;
+    subLfo.connect(subLfoG);
+    subLfoG.connect(sub.frequency);
+    subLfo.start(now);
+    nodes.push(subLfo, subLfoG);
+
+    // ── Pad layer (two detuned sawtooth waves, filtered) ──
+    const padFilter = ctx.createBiquadFilter();
+    padFilter.type = 'lowpass';
+    padFilter.frequency.value = 380;
+    padFilter.Q.value = 0.6;
+    padFilter.connect(ambGain);
+    nodes.push(padFilter);
+
+    // Saw 1 — root note (~C2)
+    const saw1 = ctx.createOscillator();
+    const saw1G = ctx.createGain();
+    saw1.type = 'sawtooth';
+    saw1.frequency.value = 65.41;
+    saw1G.gain.value = 0.035;
+    saw1.connect(saw1G);
+    saw1G.connect(padFilter);
+    saw1.start(now);
+    nodes.push(saw1, saw1G);
+
+    // Saw 2 — detuned fifth above for width
+    const saw2 = ctx.createOscillator();
+    const saw2G = ctx.createGain();
+    saw2.type = 'sawtooth';
+    saw2.frequency.value = 97.99;
+    saw2G.gain.value = 0.028;
+    saw2.connect(saw2G);
+    saw2G.connect(padFilter);
+    saw2.start(now);
+    nodes.push(saw2, saw2G);
+
+    // Slow LFO on pad filter cutoff — the "breathing" pad.
+    const padLfo = ctx.createOscillator();
+    const padLfoG = ctx.createGain();
+    padLfo.type = 'sine';
+    padLfo.frequency.value = 0.08;
+    padLfoG.gain.value = 180;
+    padLfo.connect(padLfoG);
+    padLfoG.connect(padFilter.frequency);
+    padLfo.start(now);
+    nodes.push(padLfo, padLfoG);
+
+    // ── Subtle rhythmic pulse (distant heartbeat of the city) ──
+    const pulseLfo = ctx.createOscillator();
+    const pulseG = ctx.createGain();
+    const pulseDest = ctx.createGain();
+    pulseDest.gain.value = 0.04;
+    pulseDest.connect(ambGain);
+    pulseLfo.type = 'sine';
+    pulseLfo.frequency.value = 1.4;
+    pulseG.gain.value = 0.04;
+    pulseLfo.connect(pulseG);
+    pulseG.connect(pulseDest.gain);
+    pulseLfo.start(now);
+    nodes.push(pulseLfo, pulseG, pulseDest);
+
+    // ── Filtered noise bed (distant city, data streams) ──
+    const noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 3, ctx.sampleRate);
+    const noiseData = noiseBuf.getChannelData(0);
+    for (let i = 0; i < noiseData.length; i++) noiseData[i] = Math.random() * 2 - 1;
+    const noiseSrc = ctx.createBufferSource();
+    noiseSrc.buffer = noiseBuf;
+    noiseSrc.loop = true;
+
+    const noiseFilter = ctx.createBiquadFilter();
+    noiseFilter.type = 'bandpass';
+    noiseFilter.frequency.value = 800;
+    noiseFilter.Q.value = 0.5;
+
+    const noiseG = ctx.createGain();
+    noiseG.gain.value = 0.018;
+
+    noiseSrc.connect(noiseFilter);
+    noiseFilter.connect(noiseG);
+    noiseG.connect(ambGain);
+    noiseSrc.start(now);
+    nodes.push(noiseSrc, noiseFilter, noiseG);
+
+    // Slow LFO on noise filter for "city breathing"
+    const noiseLfo = ctx.createOscillator();
+    const noiseLfoG = ctx.createGain();
+    noiseLfo.type = 'sine';
+    noiseLfo.frequency.value = 0.06;
+    noiseLfoG.gain.value = 350;
+    noiseLfo.connect(noiseLfoG);
+    noiseLfoG.connect(noiseFilter.frequency);
+    noiseLfo.start(now);
+    nodes.push(noiseLfo, noiseLfoG);
+
+    // ── Stereo delay / space (feedback loop for width) ──
+    const delayIn = ctx.createGain();
+    delayIn.gain.value = 0.22;
+    delayIn.connect(ambGain);
+
+    const delay = ctx.createDelay(0.4);
+    delay.delayTime.value = 0.28;
+
+    const feedback = ctx.createGain();
+    feedback.gain.value = 0.35;
+
+    const delayOut = ctx.createGain();
+    delayOut.gain.value = 0.14;
+
+    delayIn.connect(delay);
+    delay.connect(feedback);
+    feedback.connect(delay);
+    feedback.connect(delayOut);
+    delayOut.connect(ambGain);
+
+    // Tap the pad into the delay for spatial width.
+    const delayTap = ctx.createGain();
+    delayTap.gain.value = 0.5;
+    padFilter.connect(delayTap);
+    delayTap.connect(delayIn);
+    nodes.push(delayIn, delay, feedback, delayOut, delayTap);
+
+    this.cityNodes = nodes;
   }
 
   stopCityBed(): void {
     for (const n of this.cityNodes) {
       try {
-        if ('stop' in n && typeof (n as OscillatorNode).stop === 'function') {
-          (n as OscillatorNode).stop();
+        if (
+          'stop' in n &&
+          typeof (n as OscillatorNode | AudioBufferSourceNode).stop === 'function'
+        ) {
+          (n as OscillatorNode | AudioBufferSourceNode).stop();
         }
         n.disconnect();
       } catch {
