@@ -1,4 +1,5 @@
 import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
+import LandingPage from './components/LandingPage';
 import SimpleIntro from './components/SimpleIntro';
 import ScreenFade from './components/ScreenFade';
 import type { CharacterBuild } from './game/character';
@@ -17,7 +18,7 @@ const InstantAction = lazy(() => import('./components/InstantAction'));
 const CharacterCreator = lazy(() => import('./components/CharacterCreator'));
 const MMOGame = lazy(() => import('./components/MMOGame'));
 
-type View = 'intro' | 'cinematic' | 'menu' | 'creator' | 'game';
+type View = 'landing' | 'intro' | 'cinematic' | 'menu' | 'creator' | 'game';
 
 function BootScreen({ label }: { label: string }) {
   return (
@@ -28,12 +29,11 @@ function BootScreen({ label }: { label: string }) {
 }
 
 function App() {
-  const [currentView, setCurrentView] = useState<View>('intro');
+  const [currentView, setCurrentView] = useState<View>('landing');
   const [build, setBuild] = useState<CharacterBuild | null>(null);
   const [fading, setFading] = useState(false);
   const [pendingView, setPendingView] = useState<View | null>(null);
 
-  // Stripe return + skip-seen opening on boot.
   useEffect(() => {
     void handlePassReturnFromUrl().then((pass) => {
       if (pass) useGameStore.setState({ pass });
@@ -48,7 +48,6 @@ function App() {
   const enterCreator = () => go('creator');
 
   const enterFromMenu = () => {
-    // Continue with saved build if present.
     const saved = loadBuild();
     if (saved?.callsign) {
       setBuild(saved);
@@ -58,6 +57,17 @@ function App() {
     }
     enterCreator();
   };
+
+  // Landing page — atmospheric gate, no fade transition on first enter
+  if (currentView === 'landing') {
+    return (
+      <LandingPage
+        onEnter={() => {
+          setCurrentView('intro');
+        }}
+      />
+    );
+  }
 
   if (currentView === 'intro') {
     return (
