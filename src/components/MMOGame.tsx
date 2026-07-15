@@ -546,18 +546,25 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
     };
   }, []);
 
+  // One-shot init guard: the store snapshot changes identity on every set(),
+  // so this must never key off `gameStore` or applyCharacter loops (#185).
+  const initDoneRef = useRef(false);
   useEffect(() => {
-    if (initialBuild) {
-      gameStore.applyCharacter(initialBuild);
+    if (!initDoneRef.current) {
+      initDoneRef.current = true;
+      const store = useGameStore.getState();
+      if (initialBuild) {
+        store.applyCharacter(initialBuild);
+      }
+      const name =
+        initialBuild?.callsign ||
+        initialCallsign ||
+        (typeof localStorage !== 'undefined'
+          ? localStorage.getItem('ironhaven-username') || undefined
+          : undefined);
+      if (name) store.setUsername(name);
+      store.initializePlayer(name || `Runner_${playerId.slice(-4)}`);
     }
-    const name =
-      initialBuild?.callsign ||
-      initialCallsign ||
-      (typeof localStorage !== 'undefined'
-        ? localStorage.getItem('ironhaven-username') || undefined
-        : undefined);
-    if (name) gameStore.setUsername(name);
-    gameStore.initializePlayer(name || `Runner_${playerId.slice(-4)}`);
 
     let cancelled = false;
     const toOther = (p: {
@@ -615,7 +622,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       unsubscribe();
       clearInterval(cleanupInterval);
     };
-  }, [playerId, gameStore]);
+  }, [playerId, initialBuild, initialCallsign]);
 
   const broadcastPosition = (position: THREE.Vector3, rotation: number) => {
     const now = Date.now();

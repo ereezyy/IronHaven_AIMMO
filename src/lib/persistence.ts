@@ -120,7 +120,11 @@ class PersistenceService {
   }
 
   async startSession(playerId: string): Promise<string | null> {
-    if (this.offlineMode) {
+    // Re-entry guard: init flows can race (resume + fresh paths); one session
+    // per page load is enough and prevents duplicate-insert error cascades.
+    if (this.currentSessionId) return this.currentSessionId;
+
+    const startLocalSession = (): string => {
       const sessionId = this.generateSessionId();
       this.currentSessionId = sessionId;
       this.saveToLocalStorage('current_session', {
@@ -129,14 +133,22 @@ class PersistenceService {
         startTime: new Date().toISOString(),
       });
       return sessionId;
-    }
+    };
+
+    if (this.offlineMode) return startLocalSession();
 
     try {
+      // Owner-scoped RLS: the insert must carry the anonymous JWT. The resume
+      // path (adoptPlayerId) reaches here without initializePlayer having run,
+      // so establish the auth session explicitly.
+      await ensureAuthUser();
+
+      const sessionId = this.generateSessionId();
       const { data, error } = await supabase
         .from('game_sessions')
         .insert([
           {
-            id: this.generateSessionId(),
+            id: sessionId,
             player_id: playerId,
             start_time: new Date().toISOString(),
             total_kills: 0,
@@ -148,15 +160,18 @@ class PersistenceService {
         .maybeSingle();
 
       if (error) {
-        console.error('Failed to start session:', error);
-        return null;
+        // FK/RLS rejection (e.g. adopted player id with no players row on this
+        // DB). Session stats are non-critical — degrade to a local session
+        // instead of returning null and letting callers retry forever.
+        console.warn('Failed to start remote session, using local:', error);
+        return startLocalSession();
       }
 
-      this.currentSessionId = data.id;
-      return data.id;
+      this.currentSessionId = data?.id ?? sessionId;
+      return this.currentSessionId;
     } catch (error) {
-      console.error('Error starting session:', error);
-      return null;
+      console.warn('Error starting session, using local:', error);
+      return startLocalSession();
     }
   }
 
