@@ -399,8 +399,10 @@ const RemotePlayer: React.FC<{ player: OtherPlayer }> = ({ player }) => {
       </Html>
 
       {/* Animated character wearing the synced avatar; the cooler fallback
-          tint only covers legacy rows written before avatar sync shipped. */}
-      <group position={[0, -1, 0]} rotation={[0, Math.PI, 0]}>
+          tint only covers legacy rows written before avatar sync shipped.
+          Yaw arrives as the sender's mouseX — same unflipped convention as
+          the local player, so no extra rotation here. */}
+      <group position={[0, -1, 0]}>
         {player.avatar ? (
           <CharacterModel
             speedRef={speedRef}
@@ -1535,7 +1537,18 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       window.removeEventListener('keydown', handleKey);
       window.removeEventListener('mousedown', handleMouseDown);
     };
-  }, [aiPanelOpen, shopOpen, otherPlayers]);
+    // Every piece of state the handlers read must be a dep — otherwise the
+    // listeners keep a stale snapshot (e.g. controlsOpen stuck true blocked
+    // firing forever after the controls card closed).
+  }, [
+    aiPanelOpen,
+    shopOpen,
+    otherPlayers,
+    controlsOpen,
+    pendingBrief,
+    isDead,
+    activeCutscene,
+  ]);
 
   return (
     <div className="w-full h-screen bg-black relative">

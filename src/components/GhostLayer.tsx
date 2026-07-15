@@ -22,7 +22,8 @@ function GhostRunnerMesh({
     const moved = prev.current.distanceToSquared(new THREE.Vector3(x, y, z));
     g.position.set(x, y, z);
     speedRef.current = Math.min(8, Math.sqrt(moved) * 40 + 1.5);
-    g.rotation.y = ghost.phase + t * ghost.speed + Math.PI;
+    // Face the orbit tangent: unflipped Soldier fronts -Z, so yaw = PI - a.
+    g.rotation.y = Math.PI - (ghost.phase + t * ghost.speed);
     prev.current.set(x, y, z);
   });
 
@@ -56,7 +57,7 @@ function GhostRunnerMesh({
           </div>
         </div>
       </Html>
-      <group position={[0, -1, 0]} rotation={[0, Math.PI, 0]}>
+      <group position={[0, -1, 0]}>
         <CharacterModel speedRef={speedRef} tint="#6a7a8a" />
       </group>
     </group>

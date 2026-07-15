@@ -373,8 +373,9 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
       <group ref={visualRef}>
         {/* Rigged animated character; feet sit 1 unit below the physics
             center (capsule bottom = body center - 1, same convention as the
-            old manual loop). Soldier faces +Z, forward is -Z, hence flip. */}
-        <group position={[0, -1, 0]} rotation={[0, Math.PI, 0]}>
+            old manual loop). Soldier natively faces -Z (three.js forward),
+            matching the controller's forward vector — no flip needed. */}
+        <group position={[0, -1, 0]}>
           <CharacterModel
             speedRef={speedRef}
             flashRef={flash}
