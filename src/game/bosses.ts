@@ -1,5 +1,7 @@
 // World bosses — pure state + tick for open-world PvE.
 
+import { isSafeZoneAt, isSpawnProtected } from './zones';
+
 export interface BossDef {
   id: string;
   name: string;
@@ -144,7 +146,10 @@ export function tickBoss(
   const distSq = pdx * pdx + pdz * pdz;
   const aggro = b.def.aggroRange;
 
-  if (player.alive && distSq < aggro * aggro) {
+  // Protected players (safe zone / spawn grace) never draw boss aggro.
+  const protectedPlayer =
+    isSafeZoneAt(player.x, player.z) || isSpawnProtected();
+  if (!protectedPlayer && player.alive && distSq < aggro * aggro) {
     b.mood = 'enraged';
     b.targetPlayer = true;
     b.rotation = Math.atan2(pdx, pdz);

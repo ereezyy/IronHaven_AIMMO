@@ -76,43 +76,55 @@ describe('createNpcs', () => {
 });
 
 describe('mood transitions', () => {
+  // Player positions sit outside the Spawn Sanctum safe zone (r=14 at origin)
+  // because protected players never draw aggro.
   it('civilian flees on high wanted or kills, else stays calm', () => {
     const events: never[] = [];
     const calm = npcOf('civilian', { x: 60, z: 0 });
-    tickNpc(calm, player(), 0.016, events);
+    tickNpc(calm, player({ x: 30 }), 0.016, events);
     expect(calm.mood).toBe('calm');
 
     const scaredWanted = npcOf('civilian', { x: 60, z: 0 });
-    tickNpc(scaredWanted, player({ wanted: 2 }), 0.016, events);
+    tickNpc(scaredWanted, player({ x: 30, wanted: 2 }), 0.016, events);
     expect(scaredWanted.mood).toBe('fleeing');
 
     const scaredKills = npcOf('civilian', { x: 60, z: 0 });
-    tickNpc(scaredKills, player({ kills: 6 }), 0.016, events);
+    tickNpc(scaredKills, player({ x: 30, kills: 6 }), 0.016, events);
     expect(scaredKills.mood).toBe('fleeing');
   });
 
   it('police turns hostile near a wanted player', () => {
     const events: never[] = [];
-    const near = npcOf('police', { x: 5, z: 0 });
-    tickNpc(near, player({ wanted: 1 }), 0.016, events);
+    const near = npcOf('police', { x: 65, z: 0 });
+    tickNpc(near, player({ x: 60, wanted: 1 }), 0.016, events);
     expect(near.mood).toBe('hostile');
 
-    const farClean = npcOf('police', { x: 5, z: 0 });
-    tickNpc(farClean, player(), 0.016, events);
+    const farClean = npcOf('police', { x: 65, z: 0 });
+    tickNpc(farClean, player({ x: 60 }), 0.016, events);
     expect(farClean.mood).toBe('calm');
   });
 
   it('gangster/hitman/boss turn hostile on low reputation within aggro range', () => {
     const events: never[] = [];
     for (const t of ['gangster', 'hitman', 'boss'] as NpcType[]) {
-      const hostile = npcOf(t, { x: 5, z: 0 });
-      tickNpc(hostile, player({ reputation: 0 }), 0.016, events);
+      const hostile = npcOf(t, { x: 65, z: 0 });
+      tickNpc(hostile, player({ x: 60, reputation: 0 }), 0.016, events);
       expect(hostile.mood).toBe('hostile');
 
-      const friendly = npcOf(t, { x: 5, z: 0 });
-      tickNpc(friendly, player({ reputation: 50 }), 0.016, events);
+      const friendly = npcOf(t, { x: 65, z: 0 });
+      tickNpc(friendly, player({ x: 60, reputation: 50 }), 0.016, events);
       expect(friendly.mood).toBe('calm');
     }
+  });
+
+  it('npcs stay calm toward a player inside the safe spawn zone', () => {
+    const events: never[] = [];
+    for (const t of ['gangster', 'hitman', 'boss', 'police'] as NpcType[]) {
+      const n = npcOf(t, { x: 5, z: 0 });
+      tickNpc(n, player({ x: 0, wanted: 5, reputation: 0 }), 0.016, events);
+      expect(n.mood).toBe('calm');
+    }
+    expect(events).toHaveLength(0);
   });
 
   it('dealer stays calm regardless', () => {
@@ -126,8 +138,9 @@ describe('mood transitions', () => {
 describe('combat', () => {
   it('a hostile npc in melee range emits a damage event on cooldown', () => {
     const events: NpcEvent[] = [];
-    const g = npcOf('gangster', { x: 0, z: 0 });
-    tickNpc(g, player({ x: 1, z: 0, reputation: 0 }), 0.016, events);
+    // Outside the safe spawn zone so aggro is allowed.
+    const g = npcOf('gangster', { x: 60, z: 0 });
+    tickNpc(g, player({ x: 61, z: 0, reputation: 0 }), 0.016, events);
     expect(g.mood).toBe('hostile');
     expect(events).toHaveLength(1);
     expect(events[0]).toMatchObject({ kind: 'damage', amount: 15 });

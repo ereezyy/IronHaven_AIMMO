@@ -1,6 +1,8 @@
 // Pure NPC simulation — no React, no THREE, no per-frame allocations.
 // The manager component owns rendering; this module owns behavior.
 
+import { isSafeZoneAt, isSpawnProtected } from './zones';
+
 export type NpcType =
   | 'civilian'
   | 'gangster'
@@ -276,6 +278,13 @@ function decideMood(
   world?: Npc[]
 ): void {
   const t = npc.type;
+  // Safe zones and the post-spawn grace window are hard no-aggro: nobody
+  // hunts a protected player, so the Spawn Sanctum is actually safe.
+  if (isSafeZoneAt(p.x, p.z) || isSpawnProtected()) {
+    npc.mood = 'calm';
+    if (t === 'police') npc.speed = BASE.police.speed;
+    return;
+  }
   if (t === 'civilian') {
     const sawCombat = world ? witnessesCombat(npc, world) : false;
     npc.mood = p.wanted > 1 || p.kills > 5 || sawCombat ? 'fleeing' : 'calm';

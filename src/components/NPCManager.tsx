@@ -14,6 +14,7 @@ import {
   TALK_RANGE,
   MELEE_RANGE,
 } from '../game/npc';
+import { isSafeZoneAt, isSpawnProtected } from '../game/zones';
 
 export type AttackFn = (damage: number, range?: number) => void;
 
@@ -133,6 +134,10 @@ const NPCManager: React.FC<NPCManagerProps> = ({
         s.addAction(`killed_${e.npc.type}`);
       }
     }
+    // Protected players (safe zone / spawn grace) take no damage even from
+    // hits already in flight when they crossed the boundary.
+    const p = playerPosRef.current;
+    if (isSafeZoneAt(p.x, p.z) || isSpawnProtected()) dmg = 0;
     const ps = useGameStore.getState().playerStats;
     s.updateStats({
       health: Math.max(0, ps.health - dmg),

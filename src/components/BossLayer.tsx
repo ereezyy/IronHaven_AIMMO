@@ -11,6 +11,7 @@ import {
   type BossRuntime,
   type BossEvent,
 } from '../game/bosses';
+import { isSafeZoneAt, isSpawnProtected } from '../game/zones';
 import { useGameStore } from '../store/gameState';
 import { gameAudio } from '../lib/gameAudio';
 
@@ -69,7 +70,7 @@ const BossLayer: React.FC<BossLayerProps> = ({
           if (e.loot) s.addAction(`loot_${e.loot.label}`);
         }
       }
-      if (dmg > 0) {
+      if (dmg > 0 && !isSafeZoneAt(p.x, p.z) && !isSpawnProtected()) {
         const s = useGameStore.getState();
         s.updateStats({
           health: Math.max(0, s.playerStats.health - dmg),

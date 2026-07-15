@@ -11,6 +11,7 @@ import {
   type PreyRuntime,
   type PreyEvent,
 } from '../game/hunting';
+import { isSafeZoneAt, isSpawnProtected } from '../game/zones';
 import { useGameStore } from '../store/gameState';
 import { gameAudio } from '../lib/gameAudio';
 
@@ -64,7 +65,7 @@ const HuntLayer: React.FC<HuntLayerProps> = ({
         s.addAction(`hunt_${e.preyId}`);
       }
     }
-    if (dmg > 0) {
+    if (dmg > 0 && !isSafeZoneAt(p.x, p.z) && !isSpawnProtected()) {
       const s = useGameStore.getState();
       s.updateStats({
         health: Math.max(0, s.playerStats.health - dmg),

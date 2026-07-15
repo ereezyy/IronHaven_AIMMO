@@ -1,5 +1,7 @@
 // Open-world hunting targets — pure spawn + combat data.
 
+import { isSafeZoneAt, isSpawnProtected } from './zones';
+
 export type PreyId =
   | 'street_rat'
   | 'chrome_hound'
@@ -201,7 +203,14 @@ export function tickPrey(
   const distSq = dx * dx + dz * dz;
   const frac = p.health / def.maxHealth;
 
-  if (player.alive && distSq < def.aggroRange * def.aggroRange) {
+  // Protected players (safe zone / spawn grace) never draw aggro.
+  const protectedPlayer =
+    isSafeZoneAt(player.x, player.z) || isSpawnProtected();
+  if (
+    !protectedPlayer &&
+    player.alive &&
+    distSq < def.aggroRange * def.aggroRange
+  ) {
     if (frac < def.fleeHealth) p.mood = 'flee';
     else p.mood = defIdIsAggressive(p.defId) ? 'hostile' : 'flee';
   } else if (p.mood !== 'wander') {

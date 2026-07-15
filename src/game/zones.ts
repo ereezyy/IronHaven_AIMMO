@@ -76,6 +76,24 @@ export function zoneAt(x: number, z: number): WorldZone {
   );
 }
 
+/** True when the position is inside a safe zone (no aggro, no damage). */
+export function isSafeZoneAt(x: number, z: number): boolean {
+  return zoneAt(x, z).kind === 'safe';
+}
+
+// Spawn protection: short post-(re)spawn grace window during which the player
+// takes no damage, so mobs camping just outside the sanctum can't chain-kill.
+const SPAWN_PROTECT_MS = 8000;
+let spawnProtectedUntil = 0;
+
+export function grantSpawnProtection(ms = SPAWN_PROTECT_MS): void {
+  spawnProtectedUntil = Date.now() + ms;
+}
+
+export function isSpawnProtected(now = Date.now()): boolean {
+  return now < spawnProtectedUntil;
+}
+
 export function allowsPvp(zone: WorldZone, pvpFlag: boolean): boolean {
   if (zone.kind === 'safe') return false;
   if (zone.kind === 'pvp' || zone.kind === 'boss') return true;

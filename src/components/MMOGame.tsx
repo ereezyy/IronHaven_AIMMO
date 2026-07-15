@@ -138,7 +138,13 @@ import FishingLayer from './FishingLayer';
 import type { FishSpot } from '../game/fishing';
 import BossLayer, { type BossAttackFn } from './BossLayer';
 import HuntLayer, { type HuntAttackFn } from './HuntLayer';
-import { zoneAt, allowsPvp } from '../game/zones';
+import {
+  zoneAt,
+  allowsPvp,
+  isSafeZoneAt,
+  isSpawnProtected,
+  grantSpawnProtection,
+} from '../game/zones';
 import { getFaction } from '../game/factions';
 import { levelFromXp } from '../game/progression';
 import { WORLD_BOSSES } from '../game/bosses';
@@ -552,6 +558,8 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
   useEffect(() => {
     if (!initDoneRef.current) {
       initDoneRef.current = true;
+      // Fresh entry into the world gets the same grace window as a respawn.
+      grantSpawnProtection();
       const store = useGameStore.getState();
       if (initialBuild) {
         store.applyCharacter(initialBuild);
@@ -700,6 +708,9 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       };
       if (hit.targetId !== playerId && hit.targetId !== gameStore.playerId)
         return;
+      // Safe zone / spawn grace also shields against PvP hits.
+      const pp = playerPosRef.current;
+      if (isSafeZoneAt(pp.x, pp.z) || isSpawnProtected()) return;
       const s = useGameStore.getState();
       s.updateStats({
         health: Math.max(0, s.playerStats.health - (hit.damage || 10)),
@@ -870,6 +881,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
     playerPosRef.current.set(0, 1, 0);
     prevHealth.current = 100;
     setDeathPenalty(0);
+    grantSpawnProtection();
     setSpawnKey((k) => k + 1);
   };
 
