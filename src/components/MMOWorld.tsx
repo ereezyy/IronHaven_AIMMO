@@ -270,12 +270,14 @@ const MMOWorld: React.FC = () => {
             />
           </mesh>
 
+          {/* No castShadow: every shadow-casting light adds a shadow map to
+              every shader; 20 of these blew past MAX_TEXTURE_IMAGE_UNITS(16)
+              and crashed the WebGL context. The sun handles scene shadows. */}
           <pointLight
             position={[0, 6, 0]}
             color="#caa066"
             intensity={1.4}
             distance={16}
-            castShadow
           />
         </group>
       ))}
