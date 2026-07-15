@@ -6,6 +6,7 @@ import {
   applyHarvest,
   tradeBuy,
   tradeSell,
+  transferResource,
   RECIPES,
 } from './economy';
 
@@ -42,5 +43,25 @@ describe('economy craft/trade/harvest', () => {
     const sold = tradeSell(bag, money, 'scrap', 1);
     expect(sold!.bag.scrap).toBe(1);
     expect(sold!.money).toBeGreaterThan(money - 40);
+  });
+
+  it('transfers resources between bag and stash', () => {
+    const bag = applyHarvest(emptyBag(), { scrap: 3 });
+    const stash = emptyBag();
+    const moved = transferResource(bag, stash, 'scrap', 2);
+    expect(moved).not.toBeNull();
+    expect(moved!.from.scrap).toBe(1);
+    expect(moved!.to.scrap).toBe(2);
+    // Round trip back.
+    const back = transferResource(moved!.to, moved!.from, 'scrap', 2);
+    expect(back!.from.scrap).toBe(0);
+    expect(back!.to.scrap).toBe(3);
+  });
+
+  it('rejects transfers with insufficient quantity', () => {
+    expect(transferResource(emptyBag(), emptyBag(), 'scrap', 1)).toBeNull();
+    const bag = applyHarvest(emptyBag(), { scrap: 1 });
+    expect(transferResource(bag, emptyBag(), 'scrap', 0)).toBeNull();
+    expect(transferResource(bag, emptyBag(), 'scrap', 2)).toBeNull();
   });
 });

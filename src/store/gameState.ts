@@ -18,6 +18,7 @@ import {
   canCraft,
   tradeBuy,
   tradeSell,
+  transferResource,
   Recipe,
   RECIPES,
 } from '../game/economy';
@@ -132,6 +133,8 @@ interface GameState {
   inventory: string[];
   /** Crafting materials / trade goods. */
   bag: ResourceBag;
+  /** Safehouse storage — kept separate from the field bag. */
+  stash: ResourceBag;
   fishBag: FishBag;
   recentActions: string[];
   activeMission: any;
@@ -217,6 +220,8 @@ interface GameState {
   setUsername: (username: string) => void;
   applyCharacter: (build: CharacterBuild) => void;
   harvestIntoBag: (yields: Partial<ResourceBag>) => void;
+  depositToStash: (id: ResourceId, qty?: number) => boolean;
+  withdrawFromStash: (id: ResourceId, qty?: number) => boolean;
   craftRecipe: (recipeId: string) => boolean;
   buyResource: (id: ResourceId, qty?: number) => boolean;
   sellResource: (id: ResourceId, qty?: number) => boolean;
@@ -334,6 +339,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
   inventory: [],
   bag: emptyBag(),
+  stash: emptyBag(),
   fishBag: emptyFishBag(),
   recentActions: [],
   activeMission: null,
@@ -869,6 +875,22 @@ export const useGameStore = create<GameState>((set, get) => ({
     get().gainXp('harvest');
     get().saveGameState();
   },
+  depositToStash: (id, qty = 1) => {
+    const s = get();
+    const moved = transferResource(s.bag, s.stash, id, qty);
+    if (!moved) return false;
+    set({ bag: moved.from, stash: moved.to });
+    get().saveGameState();
+    return true;
+  },
+  withdrawFromStash: (id, qty = 1) => {
+    const s = get();
+    const moved = transferResource(s.stash, s.bag, id, qty);
+    if (!moved) return false;
+    set({ stash: moved.from, bag: moved.to });
+    get().saveGameState();
+    return true;
+  },
   craftRecipe: (recipeId) => {
     const recipe = RECIPES.find((r) => r.id === recipeId) as Recipe | undefined;
     if (!recipe) return false;
@@ -1113,6 +1135,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           skills: state.playerStats.skills,
           inventory: state.inventory,
           currentWeaponId: state.currentWeaponId,
+          stash: state.stash,
         };
       }, 30000);
 
@@ -1152,6 +1175,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       skills: state.playerStats.skills,
       inventory: state.inventory,
       currentWeaponId: state.currentWeaponId,
+      stash: state.stash,
     });
   },
   loadGameState: async (playerId: string) => {
@@ -1181,6 +1205,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         },
         inventory: playerData.inventory,
         currentWeaponId: playerData.currentWeaponId,
+        stash: { ...emptyBag(), ...(playerData.stash || {}) },
       }));
     }
   },
@@ -1198,6 +1223,7 @@ function captureAndSaveProgress(get: () => GameState): void {
     abilityBar: [...s.abilityBar],
     inventory: [...s.inventory],
     bag: { ...s.bag },
+    stash: { ...s.stash },
     fishBag: { ...s.fishBag },
     currentWeaponId: s.currentWeaponId,
     playerPosition: [...s.playerPosition] as [number, number, number],
@@ -1234,6 +1260,7 @@ function applyProgressSnapshot(
     abilityBar: [...snap.abilityBar],
     inventory: [...snap.inventory],
     bag: { ...snap.bag },
+    stash: { ...(snap.stash || emptyBag()) },
     fishBag: { ...snap.fishBag },
     currentWeaponId: snap.currentWeaponId,
     playerPosition: [...snap.playerPosition] as [number, number, number],

@@ -44,6 +44,7 @@ import { DialogueOption } from '../game/dialogue';
 import {
   buildingColliderSpecs,
   groundColliderSpec,
+  safehouseColliderSpec,
 } from '../game/physicsColliders';
 import {
   attackCooldownMs,
@@ -134,6 +135,9 @@ import {
 } from '../game/character';
 import SocialPanel from './SocialPanel';
 import ShopLayer, { ShopUI } from './ShopLayer';
+import SafehouseLayer from './SafehouseLayer';
+import SafehousePanel from './SafehousePanel';
+import { SAFEHOUSE } from '../game/safehouse';
 import type { WorldShop } from '../game/shops';
 import FishingLayer from './FishingLayer';
 import type { FishSpot } from '../game/fishing';
@@ -229,9 +233,14 @@ const LoadingScreen: React.FC = () => {
 const StaticWorldColliders: React.FC = () => {
   const buildings = React.useMemo(() => buildingColliderSpecs(), []);
   const ground = React.useMemo(() => groundColliderSpec(), []);
+  const safehouse = React.useMemo(() => safehouseColliderSpec(), []);
   return (
     <>
       <CuboidCollider args={ground.halfExtents} position={ground.position} />
+      <CuboidCollider
+        args={safehouse.halfExtents}
+        position={safehouse.position}
+      />
       {buildings.map((b, i) => (
         <CuboidCollider
           key={`bcol-${i}`}
@@ -485,6 +494,10 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
   const [nearestShop, setNearestShop] = useState<WorldShop | null>(null);
   const nearestShopRef = useRef<WorldShop | null>(null);
   const [shopOpen, setShopOpen] = useState(false);
+  const [nearSafehouse, setNearSafehouse] = useState(false);
+  const nearSafehouseRef = useRef(false);
+  const [safehouseOpen, setSafehouseOpen] = useState(false);
+  const safehouseOpenRef = useRef(false);
   const [nearestFish, setNearestFish] = useState<FishSpot | null>(null);
   const nearestFishRef = useRef<FishSpot | null>(null);
   const castApi = useRef<(() => void) | null>(null);
@@ -1237,7 +1250,8 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
         cutsceneRef.current ||
         Boolean(pendingBrief) ||
         controlsOpen ||
-        shopOpen;
+        shopOpen ||
+        safehouseOpenRef.current;
 
       if (e.code === 'KeyL') {
         setQuestOpen((v) => {
@@ -1353,6 +1367,11 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
           setShopOpen(true);
           if (document.pointerLockElement) document.exitPointerLock();
           gameAudio.play('market', 0.15);
+        } else if (nearSafehouseRef.current) {
+          safehouseOpenRef.current = true;
+          setSafehouseOpen(true);
+          if (document.pointerLockElement) document.exitPointerLock();
+          gameAudio.play('ui', 0.15);
         }
       } else if (e.code === 'Escape' && dialogueOpenRef.current) {
         closeDialogue();
@@ -1360,6 +1379,9 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
         closeMarket();
       } else if (e.code === 'Escape' && shopOpen) {
         setShopOpen(false);
+      } else if (e.code === 'Escape' && safehouseOpenRef.current) {
+        safehouseOpenRef.current = false;
+        setSafehouseOpen(false);
       } else if (e.code === 'Escape' && economyOpenRef.current) {
         economyOpenRef.current = false;
         setEconomyOpen(false);
@@ -1418,6 +1440,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
         cutsceneRef.current ||
         controlsOpen ||
         shopOpen ||
+        safehouseOpenRef.current ||
         aiPanelOpen ||
         drivingRef.current
       )
@@ -1656,6 +1679,12 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
               onNearest={setNearestShop}
             />
 
+            <SafehouseLayer
+              playerPosRef={playerPosRef}
+              nearRef={nearSafehouseRef}
+              onNear={setNearSafehouse}
+            />
+
             <FishingLayer
               playerPosRef={playerPosRef}
               nearestRef={nearestFishRef}
@@ -1846,6 +1875,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       {/* Single prompt stack — clears hotbar / chat collision. */}
       {!dialogueNpc &&
         !shopOpen &&
+        !safehouseOpen &&
         !marketOpen &&
         !isDead &&
         !activeCutscene &&
@@ -1876,6 +1906,15 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
                       id: 'shop',
                       keyLabel: 'e',
                       text: `shop · ${nearestShop.name}`,
+                    },
+                  ]
+                : []),
+              ...(!isDriving && !nearestNpc && !nearestShop && nearSafehouse
+                ? [
+                    {
+                      id: 'safehouse',
+                      keyLabel: 'e',
+                      text: `enter · ${SAFEHOUSE.name}`,
                     },
                   ]
                 : []),
@@ -1983,6 +2022,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
           economyOpen ||
           marketOpen ||
           shopOpen ||
+          safehouseOpen ||
           Boolean(dialogueNpc) ||
           Boolean(pendingBrief) ||
           isDead;
@@ -2101,6 +2141,15 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
 
       {shopOpen && nearestShop && (
         <ShopUI shop={nearestShop} onClose={() => setShopOpen(false)} />
+      )}
+
+      {safehouseOpen && !isDead && (
+        <SafehousePanel
+          onClose={() => {
+            safehouseOpenRef.current = false;
+            setSafehouseOpen(false);
+          }}
+        />
       )}
 
       <AIConfigPanel

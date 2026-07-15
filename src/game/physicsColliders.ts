@@ -7,6 +7,7 @@
 //   extents; Rapier cuboids want HALF extents.
 
 import { CITY_BUILDINGS, CITY_RADIUS } from './cityLayout';
+import { SAFEHOUSE } from './safehouse';
 
 export interface CuboidSpec {
   /** World-space center of the cuboid. */
@@ -66,4 +67,10 @@ export function buildingColliderSpecs(): CuboidSpec[] {
     position: [b.position[0], b.position[1], b.position[2]],
     halfExtents: [b.size[0] / 2, b.size[1] / 2, b.size[2] / 2],
   }));
+}
+
+/** Safehouse shell (must match the SafehouseLayer mesh: 5 × 3.2 × 4 box). */
+export function safehouseColliderSpec(): CuboidSpec {
+  const [x, , z] = SAFEHOUSE.position;
+  return { position: [x, 1.6, z], halfExtents: [2.5, 1.6, 2] };
 }

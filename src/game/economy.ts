@@ -251,3 +251,17 @@ export function tradeSell(
 export function resourceName(id: string): string {
   return RESOURCES.find((r) => r.id === id)?.name || id;
 }
+
+/** Move qty of a resource between two bags (bag ↔ safehouse stash). */
+export function transferResource(
+  from: ResourceBag,
+  to: ResourceBag,
+  id: ResourceId,
+  qty: number
+): { from: ResourceBag; to: ResourceBag } | null {
+  if (qty < 1 || (from[id] || 0) < qty) return null;
+  return {
+    from: { ...from, [id]: from[id] - qty },
+    to: { ...to, [id]: (to[id] || 0) + qty },
+  };
+}

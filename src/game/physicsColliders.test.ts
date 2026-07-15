@@ -5,8 +5,11 @@ import {
   PLAYER_MOTION,
   groundColliderSpec,
   buildingColliderSpecs,
+  safehouseColliderSpec,
 } from './physicsColliders';
 import { CITY_BUILDINGS, CITY_RADIUS } from './cityLayout';
+import { SAFEHOUSE } from './safehouse';
+import { zoneAt } from './zones';
 
 describe('PLAYER_CAPSULE', () => {
   it('total capsule height is 2 so feet touch y=0 with center at y=1', () => {
@@ -78,6 +81,33 @@ describe('buildingColliderSpecs', () => {
   it('building boxes rest on the ground (bottom at y=0)', () => {
     for (const s of buildingColliderSpecs()) {
       expect(s.position[1] - s.halfExtents[1]).toBeCloseTo(0, 6);
+    }
+  });
+});
+
+describe('safehouseColliderSpec', () => {
+  it('rests on the ground, centered on the safehouse door position', () => {
+    const s = safehouseColliderSpec();
+    expect(s.position[1] - s.halfExtents[1]).toBeCloseTo(0, 6);
+    expect(s.position[0]).toBe(SAFEHOUSE.position[0]);
+    expect(s.position[2]).toBe(SAFEHOUSE.position[2]);
+  });
+
+  it('safehouse sits inside the spawn sanctum safe zone', () => {
+    const [x, , z] = SAFEHOUSE.position;
+    expect(zoneAt(x, z).id).toBe('safe_spawn');
+  });
+
+  it('does not overlap any city building collider', () => {
+    const s = safehouseColliderSpec();
+    for (const b of buildingColliderSpecs()) {
+      const overlapX =
+        Math.abs(s.position[0] - b.position[0]) <
+        s.halfExtents[0] + b.halfExtents[0];
+      const overlapZ =
+        Math.abs(s.position[2] - b.position[2]) <
+        s.halfExtents[2] + b.halfExtents[2];
+      expect(overlapX && overlapZ).toBe(false);
     }
   });
 });

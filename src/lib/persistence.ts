@@ -24,6 +24,8 @@ export interface PlayerData {
   };
   inventory: string[];
   currentWeaponId: string;
+  /** Safehouse storage (resource id → qty). Optional: pre-safehouse rows. */
+  stash?: Record<string, number>;
 }
 
 export interface GameSession {
@@ -217,6 +219,7 @@ class PersistenceService {
         skills: playerData.skills,
         inventory: playerData.inventory,
         current_weapon_id: playerData.currentWeaponId,
+        stash: playerData.stash,
       };
 
       Object.keys(updateData).forEach(
@@ -271,6 +274,7 @@ class PersistenceService {
         skills: data.skills,
         inventory: data.inventory,
         currentWeaponId: data.current_weapon_id,
+        stash: data.stash || undefined,
       };
     } catch (error) {
       console.error('Error loading player state:', error);

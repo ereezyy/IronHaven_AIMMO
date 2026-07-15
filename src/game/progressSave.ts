@@ -37,6 +37,8 @@ export interface ProgressSnapshot {
   abilityBar: (ActiveAbilityId | null)[];
   inventory: string[];
   bag: ResourceBag;
+  /** Safehouse storage. Missing on pre-safehouse snapshots — default empty. */
+  stash?: ResourceBag;
   fishBag: FishBag;
   currentWeaponId: string;
   playerPosition: [number, number, number];

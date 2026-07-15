@@ -235,3 +235,46 @@ describe('Iron Haven Pass — store integration', () => {
     expect(useGameStore.getState().isPassActive()).toBe(false);
   });
 });
+
+describe('safehouse stash — deposit and withdraw', () => {
+  beforeEach(() => {
+    reset();
+    useGameStore.setState((st) => ({
+      bag: { ...st.bag, scrap: 3 },
+      stash: {
+        scrap: 0,
+        circuits: 0,
+        chems: 0,
+        nano_fiber: 0,
+        stim_vial: 0,
+        armor_plate: 0,
+        fuel_cell: 0,
+      },
+    }));
+  });
+
+  it('deposits from bag into stash', () => {
+    const ok = useGameStore.getState().depositToStash('scrap', 2);
+    expect(ok).toBe(true);
+    const s = useGameStore.getState();
+    expect(s.bag.scrap).toBe(1);
+    expect(s.stash.scrap).toBe(2);
+  });
+
+  it('withdraws from stash back into bag', () => {
+    useGameStore.getState().depositToStash('scrap', 3);
+    const ok = useGameStore.getState().withdrawFromStash('scrap', 1);
+    expect(ok).toBe(true);
+    const s = useGameStore.getState();
+    expect(s.bag.scrap).toBe(1);
+    expect(s.stash.scrap).toBe(2);
+  });
+
+  it('rejects moves beyond what is held (no state change)', () => {
+    expect(useGameStore.getState().depositToStash('scrap', 5)).toBe(false);
+    expect(useGameStore.getState().withdrawFromStash('scrap', 1)).toBe(false);
+    const s = useGameStore.getState();
+    expect(s.bag.scrap).toBe(3);
+    expect(s.stash.scrap).toBe(0);
+  });
+});
