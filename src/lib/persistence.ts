@@ -59,6 +59,10 @@ class PersistenceService {
   private autoSaveInterval: NodeJS.Timeout | null = null;
   private offlineMode: boolean = !SUPABASE_CONFIGURED;
   private lastSavedStateHash: string | null = null;
+  /** Live DB missing multiplayer_players.avatar — omit until migration lands. */
+  private multiplayerAvatarUnsupported = false;
+  /** Rate-limit multiplayer error spam (one log per 15s). */
+  private lastMultiplayerErrorLog = 0;
 
   async initializePlayer(username: string): Promise<string> {
     try {
@@ -356,7 +360,10 @@ class PersistenceService {
     if (this.offlineMode) return false;
 
     try {
-      const { error } = await supabase.from('multiplayer_players').upsert({
+      // Owner-scoped RLS requires a JWT; resume paths may not have signed in yet.
+      await ensureAuthUser();
+
+      const row: Record<string, unknown> = {
         id: playerData.id,
         username: playerData.username,
         position_x: playerData.position[0],
@@ -370,20 +377,69 @@ class PersistenceService {
         stamina: playerData.stamina,
         level: playerData.level,
         is_in_combat: playerData.isInCombat,
-        avatar: playerData.avatar ?? null,
         last_seen: new Date().toISOString(),
-      });
+      };
+      if (!this.multiplayerAvatarUnsupported) {
+        row.avatar = playerData.avatar ?? null;
+      }
+
+      let { error } = await supabase.from('multiplayer_players').upsert(row);
+
+      // PGRST204 / 400: schema cache has no `avatar` column (migration not
+      // applied yet). Self-heal for this session — strip avatar and retry once
+      // so presence still works; remotes fall back to the default cooler tint.
+      if (error && this.isMissingAvatarColumnError(error)) {
+        this.multiplayerAvatarUnsupported = true;
+        delete row.avatar;
+        ({ error } = await supabase.from('multiplayer_players').upsert(row));
+        if (!error) {
+          this.logMultiplayerErrorOnce(
+            'multiplayer_players.avatar missing on DB — presence continues without cosmetic sync. Apply migration 20260715120000_multiplayer_avatar.sql'
+          );
+          return true;
+        }
+      }
 
       if (error) {
-        console.error('Failed to update multiplayer player:', error);
+        this.logMultiplayerErrorOnce(
+          `Failed to update multiplayer player: ${error.message || error.code || JSON.stringify(error)}`
+        );
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error updating multiplayer player:', error);
+      this.logMultiplayerErrorOnce(
+        `Error updating multiplayer player: ${error instanceof Error ? error.message : String(error)}`
+      );
       return false;
     }
+  }
+
+  private isMissingAvatarColumnError(error: {
+    code?: string;
+    message?: string;
+    details?: string;
+    hint?: string;
+  }): boolean {
+    const blob =
+      `${error.code ?? ''} ${error.message ?? ''} ${error.details ?? ''} ${error.hint ?? ''}`.toLowerCase();
+    // PostgREST: PGRST204 "Could not find the 'avatar' column..."
+    return (
+      blob.includes('avatar') &&
+      (blob.includes('pgrst204') ||
+        blob.includes('does not exist') ||
+        blob.includes('could not find') ||
+        blob.includes('schema cache') ||
+        blob.includes('column'))
+    );
+  }
+
+  private logMultiplayerErrorOnce(message: string): void {
+    const now = Date.now();
+    if (now - this.lastMultiplayerErrorLog < 15_000) return;
+    this.lastMultiplayerErrorLog = now;
+    console.error(message);
   }
 
   private mapMultiplayerRow(row: any): NearbyPlayer {

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useThree } from '@react-three/fiber';
+import { recordWebGLContextEvent } from '../lib/crashBreadcrumb';
 
 /**
  * Tracks WebGL context loss on the active canvas. While the context is lost,
@@ -15,8 +16,14 @@ export function useWebGLContextLost(): boolean {
     const canvas = gl.domElement;
     // Three's WebGLRenderer already preventDefault()s contextlost, which is
     // what lets the browser attempt restoration; we only observe here.
-    const onLost = () => setLost(true);
-    const onRestored = () => setLost(false);
+    const onLost = () => {
+      recordWebGLContextEvent('webglcontextlost');
+      setLost(true);
+    };
+    const onRestored = () => {
+      recordWebGLContextEvent('webglcontextrestored');
+      setLost(false);
+    };
     canvas.addEventListener('webglcontextlost', onLost);
     canvas.addEventListener('webglcontextrestored', onRestored);
     return () => {

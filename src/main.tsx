@@ -1,7 +1,15 @@
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
+import {
+  installCrashBreadcrumbs,
+  writeBreadcrumb,
+} from './lib/crashBreadcrumb';
 import './index.css';
+
+// Capture frame-loop / promise errors that ErrorBoundary never sees.
+// Surfaces any prior-session breadcrumb in the console on boot.
+installCrashBreadcrumbs();
 
 function ErrorFallback({ error }: { error: Error }) {
   return (
@@ -51,6 +59,13 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }> {
   state = { error: null as Error | null };
   static getDerivedStateFromError(error: Error) {
     return { error };
+  }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    writeBreadcrumb({
+      kind: 'error',
+      message: error.message,
+      stack: `${error.stack || ''}\n${info.componentStack || ''}`,
+    });
   }
   render() {
     if (this.state.error) return <ErrorFallback error={this.state.error} />;
