@@ -363,6 +363,9 @@ class PersistenceService {
       // Owner-scoped RLS requires a JWT; resume paths may not have signed in yet.
       await ensureAuthUser();
 
+      // DB columns health/stamina/level are integer; stamina ticks as a float
+      // in the frame loop (e.g. 97.654…) and Postgres rejects that with 400
+      // "invalid input syntax for type integer".
       const row: Record<string, unknown> = {
         id: playerData.id,
         username: playerData.username,
@@ -373,9 +376,16 @@ class PersistenceService {
         velocity_x: playerData.velocity[0],
         velocity_y: playerData.velocity[1],
         velocity_z: playerData.velocity[2],
-        health: playerData.health,
-        stamina: playerData.stamina,
-        level: playerData.level,
+        health: Math.round(
+          Math.max(0, Math.min(9999, Number(playerData.health) || 0))
+        ),
+        stamina: Math.round(
+          Math.max(0, Math.min(9999, Number(playerData.stamina) || 0))
+        ),
+        level: Math.max(
+          1,
+          Math.min(999, Math.floor(Number(playerData.level) || 1))
+        ),
         is_in_combat: playerData.isInCombat,
         last_seen: new Date().toISOString(),
       };

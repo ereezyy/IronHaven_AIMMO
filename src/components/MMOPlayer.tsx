@@ -132,7 +132,19 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
     };
 
     const handleClick = () => {
-      gl.domElement.requestPointerLock();
+      // After WebGL context loss the canvas may be detached from the document
+      // briefly — requestPointerLock then rejects with WrongDocumentError.
+      const el = gl.domElement;
+      if (!el.isConnected) return;
+      try {
+        const result = el.requestPointerLock();
+        // Spec returns a Promise in modern browsers; swallow rejections.
+        if (result && typeof (result as Promise<void>).catch === 'function') {
+          (result as Promise<void>).catch(() => {});
+        }
+      } catch {
+        // ignore — user can click again once the canvas is reattached
+      }
     };
 
     document.addEventListener('pointerlockchange', handlePointerLockChange);
