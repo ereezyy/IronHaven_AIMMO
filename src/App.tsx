@@ -58,12 +58,14 @@ function App() {
     enterCreator();
   };
 
-  // Landing page — atmospheric gate, no fade transition on first enter
+  // Landing page — atmospheric gate, no fade transition on first enter.
+  // Returning runners skip intro + cinematic and land on the menu.
   if (currentView === 'landing') {
     return (
       <LandingPage
         onEnter={() => {
-          setCurrentView('intro');
+          if (hasSeenOpening()) setCurrentView('menu');
+          else setCurrentView('intro');
         }}
       />
     );

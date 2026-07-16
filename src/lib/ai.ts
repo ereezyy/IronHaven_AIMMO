@@ -10,21 +10,28 @@ const getHfToken = () => {
     (window as any).HUGGING_FACE_TOKEN ||
     'YOUR_HUGGING_FACE_TOKEN_HERE'; // Placeholder - replace with your token
 
-  console.log(
-    'AI Token Status:',
-    token && token !== 'YOUR_HUGGING_FACE_TOKEN_HERE'
-      ? 'Token found'
-      : 'No token'
-  );
+  // Quiet in production — HF is optional fallback; spam confuses players in F12.
+  if (import.meta.env.DEV) {
+    console.log(
+      'AI Token Status:',
+      token && token !== 'YOUR_HUGGING_FACE_TOKEN_HERE'
+        ? 'Token found'
+        : 'No token'
+    );
+  }
   return token;
 };
 
 let hf: HfInference;
 try {
   hf = new HfInference(getHfToken());
-  console.log('Hugging Face client initialized successfully');
+  if (import.meta.env.DEV) {
+    console.log('Hugging Face client initialized successfully');
+  }
 } catch (error) {
-  console.error('Failed to initialize Hugging Face client:', error);
+  if (import.meta.env.DEV) {
+    console.error('Failed to initialize Hugging Face client:', error);
+  }
 }
 
 export interface AIResponse {

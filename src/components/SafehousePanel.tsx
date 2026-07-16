@@ -14,20 +14,23 @@ interface SafehousePanelProps {
   onClose: () => void;
 }
 
-type Tab = 'stash' | 'craft';
+type Tab = 'stash' | 'craft' | 'rest';
 
 const SafehousePanel: React.FC<SafehousePanelProps> = ({ onClose }) => {
   const [tab, setTab] = useState<Tab>('stash');
   const bag = useGameStore((s) => s.bag);
   const stash = useGameStore((s) => s.stash);
   const money = useGameStore((s) => s.playerStats.money);
+  const health = useGameStore((s) => s.playerStats.health);
   const depositToStash = useGameStore((s) => s.depositToStash);
   const withdrawFromStash = useGameStore((s) => s.withdrawFromStash);
   const craftRecipe = useGameStore((s) => s.craftRecipe);
+  const updateStats = useGameStore((s) => s.updateStats);
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'stash', label: 'stash' },
     { id: 'craft', label: 'workbench' },
+    { id: 'rest', label: 'rest' },
   ];
 
   return (
@@ -138,6 +141,31 @@ const SafehousePanel: React.FC<SafehousePanelProps> = ({ onClose }) => {
                   </button>
                 );
               })}
+            </div>
+          )}
+
+          {tab === 'rest' && (
+            <div className="space-y-3">
+              <p className="text-[11px] text-neutral-500 leading-relaxed tracking-[0.06em]">
+                The Den is a safe zone. Rest to patch up — free at full hideout,
+                no heat clear (visit a shop for that).
+              </p>
+              <div className="border border-[#1a1c1f] px-3 py-3 text-[11px] text-neutral-400">
+                vitality ·{' '}
+                <span className="text-neutral-100">{Math.round(health)}</span>
+                /100
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  updateStats({ health: 100 });
+                  gameAudio.play('market', 0.2);
+                }}
+                disabled={health >= 100}
+                className="w-full border border-[#3f7d4e] py-3 text-[11px] tracking-[0.22em] uppercase text-[#3f7d4e] hover:bg-[#3f7d4e]/10 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                rest · full heal
+              </button>
             </div>
           )}
         </div>

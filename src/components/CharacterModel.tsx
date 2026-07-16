@@ -265,6 +265,12 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
       }
     });
     materials.current = mats;
+    // Dispose per-instance clones on unmount / retint so remote player churn
+    // does not leak GPU memory across a long session.
+    return () => {
+      for (const mat of mats) mat.dispose();
+      materials.current = [];
+    };
   }, [clone, tint, accent, accent2]);
 
   useEffect(() => {

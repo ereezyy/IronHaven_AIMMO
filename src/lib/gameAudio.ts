@@ -36,6 +36,10 @@ class GameAudio {
     return this.muted;
   }
 
+  isUnlocked(): boolean {
+    return this.unlocked && this.ctx?.state === 'running';
+  }
+
   setMuted(muted: boolean): void {
     this.muted = muted;
     if (this.master) {
@@ -296,7 +300,8 @@ class GameAudio {
     // ── Filtered noise bed (distant city, data streams) ──
     const noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 3, ctx.sampleRate);
     const noiseData = noiseBuf.getChannelData(0);
-    for (let i = 0; i < noiseData.length; i++) noiseData[i] = Math.random() * 2 - 1;
+    for (let i = 0; i < noiseData.length; i++)
+      noiseData[i] = Math.random() * 2 - 1;
     const noiseSrc = ctx.createBufferSource();
     noiseSrc.buffer = noiseBuf;
     noiseSrc.loop = true;
@@ -361,7 +366,8 @@ class GameAudio {
       try {
         if (
           'stop' in n &&
-          typeof (n as OscillatorNode | AudioBufferSourceNode).stop === 'function'
+          typeof (n as OscillatorNode | AudioBufferSourceNode).stop ===
+            'function'
         ) {
           (n as OscillatorNode | AudioBufferSourceNode).stop();
         }

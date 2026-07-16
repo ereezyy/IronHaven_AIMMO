@@ -127,11 +127,15 @@ export const ShopUI: React.FC<ShopUIProps> = ({ shop, onClose }) => {
         </div>
         <div className="p-3 space-y-1 max-h-72 overflow-y-auto">
           {shop.items.map((item) => {
-            const price = Math.round(item.price * allyDiscount);
+            const list = item.price;
+            const price = Math.round(list * allyDiscount);
+            const canAfford = money >= price;
             return (
               <button
                 key={item.id + item.name}
+                disabled={!canAfford}
                 onClick={() => {
+                  if (!canAfford) return;
                   if (item.kind === 'resource' && isResourceId(item.id)) {
                     purchase(item.price, () => {
                       useGameStore.getState().harvestIntoBag({
@@ -173,10 +177,28 @@ export const ShopUI: React.FC<ShopUIProps> = ({ shop, onClose }) => {
                     });
                   }
                 }}
-                className="w-full flex justify-between px-3 py-2 text-[12px] text-neutral-300 border border-[#141517] hover:border-[#333]"
+                className={`w-full flex justify-between items-center px-3 py-2 text-[12px] border ${
+                  canAfford
+                    ? 'text-neutral-300 border-[#141517] hover:border-[#333]'
+                    : 'text-neutral-600 border-[#0e0f11] opacity-70 cursor-not-allowed'
+                }`}
               >
                 <span>{item.name}</span>
-                <span className="text-neutral-500">${price}</span>
+                <span className="text-right">
+                  <span style={{ color: canAfford ? '#cfcfd2' : '#c03a30' }}>
+                    ${price}
+                  </span>
+                  {list !== price && (
+                    <span className="ml-2 text-neutral-600 line-through">
+                      ${list}
+                    </span>
+                  )}
+                  {!canAfford && (
+                    <span className="ml-2 text-[9px] tracking-[0.15em] uppercase text-neutral-600">
+                      short ${price - money}
+                    </span>
+                  )}
+                </span>
               </button>
             );
           })}

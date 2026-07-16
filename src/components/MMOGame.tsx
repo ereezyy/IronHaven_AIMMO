@@ -25,11 +25,23 @@ import {
 } from '@react-three/postprocessing';
 import { KernelSize, BlendFunction } from 'postprocessing';
 import ContextLossGuard from './ContextLossGuard';
+import { getGfxSettings, type GfxTier } from '../lib/graphicsQuality';
+import { resolveBootGfxTier, vfxDensityForTier } from '../lib/playerExperience';
 import {
-  getGfxSettings,
-  readGfxTier,
-  type GfxTier,
-} from '../lib/graphicsQuality';
+  ActiveObjectiveBar,
+  AudioUnlockBanner,
+  ClickToResume,
+  DailyBoardSplash,
+  DeathLessonList,
+  EmoteBubble,
+  GraphicsSettingsPanel,
+  PassValueLine,
+  PersistentControlsStrip,
+  SessionRecoveryToast,
+  WantedHintBar,
+  usePinnedControls,
+  useShouldDailySplash,
+} from './PlayerExperience';
 import { Physics, CuboidCollider } from '@react-three/rapier';
 import * as THREE from 'three';
 import { useGameStore } from '../store/gameState';
@@ -182,13 +194,48 @@ export const DEATH_LOSS_FRACTION = 0.25;
 // edges — cinematic without smearing the crosshair area.
 const CA_OFFSET = new THREE.Vector2(0.0005, 0.001);
 
+/** Daily board login splash — isolated so hook order stays stable in MMOGame. */
+const DailyBoardSplashGate: React.FC<{
+  ready: boolean;
+  board: {
+    dailies: {
+      title: string;
+      progress: number;
+      target: number;
+      claimed: boolean;
+    }[];
+    weekly: {
+      title: string;
+      progress: number;
+      target: number;
+      claimed: boolean;
+    };
+  };
+  onOpenLog: () => void;
+}> = ({ ready, board, onOpenLog }) => {
+  const [open, dismiss] = useShouldDailySplash(ready);
+  const jobs = [...(board?.dailies || []), board?.weekly].filter(Boolean);
+  return (
+    <DailyBoardSplash
+      open={open}
+      jobs={jobs}
+      onOpenLog={() => {
+        dismiss();
+        onOpenLog();
+      }}
+      onDismiss={dismiss}
+    />
+  );
+};
+
 // Full-screen loading gate driven by the three.js loader queue (HDRI,
 // textures, models). A modern MMO never shows a half-loaded world; this
 // fades out once every asset is resident. The failsafe timer guarantees we
 // never trap the player on the loader if an asset 404s.
 const LoadingScreen: React.FC = () => {
-  const { active, progress } = useProgress();
+  const { active, progress, item } = useProgress();
   const [gone, setGone] = useState(false);
+  const [phase, setPhase] = useState('streaming district assets');
   const done = !active && progress >= 100;
 
   useEffect(() => {
@@ -197,12 +244,24 @@ const LoadingScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (progress < 40) setPhase('loading meshes & textures');
+    else if (progress < 75) setPhase('compiling shaders');
+    else if (progress < 100) setPhase('warming neon & atmosphere');
+    else setPhase('district online');
+  }, [progress]);
+
+  useEffect(() => {
     if (!done) return;
     const t = setTimeout(() => setGone(true), 750);
     return () => clearTimeout(t);
   }, [done]);
 
   if (gone) return null;
+
+  const assetHint =
+    item && typeof item === 'string'
+      ? item.split('/').pop()?.slice(0, 42)
+      : null;
 
   return (
     <div
@@ -226,8 +285,13 @@ const LoadingScreen: React.FC = () => {
         />
       </div>
       <div className="mt-3 text-[10px] tracking-[0.3em] uppercase text-neutral-600">
-        {Math.round(progress)}% · streaming district assets
+        {Math.round(progress)}% · {phase}
       </div>
+      {assetHint && (
+        <div className="mt-1 text-[9px] tracking-[0.12em] text-neutral-700 max-w-xs truncate">
+          {assetHint}
+        </div>
+      )}
     </div>
   );
 };
@@ -472,10 +536,17 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
   const [muted, setMuted] = useState(false);
   const [aiReady, setAiReady] = useState(() => llmClient.isConfigured());
-  // Adaptive GPU tier — starts balanced (no SSAO), steps down on context loss.
-  const [gfxTier, setGfxTier] = useState<GfxTier>(() => readGfxTier());
+  // Adaptive GPU tier — low-end boots on performance; steps down on context loss.
+  const [gfxTier, setGfxTier] = useState<GfxTier>(() => resolveBootGfxTier());
   const gfx = getGfxSettings(gfxTier);
   const onGfxDegrade = useCallback((tier: GfxTier) => setGfxTier(tier), []);
+  const [gfxOpen, setGfxOpen] = useState(false);
+  const gfxOpenRef = useRef(false);
+  const [audioNeedsUnlock, setAudioNeedsUnlock] = useState(true);
+  const [pointerLocked, setPointerLocked] = useState(false);
+  const [controlsPinned, setControlsPinned] = usePinnedControls();
+  const [emoteText, setEmoteText] = useState<string | null>(null);
+  const emoteTimer = useRef<number | null>(null);
   const [aiContract, setAiContract] = useState<StreetContract | null>(null);
   /** Contract waiting on accept/decline briefing. */
   const [pendingBrief, setPendingBrief] = useState<StreetContract | null>(null);
@@ -567,7 +638,9 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
   // Unlock procedural audio after the first gesture (autoplay policy).
   useEffect(() => {
     const unlock = () => {
-      void gameAudio.unlock();
+      void gameAudio.unlock().then(() => {
+        if (gameAudio.isUnlocked()) setAudioNeedsUnlock(false);
+      });
     };
     window.addEventListener('pointerdown', unlock, { once: true });
     window.addEventListener('keydown', unlock, { once: true });
@@ -575,6 +648,14 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       window.removeEventListener('pointerdown', unlock);
       window.removeEventListener('keydown', unlock);
     };
+  }, []);
+
+  // Track pointer lock for "click to resume" banner.
+  useEffect(() => {
+    const sync = () => setPointerLocked(Boolean(document.pointerLockElement));
+    document.addEventListener('pointerlockchange', sync);
+    sync();
+    return () => document.removeEventListener('pointerlockchange', sync);
   }, []);
 
   // One-shot init guard: the store snapshot changes identity on every set(),
@@ -1262,7 +1343,44 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
         Boolean(pendingBrief) ||
         controlsOpen ||
         shopOpen ||
-        safehouseOpenRef.current;
+        safehouseOpenRef.current ||
+        gfxOpenRef.current;
+
+      // Graphics settings (always available, even when other panels open — toggle)
+      if (e.code === 'KeyG' && !e.repeat) {
+        setGfxOpen((v) => {
+          const next = !v;
+          gfxOpenRef.current = next;
+          if (next && document.pointerLockElement) document.exitPointerLock();
+          return next;
+        });
+        gameAudio.play('ui', 0.12);
+        return;
+      }
+
+      // Quick emotes 1–4 (local bubble + kill-feed for nearby feel)
+      if (
+        !blocked &&
+        !e.repeat &&
+        (e.code === 'Digit1' ||
+          e.code === 'Digit2' ||
+          e.code === 'Digit3' ||
+          e.code === 'Digit4')
+      ) {
+        const emotes: Record<string, string> = {
+          Digit1: '👍 respect',
+          Digit2: '🔥 heat',
+          Digit3: '💀 threat',
+          Digit4: '🤝 deal',
+        };
+        const text = emotes[e.code];
+        setEmoteText(text);
+        pushFeed(`${gameStore.username || 'Runner'}: ${text}`, 'info');
+        gameAudio.play('talk', 0.15);
+        if (emoteTimer.current) window.clearTimeout(emoteTimer.current);
+        emoteTimer.current = window.setTimeout(() => setEmoteText(null), 2800);
+        return;
+      }
 
       if (e.code === 'KeyL') {
         setQuestOpen((v) => {
@@ -1411,6 +1529,9 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       } else if (e.code === 'Escape' && leaderboardOpenRef.current) {
         leaderboardOpenRef.current = false;
         setLeaderboardOpen(false);
+      } else if (e.code === 'Escape' && gfxOpenRef.current) {
+        gfxOpenRef.current = false;
+        setGfxOpen(false);
       } else if (e.code === 'Escape' && controlsOpen) {
         setControlsOpen(false);
       } else if (e.code === 'Escape' && aiPanelOpen) {
@@ -1627,9 +1748,9 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
               background={false}
             />
 
-            {/* Floating embers / ash drifting through the district. */}
+            {/* Floating embers / ash — count scales with graphics tier. */}
             <Sparkles
-              count={120}
+              count={Math.max(12, Math.round(120 * vfxDensityForTier(gfxTier)))}
               scale={[140, 24, 140]}
               position={[0, 10, 0]}
               size={3}
@@ -2100,6 +2221,96 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
 
       <KillFeed entries={killFeed} />
 
+      <SessionRecoveryToast />
+      <ActiveObjectiveBar
+        objectives={[
+          ...buildStreetObjectives({
+            talked: hasTalked,
+            kills: gameStore.sessionStats.totalKills,
+            money: gameStore.playerStats.money,
+            reputation: gameStore.playerStats.reputation,
+            hasWeapon:
+              gameStore.currentWeaponId !== STARTER_WEAPON_ID ||
+              gameStore.inventory.length > 0,
+            combatSkill: gameStore.playerStats.skills.combat,
+          }),
+          ...(aiContract
+            ? [
+                {
+                  id: aiContract.id,
+                  label: aiContract.title,
+                  done: false,
+                },
+              ]
+            : []),
+        ]}
+        hidden={
+          Boolean(activeCutscene) ||
+          controlsOpen ||
+          isDead ||
+          gfxOpen ||
+          questOpen ||
+          Boolean(pendingBrief)
+        }
+      />
+      <WantedHintBar wanted={gameStore.playerStats.wanted} />
+      <ClickToResume
+        visible={
+          !pointerLocked &&
+          !isDead &&
+          !activeCutscene &&
+          !controlsOpen &&
+          !marketOpen &&
+          !shopOpen &&
+          !safehouseOpen &&
+          !dialogueNpc &&
+          !pendingBrief &&
+          !gfxOpen &&
+          !questOpen &&
+          !skillsOpen &&
+          !passOpen &&
+          !socialOpen &&
+          !economyOpen &&
+          !aiPanelOpen
+        }
+        reason={
+          gameAudio.isUnlocked() ? 'mouse free' : 'click for look + sound'
+        }
+      />
+      <AudioUnlockBanner
+        needsUnlock={audioNeedsUnlock && !isDead}
+        onUnlock={() => setAudioNeedsUnlock(false)}
+      />
+      <EmoteBubble text={emoteText} visible={Boolean(emoteText)} />
+      <PersistentControlsStrip
+        pinned={controlsPinned}
+        onTogglePin={setControlsPinned}
+        hidden={
+          Boolean(activeCutscene) ||
+          controlsOpen ||
+          isDead ||
+          (!controlsPinned && !helpDismissed)
+        }
+      />
+      <GraphicsSettingsPanel
+        open={gfxOpen}
+        tier={gfxTier}
+        onTier={setGfxTier}
+        onClose={() => {
+          gfxOpenRef.current = false;
+          setGfxOpen(false);
+        }}
+      />
+      <DailyBoardSplashGate
+        ready={tipsReady && !controlsOpen && !activeCutscene && !isDead}
+        board={gameStore.dailyBoard}
+        onOpenLog={() => {
+          questOpenRef.current = true;
+          setQuestOpen(true);
+          if (document.pointerLockElement) document.exitPointerLock();
+        }}
+      />
+
       {activeWorldEvent && (
         <WorldEventBanner
           event={WORLD_EVENTS[activeWorldEvent.kind]}
@@ -2332,12 +2543,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
           >
             wasted
           </div>
-          {deathPenalty > 0 && (
-            <div className="mt-4 text-[11px] tracking-[0.22em] uppercase text-neutral-400">
-              dropped <span className="text-neutral-100">${deathPenalty}</span>{' '}
-              on the street
-            </div>
-          )}
+          <DeathLessonList penalty={deathPenalty} />
           <button
             autoFocus
             onClick={respawn}
@@ -2377,6 +2583,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
               ? `${formatPassRemaining(gameStore.pass)} left · o`
               : '$1.99/wk · o'}
           </div>
+          <PassValueLine active={passIsLive(gameStore.pass)} />
         </button>
       )}
 
