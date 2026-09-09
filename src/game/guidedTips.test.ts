@@ -26,6 +26,24 @@ describe('guided tips', () => {
     expect(GUIDED_TIPS.length).toBeGreaterThanOrEqual(6);
   });
 
+  it('early tip covers talk / fight / market / pass demo path', () => {
+    const early = GUIDED_TIPS.filter((t) => t.step <= 3);
+    const blob = early
+      .map((t) => `${t.title} ${t.body} ${t.keyHint ?? ''}`)
+      .join(' ')
+      .toLowerCase();
+    expect(blob).toMatch(/\be\b/);
+    expect(blob).toMatch(/talk/);
+    expect(blob).toMatch(/click/);
+    expect(blob).toMatch(/fight/);
+    expect(blob).toMatch(/\bb\b/);
+    expect(blob).toMatch(/market/);
+    expect(blob).toMatch(/\bo\b/);
+    expect(blob).toMatch(/pass/);
+    // Phase 1 keys stay elsewhere — do not remap weapons/gfx/ai here
+    expect(blob).not.toMatch(/emote/);
+  });
+
   it('advances when a tip is completed', () => {
     let s = markTipComplete(EMPTY_TIPS_STATE, 'look');
     expect(currentTip(s)?.id).toBe('move');
