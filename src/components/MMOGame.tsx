@@ -1468,7 +1468,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       if (e.code === 'KeyB' && !dialogueOpenRef.current) {
         if (marketOpenRef.current) closeMarket();
         else openMarket();
-      } else if (e.code === AI_PANEL_KEY) {
+      } else if (e.code === AI_PANEL_KEY && !e.repeat) {
         setAiPanelOpen((v) => !v);
         if (document.pointerLockElement) document.exitPointerLock();
       } else if (e.code === 'KeyU') {
@@ -2610,9 +2610,10 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
             <div className="text-[10px] tracking-[0.16em] uppercase text-neutral-400">
               <span style={{ color: COLORS.accent }}>wasd</span> move ·{' '}
               <span style={{ color: COLORS.accent }}>e</span> talk ·{' '}
+              <span style={{ color: COLORS.accent }}>1–4</span> weapons ·{' '}
               <span style={{ color: COLORS.accent }}>j</span> job ·{' '}
-              <span style={{ color: COLORS.accent }}>l</span> log ·{' '}
-              <span style={{ color: COLORS.accent }}>k</span> skills ·{' '}
+              <span style={{ color: COLORS.accent }}>g</span> gfx ·{' '}
+              <span style={{ color: COLORS.accent }}>i</span> ai ·{' '}
               <span style={{ color: COLORS.gold }}>o</span> pass
             </div>
             <button
