@@ -7,6 +7,7 @@ import {
   attackCooldownMs,
   type ObjectiveSnapshot,
 } from './objectives';
+import { firstOpenObjective } from '../lib/playerExperience';
 
 const snap = (over: Partial<ObjectiveSnapshot> = {}): ObjectiveSnapshot => ({
   talked: false,
@@ -23,6 +24,14 @@ describe('buildStreetObjectives', () => {
     const list = buildStreetObjectives(snap());
     expect(list.every((o) => !o.done)).toBe(true);
     expect(list[0].id).toBe('talk');
+  });
+
+  it('fresh board first incomplete has non-empty label', () => {
+    const list = buildStreetObjectives(snap());
+    const next = firstOpenObjective(list);
+    expect(next).not.toBeNull();
+    expect(next!.id).toBe('talk');
+    expect(next!.label.trim().length).toBeGreaterThan(0);
   });
 
   it('marks talk, kill, and arm when conditions met', () => {
