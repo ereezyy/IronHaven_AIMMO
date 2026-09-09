@@ -1404,7 +1404,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
           setEmoteText(text);
           pushFeed(
             `${useGameStore.getState().username || 'Runner'}: ${text}`,
-            'info'
+            'system'
           );
           gameAudio.play('talk', 0.15);
           if (emoteTimer.current) window.clearTimeout(emoteTimer.current);
