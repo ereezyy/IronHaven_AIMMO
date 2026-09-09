@@ -76,6 +76,10 @@ import {
   buildStreetObjectives,
   scaleDamage,
 } from '../game/objectives';
+import {
+  formatContractPayout,
+  newlyCompletedObjectives,
+} from '../game/demoLoop';
 import { applyCrit } from '../game/skills';
 import SkillTreePanel from './SkillTreePanel';
 import PassPanel from './PassPanel';
@@ -1298,7 +1302,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
     return () => window.clearInterval(id);
   }, []);
 
-  // One-shot cash when a street contract first completes (never during render).
+  // One-shot cash + kill-feed when a street contract first completes (never during render).
   useEffect(() => {
     const s = useGameStore.getState();
     const hasWeapon =
@@ -1311,13 +1315,18 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       hasWeapon,
       combatSkill: s.playerStats.skills.combat,
     });
+    const newlyDone = newlyCompletedObjectives(
+      street,
+      rewardedObjectives.current
+    );
+    if (newlyDone.length === 0) return;
     let bonus = 0;
-    for (const o of street) {
-      if (o.done && !rewardedObjectives.current.has(o.id) && o.reward > 0) {
-        rewardedObjectives.current.add(o.id);
-        bonus += o.reward;
-        s.addAction(`contract_${o.id}`);
-      }
+    for (const o of newlyDone) {
+      rewardedObjectives.current.add(o.id);
+      bonus += o.reward;
+      s.addAction(`contract_${o.id}`);
+      pushFeed(formatContractPayout(o.label, o.reward), 'info');
+      gameAudio.play('market', 0.25);
     }
     if (bonus > 0) {
       s.updateStats({ money: s.playerStats.money + bonus });
@@ -1330,6 +1339,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
     gameStore.playerStats.skills.combat,
     gameStore.currentWeaponId,
     gameStore.inventory,
+    pushFeed,
   ]);
 
   useEffect(() => {
