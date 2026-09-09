@@ -43,6 +43,7 @@ import {
   DeathLessonList,
   EmoteBubble,
   GraphicsSettingsPanel,
+  PassNudgeBanner,
   PassValueLine,
   PersistentControlsStrip,
   SessionRecoveryToast,
@@ -79,6 +80,7 @@ import {
 import {
   formatContractPayout,
   newlyCompletedObjectives,
+  shouldNudgePass,
 } from '../game/demoLoop';
 import { applyCrit } from '../game/skills';
 import SkillTreePanel from './SkillTreePanel';
@@ -610,6 +612,8 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
   const skillsOpenRef = useRef(false);
   const [passOpen, setPassOpen] = useState(false);
   const passOpenRef = useRef(false);
+  const passNudgedRef = useRef(false);
+  const [passNudgeOpen, setPassNudgeOpen] = useState(false);
   const [questOpen, setQuestOpen] = useState(false);
   const questOpenRef = useRef(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
@@ -1341,6 +1345,22 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
     gameStore.inventory,
     pushFeed,
   ]);
+
+  // Soft Pass CTA once talk + kill are done and Pass is inactive (session ref only).
+  useEffect(() => {
+    if (
+      !shouldNudgePass({
+        talkedDone: hasTalked,
+        killDone: gameStore.sessionStats.totalKills >= 1,
+        passActive: passIsLive(gameStore.pass),
+        alreadyNudged: passNudgedRef.current,
+      })
+    ) {
+      return;
+    }
+    passNudgedRef.current = true;
+    setPassNudgeOpen(true);
+  }, [hasTalked, gameStore.sessionStats.totalKills, gameStore.pass]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -2510,6 +2530,18 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
           contract complete · {contractToast}
         </div>
       )}
+
+      <PassNudgeBanner
+        open={passNudgeOpen && !passOpen && !passIsLive(gameStore.pass)}
+        onOpenPass={() => {
+          setPassNudgeOpen(false);
+          passOpenRef.current = true;
+          setPassOpen(true);
+          if (document.pointerLockElement) document.exitPointerLock();
+          gameAudio.play('ui', 0.12);
+        }}
+        onDismiss={() => setPassNudgeOpen(false)}
+      />
 
       {gameStore.xpToast && Date.now() - gameStore.xpToast.at < 2200 && (
         <div className="absolute top-28 left-4 z-[28] font-mono border border-[#c9a15a] bg-black/85 px-4 py-2 text-[11px] tracking-[0.2em] uppercase text-[#c9a15a]">
