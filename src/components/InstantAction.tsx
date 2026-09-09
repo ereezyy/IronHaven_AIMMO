@@ -3,9 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 interface InstantActionProps {
-  onAIDemo: () => void;
-  onMultiplayerDemo: () => void;
-  onCombatDemo: () => void;
+  onEnterDistrict: () => void;
   continueCallsign?: string | null;
   onContinue?: () => void;
   onNewRunner?: () => void;
@@ -104,9 +102,7 @@ const PANEL = 'border border-[#222428] bg-black/55 backdrop-blur-sm';
 const LABEL = 'text-[10px] tracking-[0.32em] uppercase text-neutral-500';
 
 const InstantAction: React.FC<InstantActionProps> = ({
-  onAIDemo,
-  onMultiplayerDemo,
-  onCombatDemo,
+  onEnterDistrict,
   continueCallsign,
   onContinue,
   onNewRunner,
@@ -209,9 +205,7 @@ const InstantAction: React.FC<InstantActionProps> = ({
           plays <span style={{ color: '#c03a30' }}>back</span>.
         </h1>
         <p className="mt-5 max-w-[440px] text-[15px] leading-relaxed text-neutral-400 font-mono">
-          50+ AI-directed factions. Persistent presence on a shared world
-          server. Pick a path below — every demo loads the same authoritative
-          simulation.
+          One shared district. Enter to create or continue your runner.
         </p>
       </div>
 
@@ -245,22 +239,10 @@ const InstantAction: React.FC<InstantActionProps> = ({
           {(
             [
               {
-                id: 'ai',
-                label: 'Walk into a conversation',
-                sub: 'AI · director · NPCs',
-                on: onAIDemo,
-              },
-              {
-                id: 'mp',
-                label: 'Join the live world',
-                sub: 'Multiplayer · 24/7 shard',
-                on: onMultiplayerDemo,
-              },
-              {
-                id: 'cb',
-                label: 'Pick a fight',
-                sub: 'Combat · ballistics · cover',
-                on: onCombatDemo,
+                id: 'enter',
+                label: 'Enter District 01',
+                sub: 'Spawn Sanctum · same live sim',
+                on: onEnterDistrict,
               },
               ...(onNewRunner
                 ? [
