@@ -83,7 +83,11 @@ export const CONTROLS_ROWS: { keys: string; action: string }[] = [
   { keys: 'R', action: 'Harvest' },
   { keys: 'C', action: 'Fish cast' },
   { keys: 'P', action: 'Toggle PvP' },
+  { keys: '1–4', action: 'Weapon loadout' },
+  { keys: 'Shift+1–4', action: 'Emotes' },
   { keys: '5–8', action: 'Active abilities' },
+  { keys: 'G', action: 'Graphics quality' },
+  { keys: 'I', action: 'AI director panel' },
   {
     keys: 'Gamepad',
     action: 'LS stick move · R stick look · A jump · RT attack',

@@ -164,10 +164,12 @@ export function PersistentControlsStrip({
         <span className="text-neutral-300">wasd</span> move ·{' '}
         <span className="text-neutral-300">e</span> talk ·{' '}
         <span className="text-neutral-300">click</span> look ·{' '}
+        <span className="text-neutral-300">1–4</span> weapons ·{' '}
         <span className="text-neutral-300">b</span> market ·{' '}
         <span className="text-neutral-300">l</span> jobs ·{' '}
         <span className="text-neutral-300">o</span> pass ·{' '}
-        <span className="text-neutral-300">g</span> gfx
+        <span className="text-neutral-300">g</span> gfx ·{' '}
+        <span className="text-neutral-300">i</span> ai
       </span>
       <button
         type="button"

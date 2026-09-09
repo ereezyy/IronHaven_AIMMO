@@ -22,6 +22,12 @@ import {
   collapseProgress,
   collapsePose,
 } from '../game/hitReaction';
+import {
+  FIRE_AIM,
+  FIRE_AIM_DECAY_PER_SEC,
+  aimStrength,
+  recoilKick,
+} from '../game/fireAim';
 
 const MODEL_URL = '/models/soldier.glb';
 
@@ -53,6 +59,8 @@ interface CharacterModelProps {
   parts?: AvatarParts;
   /** Optional ref that receives a "flash" trigger for hit feedback. */
   flashRef?: React.MutableRefObject<number>;
+  /** 1→0 pulse when the player fires; raises the weapon off the hip. */
+  fireRef?: React.MutableRefObject<number>;
   /** When true, plays the procedural death collapse (Stage D). */
   deadRef?: React.MutableRefObject<boolean>;
 }
@@ -191,6 +199,7 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
   bodyScale = 1,
   parts,
   flashRef,
+  fireRef,
   deadRef,
 }) => {
   const group = useRef<THREE.Group>(null);
@@ -211,6 +220,20 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
     const found: { bone: THREE.Bone; amplitude: [number, number, number] }[] =
       [];
     for (const f of HIT_FLINCH) {
+      const obj =
+        clone.getObjectByName(f.bone.replace(/:/g, '')) ??
+        clone.getObjectByName(f.bone);
+      if (obj && (obj as THREE.Bone).isBone) {
+        found.push({ bone: obj as THREE.Bone, amplitude: f.amplitude });
+      }
+    }
+    return found;
+  }, [clone]);
+
+  const aimBones = useMemo(() => {
+    const found: { bone: THREE.Bone; amplitude: [number, number, number] }[] =
+      [];
+    for (const f of FIRE_AIM) {
       const obj =
         clone.getObjectByName(f.bone.replace(/:/g, '')) ??
         clone.getObjectByName(f.bone);
@@ -319,6 +342,26 @@ const CharacterModel: React.FC<CharacterModelProps> = ({
         bone.rotation.x += amplitude[0] * flinch;
         bone.rotation.y += amplitude[1] * flinch;
         bone.rotation.z += amplitude[2] * flinch;
+      }
+    }
+
+    // Fire raise: lift the right arm so the hand-parented blaster comes up
+    // to a shooting pose instead of hanging at rest. Applied after flinch
+    // so a shot still reads as "gun up" even if a hit landed the same frame.
+    if (fireRef && fireRef.current > 0) {
+      fireRef.current = Math.max(
+        0,
+        fireRef.current - delta * FIRE_AIM_DECAY_PER_SEC
+      );
+    }
+    const aim = deadRef?.current ? 0 : aimStrength(fireRef?.current ?? 0);
+    const kick = deadRef?.current ? 0 : recoilKick(fireRef?.current ?? 0);
+    if (aim > 0.001) {
+      const k = aim + kick * 0.22;
+      for (const { bone, amplitude } of aimBones) {
+        bone.rotation.x += amplitude[0] * k;
+        bone.rotation.y += amplitude[1] * k;
+        bone.rotation.z += amplitude[2] * k;
       }
     }
 

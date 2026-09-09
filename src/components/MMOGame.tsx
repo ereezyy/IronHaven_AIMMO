@@ -26,6 +26,14 @@ import {
 import { KernelSize, BlendFunction } from 'postprocessing';
 import ContextLossGuard from './ContextLossGuard';
 import { getGfxSettings, type GfxTier } from '../lib/graphicsQuality';
+import {
+  AI_PANEL_KEY,
+  EMOTES,
+  GFX_KEY,
+  isEmoteDigit,
+  isWeaponDigit,
+  weaponSlotFromDigit,
+} from '../game/inputBindings';
 import { resolveBootGfxTier, vfxDensityForTier } from '../lib/playerExperience';
 import {
   ActiveObjectiveBar,
@@ -520,6 +528,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
   const economyOpenRef = useRef(false);
   const attackApi = useRef<AttackFn | null>(null);
   const playerFlashApi = useRef<(() => void) | null>(null);
+  const playerFireApi = useRef<(() => void) | null>(null);
   const cameraShake = useRef(0);
   const prevHealth = useRef(gameStore.playerStats.health);
   const vignetteTimer = useRef<number | null>(null);
@@ -1347,7 +1356,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
         gfxOpenRef.current;
 
       // Graphics settings (always available, even when other panels open — toggle)
-      if (e.code === 'KeyG' && !e.repeat) {
+      if (e.code === GFX_KEY && !e.repeat) {
         setGfxOpen((v) => {
           const next = !v;
           gfxOpenRef.current = next;
@@ -1358,27 +1367,22 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
         return;
       }
 
-      // Quick emotes 1–4 (local bubble + kill-feed for nearby feel)
-      if (
-        !blocked &&
-        !e.repeat &&
-        (e.code === 'Digit1' ||
-          e.code === 'Digit2' ||
-          e.code === 'Digit3' ||
-          e.code === 'Digit4')
-      ) {
-        const emotes: Record<string, string> = {
-          Digit1: '👍 respect',
-          Digit2: '🔥 heat',
-          Digit3: '💀 threat',
-          Digit4: '🤝 deal',
-        };
-        const text = emotes[e.code];
-        setEmoteText(text);
-        pushFeed(`${gameStore.username || 'Runner'}: ${text}`, 'info');
-        gameAudio.play('talk', 0.15);
-        if (emoteTimer.current) window.clearTimeout(emoteTimer.current);
-        emoteTimer.current = window.setTimeout(() => setEmoteText(null), 2800);
+      // Shift+1–4 emotes (plain 1–4 is weapon loadout)
+      if (!blocked && !e.repeat && isEmoteDigit(e)) {
+        const text = EMOTES[e.code];
+        if (text) {
+          setEmoteText(text);
+          pushFeed(
+            `${useGameStore.getState().username || 'Runner'}: ${text}`,
+            'info'
+          );
+          gameAudio.play('talk', 0.15);
+          if (emoteTimer.current) window.clearTimeout(emoteTimer.current);
+          emoteTimer.current = window.setTimeout(
+            () => setEmoteText(null),
+            2800
+          );
+        }
         return;
       }
 
@@ -1464,7 +1468,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       if (e.code === 'KeyB' && !dialogueOpenRef.current) {
         if (marketOpenRef.current) closeMarket();
         else openMarket();
-      } else if (e.code === 'KeyG') {
+      } else if (e.code === AI_PANEL_KEY) {
         setAiPanelOpen((v) => !v);
         if (document.pointerLockElement) document.exitPointerLock();
       } else if (e.code === 'KeyU') {
@@ -1542,16 +1546,16 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
         (e.code === 'Enter' || e.code === 'Space')
       ) {
         respawn();
-      } else if (e.code.startsWith('Digit') && !blocked) {
-        const slot = parseInt(e.code.replace('Digit', ''), 10);
-        if (slot >= 1 && slot <= 4) {
+      } else if (!blocked && isWeaponDigit(e)) {
+        const slot = weaponSlotFromDigit(e.code);
+        if (slot != null) {
           const s = useGameStore.getState();
           const owned = [
             'fists',
             ...s.inventory.filter((id) => weapons.some((w) => w.id === id)),
           ];
           const loadout = Array.from(new Set(owned));
-          const pick = loadout[slot - 1];
+          const pick = loadout[slot];
           if (pick) {
             s.setCurrentWeaponId(pick);
             gameAudio.play('ui', 0.12);
@@ -1598,6 +1602,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       if (crit) window.setTimeout(() => setLastCrit(false), 400);
 
       const dmg = rolled;
+      playerFireApi.current?.();
       attackApi.current?.(dmg, weapon.range);
 
       // Boss / hunt with specialized multipliers
@@ -1775,6 +1780,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
                 playerId={playerId}
                 onUpdate={handlePlayerUpdate}
                 flashApi={playerFlashApi}
+                fireApi={playerFireApi}
                 staminaRef={staminaRef}
                 tint={gameStore.character.appearance.tint}
                 accent={gameStore.character.appearance.accent}

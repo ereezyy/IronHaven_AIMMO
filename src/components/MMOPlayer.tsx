@@ -24,6 +24,8 @@ interface MMOPlayerProps {
   playerId: string;
   onUpdate: (position: THREE.Vector3, rotation: number) => void;
   flashApi?: React.MutableRefObject<(() => void) | null>;
+  /** Pulse the fire-aim pose (weapon raises off the hip). */
+  fireApi?: React.MutableRefObject<(() => void) | null>;
   /** Live stamina written every frame for the HUD (no React re-render). */
   staminaRef?: React.MutableRefObject<number>;
   tint?: string;
@@ -49,6 +51,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
   playerId,
   onUpdate,
   flashApi,
+  fireApi,
   staminaRef,
   tint = '#d4d5d8',
   accent = '#c03a30',
@@ -69,6 +72,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
   const controllerRef = useRef<KinematicCharacterController | null>(null);
   const visualRef = useRef<THREE.Group>(null);
   const flash = useRef(0);
+  const fire = useRef(0);
   const speedRef = useRef(0);
 
   // Per-frame mutable physics state — refs, not React state, so the hot
@@ -111,6 +115,16 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
       flashApi.current = null;
     };
   }, [flashApi]);
+
+  React.useEffect(() => {
+    if (!fireApi) return;
+    fireApi.current = () => {
+      fire.current = 1;
+    };
+    return () => {
+      fireApi.current = null;
+    };
+  }, [fireApi]);
 
   const mouseX = useRef(0);
   const mouseY = useRef(0);
@@ -391,6 +405,7 @@ const MMOPlayer: React.FC<MMOPlayerProps> = ({
           <CharacterModel
             speedRef={speedRef}
             flashRef={flash}
+            fireRef={fire}
             tint={tint}
             accent={accent}
             accent2={accent2}
