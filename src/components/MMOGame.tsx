@@ -1142,7 +1142,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
         const bonus = Math.round(10 * (mult - 1));
         if (bonus > 0) {
           useGameStore.getState().gainXp('contract', bonus);
-          pushFeed(`event bonus · +${bonus} xp (x${mult})`, 'info');
+          pushFeed(`event bonus · +${bonus} xp (x${mult})`, 'loot');
         }
       }
     }
@@ -1208,7 +1208,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
         gameAudio.play('siren', 0.18);
       }
       if (trans.ended) {
-        pushFeed(`${trans.ended.title} ended`, 'info');
+        pushFeed(`${trans.ended.title} ended`, 'system');
       }
     }, 250);
     return () => window.clearInterval(id);
@@ -1329,7 +1329,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       rewardedObjectives.current.add(o.id);
       bonus += o.reward;
       s.addAction(`contract_${o.id}`);
-      pushFeed(formatContractPayout(o.label, o.reward), 'info');
+      pushFeed(formatContractPayout(o.label, o.reward), 'loot');
       gameAudio.play('market', 0.25);
     }
     if (bonus > 0) {
@@ -1454,9 +1454,11 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       // Iron Haven Pass ($1.99/wk)
       if (e.code === 'KeyO') {
         setPassOpen((v) => {
-          passOpenRef.current = !v;
+          const next = !v;
+          passOpenRef.current = next;
+          if (next) setPassNudgeOpen(false);
           if (!v && document.pointerLockElement) document.exitPointerLock();
-          return !v;
+          return next;
         });
         gameAudio.play('ui', 0.15);
         return;
@@ -2532,7 +2534,12 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       )}
 
       <PassNudgeBanner
-        open={passNudgeOpen && !passOpen && !passIsLive(gameStore.pass)}
+        open={
+          passNudgeOpen &&
+          !passOpen &&
+          !activeCutscene &&
+          !passIsLive(gameStore.pass)
+        }
         onOpenPass={() => {
           setPassNudgeOpen(false);
           passOpenRef.current = true;
