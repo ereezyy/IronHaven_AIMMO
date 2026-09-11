@@ -40,6 +40,26 @@ npm run payment-link:success -- https://ironhaven-aimmo.vercel.app/?pass=success
 | `.env.server`      | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` |
 | Vercel project env | same + serverless secrets                    |
 
+### Production env (names only)
+
+**Client (`.env` / Vercel build):**
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_STRIPE_PUBLISHABLE_KEY`
+- `VITE_STRIPE_PAYMENT_LINK`
+- `VITE_STRIPE_PASS_API`
+- `VITE_STRIPE_CHECKOUT_URL` / `VITE_STRIPE_PASS_URL` (optional fallbacks)
+
+**Server (`.env.server` / Vercel serverless / Edge Functions):**
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `STRIPE_PRICE_ID`
+- `STRIPE_PRODUCT_ID`
+
 ## Playtest production Pass
 
 1. Open https://ironhaven-aimmo.vercel.app

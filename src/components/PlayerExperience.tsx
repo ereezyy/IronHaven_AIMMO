@@ -164,10 +164,12 @@ export function PersistentControlsStrip({
         <span className="text-neutral-300">wasd</span> move ·{' '}
         <span className="text-neutral-300">e</span> talk ·{' '}
         <span className="text-neutral-300">click</span> look ·{' '}
+        <span className="text-neutral-300">1–4</span> weapons ·{' '}
         <span className="text-neutral-300">b</span> market ·{' '}
         <span className="text-neutral-300">l</span> jobs ·{' '}
         <span className="text-neutral-300">o</span> pass ·{' '}
-        <span className="text-neutral-300">g</span> gfx
+        <span className="text-neutral-300">g</span> gfx ·{' '}
+        <span className="text-neutral-300">i</span> ai
       </span>
       <button
         type="button"
@@ -337,6 +339,45 @@ export function PassValueLine({ active }: { active: boolean }) {
   return (
     <div className="text-[9px] tracking-[0.12em] uppercase text-neutral-600 mt-0.5">
       {PASS_PRODUCT.priceLabel} · {top.label} · {PASS_BENEFIT_LINES[1]?.label}
+    </div>
+  );
+}
+
+/** Soft CTA after early street contracts (talk + kill). Session-only; parent owns open state. */
+export function PassNudgeBanner({
+  open,
+  onOpenPass,
+  onDismiss,
+}: {
+  open: boolean;
+  onOpenPass: () => void;
+  onDismiss: () => void;
+}) {
+  if (!open) return null;
+  return (
+    <div className="absolute top-[26%] left-1/2 -translate-x-1/2 z-[29] font-mono border border-[#c9a15a] bg-black/92 px-5 py-3.5 max-w-[min(440px,92vw)] text-center">
+      <div className="text-[11px] tracking-[0.12em] uppercase text-neutral-200 leading-relaxed">
+        Street heat pays.{' '}
+        <span style={{ color: '#c9a15a' }}>{PASS_PRODUCT.name}</span>
+        {' — '}
+        +25% XP · shop cut · O
+      </div>
+      <div className="mt-3 flex justify-center gap-2">
+        <button
+          type="button"
+          onClick={onOpenPass}
+          className="border border-[#c9a15a] bg-[#c9a15a]/10 px-4 py-1.5 text-[10px] tracking-[0.22em] uppercase text-[#c9a15a] hover:bg-[#c9a15a]/20 transition"
+        >
+          Open Pass
+        </button>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="border border-[#222428] px-4 py-1.5 text-[10px] tracking-[0.22em] uppercase text-neutral-500 hover:text-neutral-300 hover:border-[#3a3d42] transition"
+        >
+          Not now
+        </button>
+      </div>
     </div>
   );
 }

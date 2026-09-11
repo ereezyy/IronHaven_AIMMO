@@ -3,9 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 interface InstantActionProps {
-  onAIDemo: () => void;
-  onMultiplayerDemo: () => void;
-  onCombatDemo: () => void;
+  onEnterDistrict: () => void;
   continueCallsign?: string | null;
   onContinue?: () => void;
   onNewRunner?: () => void;
@@ -104,9 +102,7 @@ const PANEL = 'border border-[#222428] bg-black/55 backdrop-blur-sm';
 const LABEL = 'text-[10px] tracking-[0.32em] uppercase text-neutral-500';
 
 const InstantAction: React.FC<InstantActionProps> = ({
-  onAIDemo,
-  onMultiplayerDemo,
-  onCombatDemo,
+  onEnterDistrict,
   continueCallsign,
   onContinue,
   onNewRunner,
@@ -148,15 +144,11 @@ const InstantAction: React.FC<InstantActionProps> = ({
         <SignalBeacon />
       </Canvas>
 
-      {/* Top status rail */}
+      {/* Top status rail — atmosphere only, no fake region/ping claims */}
       <div className="absolute inset-x-0 top-0 flex items-baseline justify-between px-10 pt-6 font-mono text-[11px] tracking-[0.32em] uppercase pointer-events-none">
+        <span className="text-neutral-500">ironhaven · district menu</span>
         <span className="text-neutral-500">
-          ironhaven · live demo · build 2087
-        </span>
-        <span className="text-neutral-500">
-          node <span className="text-neutral-200">eu-west-3</span> · ping{' '}
-          <span className="text-neutral-200">38ms</span> ·{' '}
-          <span style={{ color: '#7dd97d' }}>online</span>
+          browser build · <span className="text-neutral-200">local sim</span>
         </span>
       </div>
 
@@ -169,7 +161,7 @@ const InstantAction: React.FC<InstantActionProps> = ({
           className="text-[10px] tracking-[0.45em] uppercase mb-2"
           style={{ color: '#c03a30' }}
         >
-          now online
+          district gate
         </div>
         <div
           className="text-[22px] md:text-[28px] tracking-[0.32em] uppercase text-neutral-200"
@@ -209,15 +201,13 @@ const InstantAction: React.FC<InstantActionProps> = ({
           plays <span style={{ color: '#c03a30' }}>back</span>.
         </h1>
         <p className="mt-5 max-w-[440px] text-[15px] leading-relaxed text-neutral-400 font-mono">
-          50+ AI-directed factions. Persistent presence on a shared world
-          server. Pick a path below — every demo loads the same authoritative
-          simulation.
+          One shared district. Enter to create or continue your runner.
         </p>
       </div>
 
       {/* Action menu */}
       <div className="absolute right-10 bottom-10 w-[320px]">
-        <div className={`${LABEL} mb-3`}>00 — entry points</div>
+        <div className={`${LABEL} mb-3`}>00 — enter</div>
         <div className="divide-y divide-[#1a1c1f]">
           {continueCallsign && onContinue && (
             <button
@@ -245,22 +235,10 @@ const InstantAction: React.FC<InstantActionProps> = ({
           {(
             [
               {
-                id: 'ai',
-                label: 'Walk into a conversation',
-                sub: 'AI · director · NPCs',
-                on: onAIDemo,
-              },
-              {
-                id: 'mp',
-                label: 'Join the live world',
-                sub: 'Multiplayer · 24/7 shard',
-                on: onMultiplayerDemo,
-              },
-              {
-                id: 'cb',
-                label: 'Pick a fight',
-                sub: 'Combat · ballistics · cover',
-                on: onCombatDemo,
+                id: 'enter',
+                label: 'Enter District 01',
+                sub: 'Spawn Sanctum · same live sim',
+                on: onEnterDistrict,
               },
               ...(onNewRunner
                 ? [

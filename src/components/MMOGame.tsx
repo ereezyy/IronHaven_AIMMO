@@ -26,6 +26,14 @@ import {
 import { KernelSize, BlendFunction } from 'postprocessing';
 import ContextLossGuard from './ContextLossGuard';
 import { getGfxSettings, type GfxTier } from '../lib/graphicsQuality';
+import {
+  AI_PANEL_KEY,
+  EMOTES,
+  GFX_KEY,
+  isEmoteDigit,
+  isWeaponDigit,
+  weaponSlotFromDigit,
+} from '../game/inputBindings';
 import { resolveBootGfxTier, vfxDensityForTier } from '../lib/playerExperience';
 import {
   ActiveObjectiveBar,
@@ -35,6 +43,7 @@ import {
   DeathLessonList,
   EmoteBubble,
   GraphicsSettingsPanel,
+  PassNudgeBanner,
   PassValueLine,
   PersistentControlsStrip,
   SessionRecoveryToast,
@@ -68,6 +77,11 @@ import {
   buildStreetObjectives,
   scaleDamage,
 } from '../game/objectives';
+import {
+  formatContractPayout,
+  newlyCompletedObjectives,
+  shouldNudgePass,
+} from '../game/demoLoop';
 import { applyCrit } from '../game/skills';
 import SkillTreePanel from './SkillTreePanel';
 import PassPanel from './PassPanel';
@@ -520,6 +534,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
   const economyOpenRef = useRef(false);
   const attackApi = useRef<AttackFn | null>(null);
   const playerFlashApi = useRef<(() => void) | null>(null);
+  const playerFireApi = useRef<(() => void) | null>(null);
   const cameraShake = useRef(0);
   const prevHealth = useRef(gameStore.playerStats.health);
   const vignetteTimer = useRef<number | null>(null);
@@ -597,6 +612,8 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
   const skillsOpenRef = useRef(false);
   const [passOpen, setPassOpen] = useState(false);
   const passOpenRef = useRef(false);
+  const passNudgedRef = useRef(false);
+  const [passNudgeOpen, setPassNudgeOpen] = useState(false);
   const [questOpen, setQuestOpen] = useState(false);
   const questOpenRef = useRef(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
@@ -1125,7 +1142,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
         const bonus = Math.round(10 * (mult - 1));
         if (bonus > 0) {
           useGameStore.getState().gainXp('contract', bonus);
-          pushFeed(`event bonus · +${bonus} xp (x${mult})`, 'info');
+          pushFeed(`event bonus · +${bonus} xp (x${mult})`, 'loot');
         }
       }
     }
@@ -1191,7 +1208,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
         gameAudio.play('siren', 0.18);
       }
       if (trans.ended) {
-        pushFeed(`${trans.ended.title} ended`, 'info');
+        pushFeed(`${trans.ended.title} ended`, 'system');
       }
     }, 250);
     return () => window.clearInterval(id);
@@ -1289,7 +1306,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
     return () => window.clearInterval(id);
   }, []);
 
-  // One-shot cash when a street contract first completes (never during render).
+  // One-shot cash + kill-feed when a street contract first completes (never during render).
   useEffect(() => {
     const s = useGameStore.getState();
     const hasWeapon =
@@ -1302,13 +1319,18 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       hasWeapon,
       combatSkill: s.playerStats.skills.combat,
     });
+    const newlyDone = newlyCompletedObjectives(
+      street,
+      rewardedObjectives.current
+    );
+    if (newlyDone.length === 0) return;
     let bonus = 0;
-    for (const o of street) {
-      if (o.done && !rewardedObjectives.current.has(o.id) && o.reward > 0) {
-        rewardedObjectives.current.add(o.id);
-        bonus += o.reward;
-        s.addAction(`contract_${o.id}`);
-      }
+    for (const o of newlyDone) {
+      rewardedObjectives.current.add(o.id);
+      bonus += o.reward;
+      s.addAction(`contract_${o.id}`);
+      pushFeed(formatContractPayout(o.label, o.reward), 'loot');
+      gameAudio.play('market', 0.25);
     }
     if (bonus > 0) {
       s.updateStats({ money: s.playerStats.money + bonus });
@@ -1321,7 +1343,24 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
     gameStore.playerStats.skills.combat,
     gameStore.currentWeaponId,
     gameStore.inventory,
+    pushFeed,
   ]);
+
+  // Soft Pass CTA once talk + kill are done and Pass is inactive (session ref only).
+  useEffect(() => {
+    if (
+      !shouldNudgePass({
+        talkedDone: hasTalked,
+        killDone: gameStore.sessionStats.totalKills >= 1,
+        passActive: passIsLive(gameStore.pass),
+        alreadyNudged: passNudgedRef.current,
+      })
+    ) {
+      return;
+    }
+    passNudgedRef.current = true;
+    setPassNudgeOpen(true);
+  }, [hasTalked, gameStore.sessionStats.totalKills, gameStore.pass]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -1347,7 +1386,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
         gfxOpenRef.current;
 
       // Graphics settings (always available, even when other panels open — toggle)
-      if (e.code === 'KeyG' && !e.repeat) {
+      if (e.code === GFX_KEY && !e.repeat) {
         setGfxOpen((v) => {
           const next = !v;
           gfxOpenRef.current = next;
@@ -1358,27 +1397,22 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
         return;
       }
 
-      // Quick emotes 1–4 (local bubble + kill-feed for nearby feel)
-      if (
-        !blocked &&
-        !e.repeat &&
-        (e.code === 'Digit1' ||
-          e.code === 'Digit2' ||
-          e.code === 'Digit3' ||
-          e.code === 'Digit4')
-      ) {
-        const emotes: Record<string, string> = {
-          Digit1: '👍 respect',
-          Digit2: '🔥 heat',
-          Digit3: '💀 threat',
-          Digit4: '🤝 deal',
-        };
-        const text = emotes[e.code];
-        setEmoteText(text);
-        pushFeed(`${gameStore.username || 'Runner'}: ${text}`, 'info');
-        gameAudio.play('talk', 0.15);
-        if (emoteTimer.current) window.clearTimeout(emoteTimer.current);
-        emoteTimer.current = window.setTimeout(() => setEmoteText(null), 2800);
+      // Shift+1–4 emotes (plain 1–4 is weapon loadout)
+      if (!blocked && !e.repeat && isEmoteDigit(e)) {
+        const text = EMOTES[e.code];
+        if (text) {
+          setEmoteText(text);
+          pushFeed(
+            `${useGameStore.getState().username || 'Runner'}: ${text}`,
+            'system'
+          );
+          gameAudio.play('talk', 0.15);
+          if (emoteTimer.current) window.clearTimeout(emoteTimer.current);
+          emoteTimer.current = window.setTimeout(
+            () => setEmoteText(null),
+            2800
+          );
+        }
         return;
       }
 
@@ -1420,9 +1454,11 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       // Iron Haven Pass ($1.99/wk)
       if (e.code === 'KeyO') {
         setPassOpen((v) => {
-          passOpenRef.current = !v;
+          const next = !v;
+          passOpenRef.current = next;
+          if (next) setPassNudgeOpen(false);
           if (!v && document.pointerLockElement) document.exitPointerLock();
-          return !v;
+          return next;
         });
         gameAudio.play('ui', 0.15);
         return;
@@ -1464,7 +1500,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       if (e.code === 'KeyB' && !dialogueOpenRef.current) {
         if (marketOpenRef.current) closeMarket();
         else openMarket();
-      } else if (e.code === 'KeyG') {
+      } else if (e.code === AI_PANEL_KEY && !e.repeat) {
         setAiPanelOpen((v) => !v);
         if (document.pointerLockElement) document.exitPointerLock();
       } else if (e.code === 'KeyU') {
@@ -1542,16 +1578,16 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
         (e.code === 'Enter' || e.code === 'Space')
       ) {
         respawn();
-      } else if (e.code.startsWith('Digit') && !blocked) {
-        const slot = parseInt(e.code.replace('Digit', ''), 10);
-        if (slot >= 1 && slot <= 4) {
+      } else if (!blocked && isWeaponDigit(e)) {
+        const slot = weaponSlotFromDigit(e.code);
+        if (slot != null) {
           const s = useGameStore.getState();
           const owned = [
             'fists',
             ...s.inventory.filter((id) => weapons.some((w) => w.id === id)),
           ];
           const loadout = Array.from(new Set(owned));
-          const pick = loadout[slot - 1];
+          const pick = loadout[slot];
           if (pick) {
             s.setCurrentWeaponId(pick);
             gameAudio.play('ui', 0.12);
@@ -1598,6 +1634,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
       if (crit) window.setTimeout(() => setLastCrit(false), 400);
 
       const dmg = rolled;
+      playerFireApi.current?.();
       attackApi.current?.(dmg, weapon.range);
 
       // Boss / hunt with specialized multipliers
@@ -1775,6 +1812,7 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
                 playerId={playerId}
                 onUpdate={handlePlayerUpdate}
                 flashApi={playerFlashApi}
+                fireApi={playerFireApi}
                 staminaRef={staminaRef}
                 tint={gameStore.character.appearance.tint}
                 accent={gameStore.character.appearance.accent}
@@ -2495,6 +2533,23 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
         </div>
       )}
 
+      <PassNudgeBanner
+        open={
+          passNudgeOpen &&
+          !passOpen &&
+          !activeCutscene &&
+          !passIsLive(gameStore.pass)
+        }
+        onOpenPass={() => {
+          setPassNudgeOpen(false);
+          passOpenRef.current = true;
+          setPassOpen(true);
+          if (document.pointerLockElement) document.exitPointerLock();
+          gameAudio.play('ui', 0.12);
+        }}
+        onDismiss={() => setPassNudgeOpen(false)}
+      />
+
       {gameStore.xpToast && Date.now() - gameStore.xpToast.at < 2200 && (
         <div className="absolute top-28 left-4 z-[28] font-mono border border-[#c9a15a] bg-black/85 px-4 py-2 text-[11px] tracking-[0.2em] uppercase text-[#c9a15a]">
           +{gameStore.xpToast.amount} xp · {gameStore.xpToast.source}
@@ -2604,9 +2659,10 @@ const MMOGame: React.FC<MMOGameProps> = ({ initialCallsign, initialBuild }) => {
             <div className="text-[10px] tracking-[0.16em] uppercase text-neutral-400">
               <span style={{ color: COLORS.accent }}>wasd</span> move ·{' '}
               <span style={{ color: COLORS.accent }}>e</span> talk ·{' '}
+              <span style={{ color: COLORS.accent }}>1–4</span> weapons ·{' '}
               <span style={{ color: COLORS.accent }}>j</span> job ·{' '}
-              <span style={{ color: COLORS.accent }}>l</span> log ·{' '}
-              <span style={{ color: COLORS.accent }}>k</span> skills ·{' '}
+              <span style={{ color: COLORS.accent }}>g</span> gfx ·{' '}
+              <span style={{ color: COLORS.accent }}>i</span> ai ·{' '}
               <span style={{ color: COLORS.gold }}>o</span> pass
             </div>
             <button

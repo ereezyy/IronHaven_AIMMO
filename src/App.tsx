@@ -106,9 +106,7 @@ function App() {
       )}
       {currentView === 'menu' && (
         <InstantAction
-          onAIDemo={enterFromMenu}
-          onMultiplayerDemo={enterFromMenu}
-          onCombatDemo={enterFromMenu}
+          onEnterDistrict={enterFromMenu}
           continueCallsign={loadContinueHint() || loadBuild()?.callsign || null}
           onContinue={
             loadBuild()

@@ -47,8 +47,8 @@ export const GUIDED_TIPS: GuidedTip[] = [
     step: 3,
     chapter: 'the grid',
     title: 'Talk to someone',
-    body: 'Walk up to a runner or civilian until a prompt appears. Press E to open dialogue — jobs and intel start here.',
-    keyHint: 'e',
+    body: 'Walk up until a prompt appears. E talk · click fight · B black market · O Pass — jobs and intel start with conversation.',
+    keyHint: 'e · click · b · o',
   },
   {
     id: 'harvest',

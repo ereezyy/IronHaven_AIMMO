@@ -26,7 +26,7 @@ export interface WorldEventDef {
   /** Combat XP / reward multiplier while active. */
   rewardMult: number;
   /** Kill-feed tone. */
-  tone: 'kill' | 'territory' | 'info';
+  tone: 'kill' | 'territory' | 'system';
 }
 
 export const WORLD_EVENTS: Record<WorldEventKind, WorldEventDef> = {
@@ -65,7 +65,7 @@ export const WORLD_EVENTS: Record<WorldEventKind, WorldEventDef> = {
     durationMs: 60_000,
     cooldownMs: 180_000,
     rewardMult: 1.5,
-    tone: 'info',
+    tone: 'system',
   },
 };
 
