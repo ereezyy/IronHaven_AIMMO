@@ -144,15 +144,11 @@ const InstantAction: React.FC<InstantActionProps> = ({
         <SignalBeacon />
       </Canvas>
 
-      {/* Top status rail */}
+      {/* Top status rail — atmosphere only, no fake region/ping claims */}
       <div className="absolute inset-x-0 top-0 flex items-baseline justify-between px-10 pt-6 font-mono text-[11px] tracking-[0.32em] uppercase pointer-events-none">
+        <span className="text-neutral-500">ironhaven · district menu</span>
         <span className="text-neutral-500">
-          ironhaven · live demo · build 2087
-        </span>
-        <span className="text-neutral-500">
-          node <span className="text-neutral-200">eu-west-3</span> · ping{' '}
-          <span className="text-neutral-200">38ms</span> ·{' '}
-          <span style={{ color: '#7dd97d' }}>online</span>
+          browser build · <span className="text-neutral-200">local sim</span>
         </span>
       </div>
 
@@ -165,7 +161,7 @@ const InstantAction: React.FC<InstantActionProps> = ({
           className="text-[10px] tracking-[0.45em] uppercase mb-2"
           style={{ color: '#c03a30' }}
         >
-          now online
+          district gate
         </div>
         <div
           className="text-[22px] md:text-[28px] tracking-[0.32em] uppercase text-neutral-200"
@@ -211,7 +207,7 @@ const InstantAction: React.FC<InstantActionProps> = ({
 
       {/* Action menu */}
       <div className="absolute right-10 bottom-10 w-[320px]">
-        <div className={`${LABEL} mb-3`}>00 — entry points</div>
+        <div className={`${LABEL} mb-3`}>00 — enter</div>
         <div className="divide-y divide-[#1a1c1f]">
           {continueCallsign && onContinue && (
             <button

@@ -27,6 +27,11 @@ describe('InstantAction', () => {
     expect(
       screen.getByText(/One shared district\. Enter to create or continue/)
     ).toBeTruthy();
+    expect(screen.getByText(/district menu/i)).toBeTruthy();
+    expect(screen.getByText(/local sim/i)).toBeTruthy();
+    expect(screen.queryByText(/eu-west-3/i)).toBeNull();
+    expect(screen.queryByText(/38ms/i)).toBeNull();
+    expect(screen.queryByText(/now online/i)).toBeNull();
 
     fireEvent.click(screen.getByText('Enter District 01'));
     expect(onEnterDistrict).toHaveBeenCalledTimes(1);
