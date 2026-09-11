@@ -28,11 +28,15 @@ cpSync(join(root, 'dist'), join(pkgDir, 'dist'), { recursive: true });
 });
 
 // Copy docs
-['README.md', 'SHIPPING_AUDIT.md', 'SHIP.md', '.env.example', 'LICENSE'].forEach(
-  (f) => {
-    if (existsSync(join(root, f))) cpSync(join(root, f), join(pkgDir, f));
-  },
-);
+[
+  'README.md',
+  'SHIPPING_AUDIT.md',
+  'SHIP.md',
+  '.env.example',
+  'LICENSE',
+].forEach((f) => {
+  if (existsSync(join(root, f))) cpSync(join(root, f), join(pkgDir, f));
+});
 
 // Create package README
 writeFileSync(
@@ -70,7 +74,7 @@ Opens at http://localhost:5173
 
 ## Live Demo
 https://ironhaven-aimmo.vercel.app
-`,
+`
 );
 
 // Zip
@@ -79,7 +83,7 @@ const isWin = process.platform === 'win32';
 if (isWin) {
   execSync(
     `powershell -NoProfile -Command "if (Test-Path '${out}') { Remove-Item '${out}' -Force }; Compress-Archive -Path '${pkgDir}' -DestinationPath '${out}' -Force"`,
-    { stdio: 'inherit' },
+    { stdio: 'inherit' }
   );
 } else {
   execSync(`cd "${root}" && zip -r "${out}" "${pkg}"`, { stdio: 'inherit' });

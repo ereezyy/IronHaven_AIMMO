@@ -58,14 +58,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
         className="fixed inset-0 z-[60] pointer-events-none opacity-[0.035]"
         style={{
           backgroundImage:
-            'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'0.5\'/%3E%3C/svg%3E")',
+            "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E\")",
           backgroundSize: '256px',
         }}
       />
 
       {/* ── HERO ── */}
       <section
-        ref={(el) => { sectionRefs.current[0] = el; }}
+        ref={(el) => {
+          sectionRefs.current[0] = el;
+        }}
         className="relative z-10 flex flex-col items-center justify-center min-h-[100dvh] px-6"
       >
         {/* Eyebrow */}
@@ -102,8 +104,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
             transition: 'all 1.6s cubic-bezier(0.16, 1, 0.3, 1) 0.6s',
           }}
         >
-          AI-directed factions. Persistent world. Every conversation can become a
-          contract, every contract a funeral.
+          AI-directed factions. Persistent world. Every conversation can become
+          a contract, every contract a funeral.
         </p>
 
         {/* CTA */}
@@ -139,7 +141,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
 
       {/* ── WHAT IT IS ── */}
       <section
-        ref={(el) => { sectionRefs.current[1] = el; }}
+        ref={(el) => {
+          sectionRefs.current[1] = el;
+        }}
         className="relative z-10 px-6 py-32 md:py-40 max-w-[720px] mx-auto"
       >
         <h2
@@ -160,17 +164,32 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
 
         <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-1">
           {[
-            { label: 'Live faction warfare', sub: 'Neon Syndicate, Chrome Guard, Dock Rats' },
-            { label: 'AI-driven street contracts', sub: 'Every NPC conversation can become a job' },
-            { label: 'Persistent territory control', sub: 'Hold blocks, earn bonuses, paint the map' },
-            { label: 'Browser-native, zero install', sub: 'WebGL. WASD. No launcher. Just play.' },
+            {
+              label: 'Live faction warfare',
+              sub: 'Neon Syndicate, Chrome Guard, Dock Rats',
+            },
+            {
+              label: 'AI-driven street contracts',
+              sub: 'Every NPC conversation can become a job',
+            },
+            {
+              label: 'Persistent territory control',
+              sub: 'Hold blocks, earn bonuses, paint the map',
+            },
+            {
+              label: 'Browser-native, zero install',
+              sub: 'WebGL. WASD. No launcher. Just play.',
+            },
           ].map((item, i) => (
             <div
               key={i}
               className="px-5 py-5 border-l-2 transition-colors duration-400"
               style={{ borderColor: i === 0 ? ACCENT : '#1f1f24' }}
             >
-              <div className="text-[14px] font-medium" style={{ color: '#e4e4e7' }}>
+              <div
+                className="text-[14px] font-medium"
+                style={{ color: '#e4e4e7' }}
+              >
                 {item.label}
               </div>
               <div className="text-[12px] mt-1.5" style={{ color: '#6b6d74' }}>
@@ -183,7 +202,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
 
       {/* ── THE WORLD ── */}
       <section
-        ref={(el) => { sectionRefs.current[2] = el; }}
+        ref={(el) => {
+          sectionRefs.current[2] = el;
+        }}
         className="relative z-10 px-6 py-24 md:py-32"
       >
         <div
@@ -205,7 +226,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
             >
               North Spine district
             </div>
-            <div className="text-[22px] md:text-[28px] font-semibold tracking-[-0.01em]" style={{ color: '#f4f4f5' }}>
+            <div
+              className="text-[22px] md:text-[28px] font-semibold tracking-[-0.01em]"
+              style={{ color: '#f4f4f5' }}
+            >
               50+ city blocks. One persistent shard.
             </div>
           </div>
@@ -214,7 +238,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
 
       {/* ── HOW TO PLAY ── */}
       <section
-        ref={(el) => { sectionRefs.current[3] = el; }}
+        ref={(el) => {
+          sectionRefs.current[3] = el;
+        }}
         className="relative z-10 px-6 py-32 md:py-40 max-w-[720px] mx-auto"
       >
         <h2
@@ -226,25 +252,43 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
 
         <div className="space-y-8">
           {[
-          { label: 'Pick a callsign', body: 'Character creator with archetypes. No two runners alike.' },
-          { label: 'Choose a side', body: 'Three factions. Zero mercy. Loyalty is a discount, not a shield.' },
-          { label: 'Take a contract', body: 'Talk to NPCs. The AI director listens. Every word matters.' },
-          { label: 'Hold your block', body: 'Territory is currency. Paint the map or die freelancing.' },
+            {
+              label: 'Pick a callsign',
+              body: 'Character creator with archetypes. No two runners alike.',
+            },
+            {
+              label: 'Choose a side',
+              body: 'Three factions. Zero mercy. Loyalty is a discount, not a shield.',
+            },
+            {
+              label: 'Take a contract',
+              body: 'Talk to NPCs. The AI director listens. Every word matters.',
+            },
+            {
+              label: 'Hold your block',
+              body: 'Territory is currency. Paint the map or die freelancing.',
+            },
           ].map((item, i) => (
-          <div key={i} className="flex gap-5 items-start">
-            <div
-              className="w-1.5 h-1.5 rounded-full shrink-0 mt-2"
-              style={{ background: i === 0 ? ACCENT : '#2a2c30' }}
-            />
-            <div>
-              <div className="text-[16px] font-medium" style={{ color: '#e4e4e7' }}>
-                {item.label}
-              </div>
-              <div className="text-[13px] mt-1.5" style={{ color: '#6b6d74' }}>
-                {item.body}
+            <div key={i} className="flex gap-5 items-start">
+              <div
+                className="w-1.5 h-1.5 rounded-full shrink-0 mt-2"
+                style={{ background: i === 0 ? ACCENT : '#2a2c30' }}
+              />
+              <div>
+                <div
+                  className="text-[16px] font-medium"
+                  style={{ color: '#e4e4e7' }}
+                >
+                  {item.label}
+                </div>
+                <div
+                  className="text-[13px] mt-1.5"
+                  style={{ color: '#6b6d74' }}
+                >
+                  {item.body}
+                </div>
               </div>
             </div>
-          </div>
           ))}
         </div>
       </section>
@@ -304,7 +348,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
           >
             GitHub
           </a>
-          <span className="mx-3" style={{ color: '#2a2c30' }}>/</span>
+          <span className="mx-3" style={{ color: '#2a2c30' }}>
+            /
+          </span>
           <a
             href="https://ironhaven-aimmo.vercel.app"
             className="hover:underline transition-colors duration-300"
