@@ -24,7 +24,7 @@ try {
   if (isWin) {
     execSync(
       `powershell -NoProfile -Command "if (Test-Path '${out}') { Remove-Item '${out}' -Force }; Compress-Archive -Path '${mediaDir}\\*' -DestinationPath '${out}' -Force"`,
-      { stdio: 'inherit' },
+      { stdio: 'inherit' }
     );
   } else {
     execSync(`cd "${mediaDir}" && zip -r "${out}" .`, { stdio: 'inherit' });
